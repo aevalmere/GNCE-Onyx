@@ -69,6 +69,7 @@ function boot() {
       if (FINE) {
         initMagnetic();
         initHoverPreview();
+        initCursorCards();
       }
       // scenes (each no-ops if its element is absent)
       initJourney();
@@ -429,6 +430,127 @@ function initHoverPreview() {
     rowEl.addEventListener('pointerleave', () =>
       gsap.to(img, { autoAlpha: 0, scale: 0.9, duration: 0.3, ease: 'power2.out' })
     );
+  });
+}
+
+/* ================================================================== */
+/* [data-cursor-card="id"] — hover detail rides the pointer.          */
+/* The card is #id (.cursor-card): parked fixed at 0,0 and moved by    */
+/* transform only, so hovering never touches layout. Any number of     */
+/* triggers may share one card; the last pointer in owns it.           */
+/* Pointer-fine only (coarse pointers keep the static fallback).       */
+/* ================================================================== */
+function initCursorCards() {
+  const OFF_X = 20; // the card rides off the pointer's shoulder,
+  const OFF_Y = 16; // never under the arrow itself
+  const EDGE = 12; // and never touching the viewport rim
+
+  type Rig = {
+    card: HTMLElement;
+    owner: HTMLElement | null; // which trigger currently holds the card
+    shown: boolean;
+    w: number;
+    h: number;
+    xTo?: (v: number) => void;
+    yTo?: (v: number) => void;
+  };
+
+  const rigs = new Map<string, Rig>();
+  const rigFor = (id: string): Rig | null => {
+    const known = rigs.get(id);
+    if (known) return known;
+    const card = document.getElementById(id);
+    if (!card) return null;
+    // The card duplicates information the trigger already carries: it is
+    // decoration to a screen reader.
+    if (!card.hasAttribute('aria-hidden')) card.setAttribute('aria-hidden', 'true');
+    gsap.set(card, { autoAlpha: 0, scale: 0.92 }); // the resting state it returns to
+    const rig: Rig = { card, owner: null, shown: false, w: 0, h: 0 };
+    rigs.set(id, rig);
+    return rig;
+  };
+
+  // Beside the cursor, flipped to the other side when that edge is close,
+  // then clamped so a corner hover can still never push the card off screen.
+  const place = (rig: Rig, cx: number, cy: number) => {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const x = cx + OFF_X + rig.w > vw - EDGE ? cx - OFF_X - rig.w : cx + OFF_X;
+    const y = cy + OFF_Y + rig.h > vh - EDGE ? cy - OFF_Y - rig.h : cy + OFF_Y;
+    return {
+      x: gsap.utils.clamp(EDGE, Math.max(EDGE, vw - rig.w - EDGE), x),
+      y: gsap.utils.clamp(EDGE, Math.max(EDGE, vh - rig.h - EDGE), y),
+    };
+  };
+
+  // A card that is fully hidden starts its next life AT the pointer: drop the
+  // old followers, set the transform outright, then rebuild the quickTos so
+  // they lerp from here instead of flying across the page (or in from 0,0).
+  const snap = (rig: Rig, x: number, y: number) => {
+    gsap.killTweensOf(rig.card, 'x,y');
+    gsap.set(rig.card, { x, y });
+    rig.xTo = gsap.quickTo(rig.card, 'x', { duration: 0.45, ease: 'power3.out' });
+    rig.yTo = gsap.quickTo(rig.card, 'y', { duration: 0.45, ease: 'power3.out' });
+  };
+
+  document.querySelectorAll<HTMLElement>('[data-cursor-card]').forEach((trigger) => {
+    const id = trigger.dataset.cursorCard;
+    const rig = id ? rigFor(id) : null;
+    if (!rig) return;
+    let raf = 0;
+
+    trigger.addEventListener('pointerenter', (e) => {
+      rig.owner = trigger;
+      // Measured once per hover, never per move. The card is hidden, not
+      // display:none, so its box is real.
+      rig.w = rig.card.offsetWidth;
+      rig.h = rig.card.offsetHeight;
+      const p = place(rig, e.clientX, e.clientY);
+      if (rig.shown) {
+        // Handed straight from a sibling trigger: glide, don't teleport.
+        rig.xTo?.(p.x);
+        rig.yTo?.(p.y);
+      } else {
+        snap(rig, p.x, p.y);
+      }
+      rig.shown = true;
+      gsap.to(rig.card, {
+        autoAlpha: 1,
+        scale: 1,
+        duration: 0.3,
+        ease: 'power3.out',
+        overwrite: 'auto',
+      });
+    });
+
+    // One follow per frame: pointermove fires far faster than we can paint.
+    trigger.addEventListener('pointermove', (e) => {
+      if (rig.owner !== trigger || raf) return;
+      const cx = e.clientX;
+      const cy = e.clientY;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        if (rig.owner !== trigger) return;
+        const p = place(rig, cx, cy);
+        rig.xTo?.(p.x);
+        rig.yTo?.(p.y);
+      });
+    });
+
+    trigger.addEventListener('pointerleave', () => {
+      if (rig.owner !== trigger) return; // a sibling already took the card over
+      rig.owner = null;
+      gsap.to(rig.card, {
+        autoAlpha: 0,
+        scale: 0.92,
+        duration: 0.25,
+        ease: 'power2.out',
+        overwrite: 'auto',
+        onComplete: () => {
+          if (!rig.owner) rig.shown = false; // fully gone: next hover snaps
+        },
+      });
+    });
   });
 }
 
