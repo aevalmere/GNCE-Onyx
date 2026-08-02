@@ -1,0 +1,180 @@
+---
+/**
+ * Lineage — the record four GNCE teams brought into this rookie season.
+ *
+ * Space indigo band, second on the page. Team numbers count up from zero;
+ * each award is one ruled line in a ledger (name left, year right), wiping
+ * in as a single staggered wave per team. 22489 and 26112 carry the long
+ * lists, so they take the wide top row; 26413 and 26111 sit in a shorter
+ * register beneath with the right third left open.
+ */
+import Reveal from '../Reveal.astro';
+
+// Confirmed record. 26111 has no awards: the number stands alone.
+const featured = [
+  {
+    num: '22489',
+    awards: [
+      { name: 'Massachusetts State Champion', year: '2025' },
+      { name: 'World Championship qualifier', year: '2025' },
+      { name: 'Motivate Award 2nd Place, Worlds Jemison Division', year: '2025' },
+      { name: 'Hardware Mastery Honorable Mention, Multinational Tech Invitational', year: '2025' },
+      { name: 'Mechatronics Synergy Award, Multinational Tech Invitational', year: '2026' },
+      { name: 'Control Award, Michiana International Premier Event', year: '' },
+      { name: 'Finalist Alliance, Michiana International Premier Event', year: '' },
+    ],
+  },
+  {
+    num: '26112',
+    awards: [
+      { name: 'World Championship qualifier', year: '2026' },
+      { name: '3rd Place, Worlds Jackson Division', year: '2026' },
+      { name: 'Finalist Alliance, State Championship', year: '2026' },
+    ],
+  },
+];
+
+const compact = [
+  { num: '26413', awards: [{ name: 'State Championship qualifier', year: '' }] },
+  { num: '26111', awards: [] },
+];
+---
+
+<section id="lineage" class="bg-surface">
+  <div class="mx-auto max-w-5xl px-5 pb-28 pt-24 sm:px-8 sm:pb-36 sm:pt-32">
+    <h2 class="lineage-title type-display" data-split>
+      Six of our seven came up through these four GNCE teams.
+    </h2>
+
+    <div class="lineage-grid mt-14 sm:mt-16">
+      {
+        featured.map((team) => (
+          <article class="team team-wide">
+            <h3 class="team-num" data-count={team.num}>
+              {team.num}
+            </h3>
+            <ul class="awards" data-reveal-group>
+              {team.awards.map((a) => (
+                <li>
+                  <Reveal variant="left" class="award">
+                    <span class="award-name">{a.name}</span>
+                    {a.year && <span class="award-year">{a.year}</span>}
+                  </Reveal>
+                </li>
+              ))}
+            </ul>
+          </article>
+        ))
+      }
+    </div>
+
+    <div class="lineage-rest mt-14 sm:mt-16">
+      {
+        compact.map((team) => (
+          <article class="team">
+            <h3 class="team-num" data-count={team.num}>
+              {team.num}
+            </h3>
+            {team.awards.length > 0 && (
+              <ul class="awards" data-reveal-group>
+                {team.awards.map((a) => (
+                  <li>
+                    <Reveal variant="left" class="award">
+                      <span class="award-name">{a.name}</span>
+                      {a.year && <span class="award-year">{a.year}</span>}
+                    </Reveal>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </article>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .lineage-title {
+    font-size: clamp(1.75rem, 4vw, 3rem);
+    max-width: 20ch;
+  }
+
+  /* Featured pair: asymmetric split sized to the lists (seven lines beside
+     three). Single column below 48rem. */
+  .lineage-grid,
+  .lineage-rest {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 3rem;
+    align-items: start;
+  }
+
+  @media (min-width: 48rem) {
+    .lineage-grid {
+      grid-template-columns: 7fr 5fr;
+      column-gap: 3rem;
+    }
+
+    /* The short register: two narrow cells, the right third left empty so
+       the space under 26112 reads as composition, not a gap. */
+    .lineage-rest {
+      grid-template-columns: 4fr 3fr 5fr;
+      column-gap: 3rem;
+    }
+  }
+
+  /* Every team hangs off a rule; the featured pair gets the grape one. */
+  .team {
+    border-top: 1px solid var(--color-line);
+    padding-top: 1rem;
+  }
+
+  .team-wide {
+    border-top: 3px solid var(--color-accent);
+  }
+
+  /* Body serif with fixed-width digits so the count-up never jitters. */
+  .team-num {
+    font-family: var(--font-text);
+    font-weight: 700;
+    font-size: clamp(1.5rem, 3.2vw, 2rem);
+    line-height: 1;
+    font-variant-numeric: tabular-nums lining-nums;
+    letter-spacing: 0.02em;
+  }
+
+  .team-wide .team-num {
+    font-size: clamp(2rem, 4.6vw, 3.1rem);
+  }
+
+  .awards {
+    margin-top: 1.5rem;
+  }
+
+  /* One award per ruled line: name left, year right, like a results sheet. */
+  .award {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1.25rem;
+    border-top: 1px solid var(--color-line);
+    padding: 0.6rem 0;
+  }
+
+  .award-name {
+    font-size: 0.9375rem;
+    line-height: 1.45;
+    color: var(--color-ink);
+    text-wrap: pretty;
+  }
+
+  .award-year {
+    flex: none;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--color-faint);
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+</style>
