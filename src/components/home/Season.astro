@@ -3,10 +3,10 @@
  * Season — the rookie season, one row per event.
  *
  * Each event is a hairline-ruled display row that opens into its own panel:
- * the highlight frame, an awards strip, and a full-width gallery. Hovering a
- * row floats that event's poster on the pointer (motion.ts cursor cards);
- * opening the row flies that same poster off the cursor into the highlight
- * frame, so the hover and the panel are visibly one object.
+ * the highlight frame and a full-width gallery. Hovering a row floats that
+ * event's poster on the pointer (motion.ts cursor cards); opening the row
+ * flies that same poster off the cursor into the highlight frame, so the
+ * hover and the panel are visibly one object.
  *
  * Nothing has happened yet, so every block is a marked slot and the poster is
  * the stand-in art. The accordion runs on its own script (below) rather than
@@ -72,14 +72,6 @@ const galleryCols = [
                       <span class="poster-rule" aria-hidden="true"></span>
                       <span class="poster-name type-display">{e.name}</span>
                     </span>
-                  </div>
-                </Placeholder>
-
-                <Placeholder name={`season-${e.key}-awards`} class="p-3 sm:p-4">
-                  <div class="awards-row">
-                    {Array.from({ length: 3 }).map(() => (
-                      <span class="award-chip type-label">Award</span>
-                    ))}
                   </div>
                 </Placeholder>
 
@@ -149,7 +141,11 @@ const galleryCols = [
     border-bottom: 1px solid var(--color-line);
   }
 
+  /* Positioned so the flying poster can be parked in here: a clone inside
+     the row travels with the row, so scroll and any reflow above move the
+     poster and its destination by the same amount. */
   .event {
+    position: relative;
     border-top: 1px solid var(--color-line);
   }
 
@@ -237,7 +233,9 @@ const galleryCols = [
 
   /* ---- Panel ------------------------------------------------------ */
   /* Clipped always, so the height tween has a hard edge and the drifting
-     gallery columns shear inside the frame instead of into the section. */
+     gallery columns shear inside the frame instead of into the section.
+     It also keeps the panel's content top-anchored while the box grows,
+     which is what lets the poster aim at the frame from the first frame. */
   .event-panel {
     overflow: clip;
   }
@@ -255,7 +253,8 @@ const galleryCols = [
     display: flex;
     flex-direction: column;
     gap: clamp(2.5rem, 5vw, 4rem);
-    /* Room for the placeholder tags, which ride up over their own top edge. */
+    /* Air above the frame so the panel opens into space, not straight off
+       the row's own rule. */
     padding-top: 3rem;
     padding-bottom: clamp(3rem, 6vw, 5rem);
   }
@@ -269,11 +268,16 @@ const galleryCols = [
   }
 
   /* ---- Poster ----------------------------------------------------- */
-  /* One composition at two sizes: everything is em, so the pointer card and
-     the panel frame are the same artwork and the flight between them reads
-     as one object growing. */
+  /* One composition at two sizes. Every measurement inside the poster is em,
+     and the em is 3.6% of the poster's own width (cqw, read off the box
+     around it), so the card on the pointer and the frame in the panel are
+     the same artwork at two scales. Both boxes are 16:9 for the same reason:
+     the flight between them is then a single uniform scale with nothing to
+     stretch and nothing to reflow.
+     No outline: like every media slot it is a flat steel plate waiting for a
+     picture, and a 1px rule is the one thing that cannot survive a scale. */
   .poster {
-    --poster-em: 0.8rem;
+    --poster-em: 3.6cqw;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -282,7 +286,6 @@ const galleryCols = [
     padding: 1.25em;
     font-size: var(--poster-em);
     background: var(--color-steel);
-    border: 1px solid var(--color-line);
   }
 
   .poster-rule {
@@ -301,46 +304,37 @@ const galleryCols = [
   }
 
   .poster-sm {
-    width: 240px;
-    height: 160px;
+    width: 100%;
+    aspect-ratio: 16 / 9;
   }
 
-  /* Pulled out over the frame's own hairline so the two borders land on the
-     same pixel instead of stacking into a 2px rule. */
+  /* Exactly the frame, so the frame's ratio is the poster's ratio. */
   .poster-lg {
-    --poster-em: clamp(0.9rem, 2.6vw, 2.2rem);
     position: absolute;
-    inset: -1px;
+    inset: 0;
   }
 
-  /* The card is only a carrier here: the poster brings its own frame. */
+  /* The frame is the box the panel poster measures its em against. */
+  .highlight-frame {
+    position: relative;
+    container-type: inline-size;
+  }
+
+  /* The card is only a carrier: the poster is its whole face, sized here so
+     the em inside resolves against 256px. Paper chrome would be a mat that
+     cannot fly with the poster, so this one card opts out of it and keeps
+     the dark ink ramp instead: same artwork on the pointer as in the panel,
+     down to the colour of the name. */
   .cursor-card.season-card {
+    --color-ink: var(--color-paper);
+    --color-muted: color-mix(in srgb, var(--color-paper) 60%, transparent);
+    --color-faint: color-mix(in srgb, var(--color-paper) 38%, transparent);
+    --color-line: color-mix(in srgb, var(--color-paper) 14%, transparent);
+    width: 256px;
     padding: 0;
     background: transparent;
     border: 0;
-  }
-
-  .highlight-frame {
-    position: relative;
-  }
-
-  /* ---- Awards ----------------------------------------------------- */
-  .awards-row {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: clamp(0.6rem, 1.5vw, 1rem);
-  }
-
-  .award-chip {
-    display: grid;
-    place-items: center;
-    min-height: clamp(4rem, 12vw, 5.5rem);
-    padding: 1rem 0.5rem;
-    background: var(--color-steel);
-    border: 1px solid var(--color-line);
-    color: var(--color-muted);
-    font-size: 0.6875rem;
-    text-align: center;
+    container-type: inline-size;
   }
 
   /* ---- Gallery ---------------------------------------------------- */
@@ -411,28 +405,47 @@ const galleryCols = [
 
     const reduced = matchMedia('(prefers-reduced-motion: reduce)');
     // Panels change the page's height, so the scroll scenes need remeasuring.
+    // It runs once, at the end of the whole sequence: a refresh mid-flight
+    // can reflow the page and move the frame out from under the poster.
     const refresh = () => (window as any).__motion?.ScrollTrigger?.refresh();
+
+    // The box is open and at rest well before the poster seats into it, and
+    // both ends of the sequence come to rest on the same family of curve.
+    const PANEL = 0.58;
+    const FLIGHT = 0.7;
 
     section.querySelectorAll<HTMLButtonElement>('[data-season-toggle]').forEach((btn) => {
       const panel = document.getElementById(btn.getAttribute('aria-controls') || '');
       if (!panel) return;
       const dest = panel.querySelector<HTMLElement>('[data-season-dest]');
       const card = document.getElementById(btn.dataset.cursorCard || '');
+      const face = card?.querySelector<HTMLElement>('.poster') || null;
+      // The flier is parked in the row rather than on the viewport: whatever
+      // moves the frame while the poster is in the air (a scroll, a sibling
+      // panel opening above it, a reflow) moves both by the same amount, so
+      // the landing stays exact.
+      const deck = (btn.closest('.event') as HTMLElement) || document.body;
       let ghost: HTMLElement | null = null;
 
       /* The poster only flies if it is on the pointer at this moment. Keyboard
-         and touch never raise the card, so they get the wipe instead. */
-      const liveCardRect = (): DOMRect | null => {
-        if (!card) return null;
+         and touch never raise the card, so they get the wipe instead. The face
+         is measured, not the card: whatever chrome the card grows later, the
+         flight still starts on the artwork. Its rect carries the card's own
+         entrance scale, so a click mid-entrance takes off from what is
+         actually on screen. */
+      const liveFace = () => {
+        if (!card || !face) return null;
         const cs = getComputedStyle(card);
-        if (cs.visibility === 'hidden' || parseFloat(cs.opacity) < 0.05) return null;
-        const r = card.getBoundingClientRect();
-        return r.width > 0 && r.height > 0 ? r : null;
+        const opacity = parseFloat(cs.opacity) || 0;
+        if (cs.visibility === 'hidden' || opacity < 0.05) return null;
+        const rect = face.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0 ? { rect, opacity } : null;
       };
 
       /* Drop the card out from under the pointer on the same frame the flight
-         starts, so the poster is never in two places. motion.ts owns the
-         card's position tweens; only its visibility is killed here. */
+         starts, so the poster is never in two places and nothing fades out
+         behind the flier. motion.ts owns the card's position tweens; only its
+         visibility is killed here, and the next hover raises it again. */
       const hideCard = () => {
         if (!card) return;
         gsap.killTweensOf(card, 'autoAlpha,opacity,visibility,scale');
@@ -470,47 +483,96 @@ const galleryCols = [
         );
       };
 
-      /* The flier is a fixed clone: the panel is clipped, so the real poster
-         could never travel outside it. The clone starts on the card's box and
-         lands exactly on the frame, then hands back to the real one. */
-      const fly = (from: DOMRect) => {
+      /* The flier is a clone of the destination: the panel is clipped, so the
+         real poster could never travel outside it. Both boxes are 16:9 and
+         both compositions are em-driven off their own width, so the clone is
+         the card's poster at takeoff and the frame's poster at landing with
+         nothing but scale in between. Transform only, one tween. */
+      const fly = (from: DOMRect, opacity: number) => {
         const el = dest;
         if (!el) return;
         const d = el.getBoundingClientRect();
         if (!d.width || !d.height) return wipe();
         clearFlight();
 
+        // Away from the frame the clone has no box to measure cqw against, so
+        // the em is pinned to the one the frame resolved: the artwork is
+        // frozen at destination size and only scale changes.
+        const em = parseFloat(getComputedStyle(el).fontSize) || 0;
         const g = el.cloneNode(true) as HTMLElement;
         g.removeAttribute('data-season-dest');
         g.setAttribute('aria-hidden', 'true');
         g.removeAttribute('style');
         g.style.cssText =
-          'position:fixed;margin:0;right:auto;bottom:auto;z-index:90;pointer-events:none;' +
-          `left:${d.left}px;top:${d.top}px;width:${d.width}px;height:${d.height}px;`;
-        document.body.appendChild(g);
+          'position:absolute;left:0;top:0;right:auto;bottom:auto;margin:0;z-index:90;' +
+          `pointer-events:none;width:${d.width}px;height:${d.height}px;--poster-em:${em}px;`;
+        deck.appendChild(g);
         ghost = g;
+        // Hidden, not removed: the frame keeps its steel plate under the
+        // flier, and the swap back at the end has nothing to move.
         gsap.set(el, { visibility: 'hidden' });
+
+        // Where the clone's own origin landed, measured rather than assumed:
+        // the row's border and the page's scroll are both already in it.
+        const o = g.getBoundingClientRect();
+        const seatX = d.left - o.left;
+        const seatY = d.top - o.top;
+
+        const done = () => {
+          gsap.set(el, { clearProps: 'visibility' });
+          g.remove();
+          if (ghost === g) ghost = null;
+          refresh();
+        };
 
         gsap.fromTo(
           g,
           {
-            x: from.left + from.width / 2 - (d.left + d.width / 2),
-            y: from.top + from.height / 2 - (d.top + d.height / 2),
+            // Centres on the card's poster; the scale is the width ratio and
+            // the heights follow it exactly, both boxes being 16:9.
+            x: from.left + from.width / 2 - (o.left + d.width / 2),
+            y: from.top + from.height / 2 - (o.top + d.height / 2),
             scale: from.width / d.width,
           },
           {
-            x: 0,
-            y: 0,
+            x: seatX,
+            y: seatY,
             scale: 1,
-            duration: 0.7,
+            duration: FLIGHT,
+            // Let go, then set down: an object released from the pointer
+            // accelerates out of rest and decelerates into the frame, and the
+            // long flat tail means it is already still when the real poster
+            // takes over. Cubic, not quartic: a quartic in-half holds the
+            // poster on the cursor for a fifth of a second after the click,
+            // which reads as lag on the one beat the eye is locked to it.
             ease: 'power3.inOut',
             onComplete: () => {
-              g.remove();
-              if (ghost === g) ghost = null;
-              gsap.set(el, { clearProps: 'visibility' });
+              // Measured again against the live frame: if anything moved it
+              // while the poster was in the air, the gap closes on a short
+              // curve instead of a cut.
+              const gr = g.getBoundingClientRect();
+              const now = el.getBoundingClientRect();
+              const dx = now.left - gr.left;
+              const dy = now.top - gr.top;
+              if (Math.abs(dx) > 0.75 || Math.abs(dy) > 0.75) {
+                gsap.to(g, {
+                  x: seatX + dx,
+                  y: seatY + dy,
+                  duration: 0.24,
+                  ease: 'power2.out',
+                  onComplete: done,
+                });
+              } else done();
             },
           }
         );
+
+        // Clicked before the card had finished coming up: the flier carries on
+        // from the exact opacity the card was wearing, so the handover is a
+        // continuation and not a step.
+        if (opacity < 0.99) {
+          gsap.fromTo(g, { opacity }, { opacity: 1, duration: 0.24, ease: 'power2.out' });
+        }
       };
 
       const expand = () => {
@@ -532,10 +594,10 @@ const galleryCols = [
         gsap.set(panel, { height: 'auto' });
         const full = panel.offsetHeight;
 
-        const from = liveCardRect();
-        if (from) {
+        const live = liveFace();
+        if (live) {
           hideCard();
-          fly(from);
+          fly(live.rect, live.opacity);
         } else {
           wipe();
         }
@@ -545,11 +607,12 @@ const galleryCols = [
           { height: 0 },
           {
             height: full,
-            duration: 0.6,
+            duration: PANEL,
             ease: 'power3.out',
             onComplete: () => {
               gsap.set(panel, { clearProps: 'height' });
-              refresh();
+              // A poster still in the air refreshes when it lands.
+              if (!ghost) refresh();
             },
           }
         );
