@@ -17,8 +17,9 @@
  * reloading. Hovering a box floats a small card off the cursor saying what
  * is down there.
  *
- * Blog posts and the lab page still carry the Footer's plain-text links,
- * so navigation survives without JS.
+ * Blog posts and the lab page carry the Footer's plain-text links, which is
+ * also where navigation goes when there is no JS: a button that cannot open
+ * anything is hidden rather than left sitting there dead.
  */
 const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
 type NavLink = {
@@ -26,7 +27,6 @@ type NavLink = {
   label: string;
   card: string;
   note: string;
-  spoken?: string;
 };
 const links: NavLink[] = [
   { href: `${base}/`, label: 'Home', card: 'nav-card-home', note: 'Back to the top' },
@@ -41,9 +41,7 @@ const links: NavLink[] = [
     href: `${base}/#season`,
     label: 'Season',
     card: 'nav-card-season',
-    note: 'Qualifier 1 · Qualifier 2 · States',
-    // Spoken version: the dots read as noise to a screen reader.
-    spoken: 'Qualifier 1, Qualifier 2, States',
+    note: 'Qualifiers and States',
   },
   {
     href: `${base}/#outreach`,
@@ -76,7 +74,7 @@ const links: NavLink[] = [
           <li class="nav-item" style={`--i:${i}`}>
             <a class="nav-box type-display" href={link.href} data-cursor-card={link.card}>
               {link.label}
-              <span class="sr-only">{link.spoken ?? link.note}</span>
+              <span class="sr-only">{link.note}</span>
             </a>
           </li>
         ))
@@ -115,21 +113,31 @@ const links: NavLink[] = [
 <style>
   /* The nav is the only stacking context in play here: fixed with a z-index,
      so the scrim, drawer, toggle and cards below sort among themselves and
-     the whole set sits above the page (and under the intro cover). Keep this
-     element free of transforms so the fixed cards stay pinned to the
-     viewport rather than to the nav. */
+     the whole set sits above the page (and under the intro cover, z 120).
+     Keep this element free of transforms so the fixed cards stay pinned to
+     the viewport rather than to the nav.
+
+     --nav-lock is the scrollbar width the page gives up while the drawer
+     holds it still (see the script). Carrying it here keeps the corner from
+     jumping right at the moment the scrollbar goes. */
   .nav-root {
     position: fixed;
-    right: 1.5rem;
+    right: calc(1.5rem + var(--nav-lock, 0px));
     bottom: 1.5rem;
     z-index: 95;
   }
 
   @media (max-width: 640px) {
     .nav-root {
-      right: 1rem;
+      right: calc(1rem + var(--nav-lock, 0px));
       bottom: 1rem;
     }
+  }
+
+  /* Without JS the button opens nothing, so it does not sit there pretending
+     to. The Footer's plain-text links carry navigation on those pages. */
+  :global(html.no-js) .nav-root {
+    display: none;
   }
 
   /* ---- Scrim ------------------------------------------------------ */
@@ -142,20 +150,21 @@ const links: NavLink[] = [
     opacity: 0;
     visibility: hidden;
     transition:
-      opacity 240ms ease,
-      visibility 0s linear 240ms;
+      opacity 220ms ease,
+      visibility 0s linear 220ms;
   }
 
   .nav-root[data-open='true'] .nav-scrim {
     opacity: 1;
     visibility: visible;
-    transition: opacity 320ms ease;
+    transition: opacity 300ms ease;
   }
 
   /* ---- Drawer ----------------------------------------------------- */
   /* Paper panel on the right edge. The light band set is declared here
      rather than inherited: this thing floats over black and light sections
-     both, so it has to bring its own. Descendants resolve indigo from it. */
+     both, so it has to bring its own. Same ramp as .band-light, so every
+     token-driven rule inside resolves indigo without a second sheet. */
   .nav-drawer {
     --color-ink: var(--color-surface);
     --color-muted: color-mix(in srgb, var(--color-surface) 62%, transparent);
@@ -164,30 +173,33 @@ const links: NavLink[] = [
 
     position: fixed;
     inset-block: 0;
-    right: 0;
+    right: var(--nav-lock, 0px);
     z-index: 2;
     display: flex;
     flex-direction: column;
     width: min(24rem, 88vw);
     /* Clears the toggle, which stays put and rides on top of the panel. */
     padding: 1.5rem 1.25rem 7rem;
-    background: var(--color-paper, #c9cfdd);
+    background: var(--color-paper);
     border-left: 1px solid var(--color-line);
     color: var(--color-ink);
+    /* Scrolls when the boxes outgrow a short viewport. The clip on x is
+       what keeps the closed boxes (held at 1.06) from asking for a
+       horizontal bar on the way in. */
     overflow-y: auto;
     overflow-x: clip;
     overscroll-behavior: contain;
     visibility: hidden;
     transform: translateX(100%);
     transition:
-      transform 300ms var(--ease-out-strong),
-      visibility 0s linear 300ms;
+      transform 260ms var(--ease-out-strong),
+      visibility 0s linear 260ms;
   }
 
   .nav-root[data-open='true'] .nav-drawer {
     visibility: visible;
     transform: none;
-    transition: transform 460ms var(--ease-out-strong);
+    transition: transform 420ms var(--ease-out-strong);
   }
 
   /* Centred while there is room, scrolled when there is not. */
@@ -214,21 +226,25 @@ const links: NavLink[] = [
     transform: scale(1.06);
     transition:
       transform 200ms var(--ease-out-strong),
-      opacity 200ms ease,
+      opacity 160ms ease,
       color 200ms ease;
   }
 
-  /* Each box zooms the last few percent home behind the sliding panel. */
+  /* Each box zooms the last few percent home behind the sliding panel. The
+     stagger is short enough that the seventh settles as the panel lands
+     (6 x 26ms + 300ms against the panel's 420ms), and transform outruns
+     opacity so it reads as a push in, not a fade. Going out, no delays: the
+     whole set leaves with the panel. */
   .nav-root[data-open='true'] .nav-box {
     opacity: 1;
     transform: none;
     transition:
-      transform 380ms var(--ease-out-strong),
-      opacity 260ms ease,
+      transform 300ms var(--ease-out-strong),
+      opacity 200ms ease,
       color 200ms ease;
     transition-delay:
-      calc(60ms + var(--i) * 35ms),
-      calc(60ms + var(--i) * 35ms),
+      calc(var(--i) * 26ms),
+      calc(var(--i) * 26ms),
       0ms;
   }
 
@@ -286,7 +302,7 @@ const links: NavLink[] = [
   }
 
   .nav-toggle:active {
-    transform: scale(0.94);
+    transform: scale(0.96);
   }
 
   @media (hover: hover) and (pointer: fine) {
@@ -314,7 +330,7 @@ const links: NavLink[] = [
     width: 100%;
     height: 2px;
     background: currentColor;
-    transition: transform 300ms var(--ease-out-strong);
+    transition: transform 280ms var(--ease-out-strong);
   }
 
   .nav-bar:first-child {
@@ -325,6 +341,7 @@ const links: NavLink[] = [
     bottom: 0;
   }
 
+  /* 6px carries each rule to the middle of the 14px box, then it turns. */
   .nav-root[data-open='true'] .nav-bar:first-child {
     transform: translateY(6px) rotate(45deg);
   }
@@ -334,41 +351,33 @@ const links: NavLink[] = [
   }
 
   /* ---- Hover cards ------------------------------------------------ */
-  /* .cursor-card (global.css) parks these fixed at 0,0 and motion.ts flies
-     them off the pointer. They sort inside the nav's stacking context, so
-     100 only has to beat the toggle, the drawer and the scrim. Paper and
-     indigo are set here for the same reason the drawer sets them: these tags
-     live outside every section. Two classes so the overrides win no matter
-     how the sheets order. */
+  /* Paper, indigo type, the hairline and the hidden resting state all come
+     from the base .cursor-card (global.css), which motion.ts then flies off
+     the pointer; only the small-tag scale is set here. The z-index sorts
+     inside .nav-root, so it has to beat the scrim, the panel and the toggle
+     and nothing else. */
   .cursor-card.nav-card {
-    --color-ink: var(--color-surface);
-    --color-line: color-mix(in srgb, var(--color-surface) 18%, transparent);
-
     z-index: 100;
     padding: 0.5rem 0.8rem;
-    background: var(--color-paper, #c9cfdd);
-    font-family: var(--font-text);
     font-size: 0.9375rem;
     line-height: 1.2;
-    color: var(--color-ink);
     white-space: nowrap;
   }
 
   /* ---- Reduced motion --------------------------------------------- */
-  /* The panel and its boxes swap on opacity alone: no slide, no zoom. The
-     mark still crosses, it just snaps. */
+  /* The panel, the scrim and the boxes just appear: no slide, no zoom, no
+     fade. The mark still crosses, it just snaps, and the press gives its
+     feedback in colour instead of a nudge. */
   @media (prefers-reduced-motion: reduce) {
-    .nav-drawer {
-      opacity: 0;
-      transform: none;
-      transition:
-        opacity 150ms ease,
-        visibility 0s linear 150ms;
+    .nav-scrim,
+    .nav-root[data-open='true'] .nav-scrim,
+    .nav-drawer,
+    .nav-root[data-open='true'] .nav-drawer {
+      transition: none;
     }
 
-    .nav-root[data-open='true'] .nav-drawer {
-      opacity: 1;
-      transition: opacity 150ms ease;
+    .nav-drawer {
+      transform: none;
     }
 
     .nav-box,
@@ -383,6 +392,16 @@ const links: NavLink[] = [
     .nav-bar {
       transition: none;
     }
+
+    .nav-toggle {
+      transition:
+        background-color 200ms ease,
+        border-color 200ms ease;
+    }
+
+    .nav-toggle:active {
+      transform: none;
+    }
   }
 </style>
 
@@ -390,6 +409,7 @@ const links: NavLink[] = [
   function initSiteNav() {
     const nav = document.getElementById('site-nav');
     if (!nav) return;
+    const root = document.documentElement;
     const toggle = nav.querySelector<HTMLButtonElement>('[data-nav-toggle]');
     const drawer = nav.querySelector<HTMLElement>('#nav-drawer');
     const scrim = nav.querySelector<HTMLElement>('[data-nav-scrim]');
@@ -397,20 +417,56 @@ const links: NavLink[] = [
     if (!toggle || !drawer) return;
 
     const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+    const engine = () => (window as any).__motion;
 
     const focusables = () => [...drawer.querySelectorAll<HTMLElement>('a[href]'), toggle];
+
+    // Holding the page still takes two locks. Lenis drives the wheel and
+    // then scrolls programmatically, which `overflow: hidden` does not stop,
+    // so it gets told to stand down; the overflow stops what Lenis never
+    // sees (touch drags, scrollbar drags, arrow keys). Losing the scrollbar
+    // widens the viewport, so its width goes back on as padding for the page
+    // and as --nav-lock for this component's fixed chrome: both land in the
+    // same frame as the overflow, so nothing visibly moves.
+    const holdPage = (hold: boolean) => {
+      const lenis = engine()?.lenis;
+      if (hold) {
+        const gutter = window.innerWidth - root.clientWidth;
+        root.style.setProperty('--nav-lock', `${gutter}px`);
+        if (gutter) root.style.paddingRight = `${gutter}px`;
+        root.style.overflow = 'hidden';
+        lenis?.stop?.();
+      } else {
+        root.style.overflow = '';
+        root.style.paddingRight = '';
+        root.style.removeProperty('--nav-lock');
+        lenis?.start?.();
+      }
+    };
 
     const setOpen = (open: boolean) => {
       nav.dataset.open = String(open);
       toggle.setAttribute('aria-expanded', String(open));
-      document.documentElement.style.overflow = open ? 'hidden' : '';
       if (srLabel) srLabel.textContent = open ? 'Close navigation' : 'Open navigation';
+      holdPage(open);
+
       if (open) {
         drawer.removeAttribute('inert');
         drawer.querySelector<HTMLAnchorElement>('a')?.focus({ preventScroll: true });
-      } else {
-        drawer.setAttribute('inert', '');
+        return;
       }
+
+      // Anything focused in the panel is about to go inert, and focus would
+      // fall back to the top of the document: hand it to the button first.
+      if (drawer.contains(document.activeElement)) toggle.focus({ preventScroll: true });
+      drawer.setAttribute('inert', '');
+      // The pointer can be left sitting where a box used to be. Browsers are
+      // uneven about firing pointerleave for something that slid out from
+      // under the cursor, and the descriptor card would hang on screen, so
+      // tell its rig plainly that the pointer is gone.
+      drawer
+        .querySelectorAll<HTMLElement>('[data-cursor-card]')
+        .forEach((el) => el.dispatchEvent(new PointerEvent('pointerleave')));
     };
 
     // Trailing slashes differ between dev, build and the base path.
@@ -419,29 +475,38 @@ const links: NavLink[] = [
 
     // Travel inside the page: Lenis when the motion engine is up, native
     // smooth scrolling when it is not, a hash jump as the floor.
+    //
+    // The finale sits under a curtain and says so with a negative
+    // scroll-margin-top (index.astro), which means an anchor has to land one
+    // viewport past the section's flow position. All three paths read
+    // scroll-margin, so all three land in the same place: Lenis subtracts it
+    // in scrollTo, and the other two are the browser doing it. No offset of
+    // our own goes on top, or #contact overshoots by a screen.
     const glideTo = (hash: string) => {
-      const lenis = (window as any).__motion?.lenis;
+      const lenis = engine()?.lenis;
       const behavior: ScrollBehavior = reduced.matches ? 'auto' : 'smooth';
+      const target = hash ? document.querySelector(hash) : null;
 
       if (!hash) {
-        if (lenis?.scrollTo) lenis.scrollTo(0, { offset: 0 });
+        // Home, on the home page: back to the top.
+        if (lenis?.scrollTo) lenis.scrollTo(0, { immediate: reduced.matches });
         else window.scrollTo({ top: 0, behavior });
+      } else if (!target) {
+        location.hash = hash; // not a section on this page after all
         return;
+      } else if (lenis?.scrollTo) {
+        lenis.scrollTo(target, { immediate: reduced.matches });
+      } else {
+        target.scrollIntoView({ behavior });
       }
 
-      const target = document.querySelector(hash);
-      if (!target) {
-        location.hash = hash;
-        return;
-      }
-      if (lenis?.scrollTo) lenis.scrollTo(hash, { offset: 0 });
-      else target.scrollIntoView({ behavior });
-
-      // Keyboard users land on the section instead of back at the top of
-      // the DOM, since the drawer they were in just went inert.
-      if (target instanceof HTMLElement) {
-        if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
-        target.focus({ preventScroll: true });
+      // Keyboard users land on the section instead of back at the top of the
+      // DOM, since the drawer they were in just went inert. Home has no
+      // section of its own, so it hands focus to the top of the content.
+      const landing = target ?? document.getElementById('main');
+      if (landing instanceof HTMLElement) {
+        if (!landing.hasAttribute('tabindex')) landing.setAttribute('tabindex', '-1');
+        landing.focus({ preventScroll: true });
       }
     };
 
@@ -451,7 +516,7 @@ const links: NavLink[] = [
     // means "put the menu away", and the toggle takes focus back.
     scrim?.addEventListener('click', () => {
       setOpen(false);
-      toggle.focus();
+      toggle.focus({ preventScroll: true });
     });
 
     drawer.addEventListener('click', (e) => {
@@ -464,7 +529,7 @@ const links: NavLink[] = [
       const here = samePath(url.pathname, location.pathname);
       if (here) e.preventDefault(); // a section on this page: never reload
       setOpen(false);
-      // A frame for the overflow lock to lift before anything measures.
+      // A frame for the scroll lock to lift before anything measures.
       if (here) requestAnimationFrame(() => glideTo(url.hash));
     });
 
@@ -472,21 +537,27 @@ const links: NavLink[] = [
       if (nav.dataset.open !== 'true') return;
       if (e.key === 'Escape') {
         setOpen(false);
-        toggle.focus();
+        toggle.focus({ preventScroll: true });
         return;
       }
+      if (e.key !== 'Tab') return;
+
       // Keep Tab inside the open drawer (links + the toggle).
-      if (e.key === 'Tab') {
-        const items = focusables();
-        const first = items[0];
-        const last = items[items.length - 1];
-        if (e.shiftKey && document.activeElement === first) {
-          e.preventDefault();
-          last.focus();
-        } else if (!e.shiftKey && document.activeElement === last) {
-          e.preventDefault();
-          first.focus();
-        }
+      const items = focusables();
+      const first = items[0];
+      const last = items[items.length - 1];
+      const at = items.indexOf(document.activeElement as HTMLElement);
+      if (at === -1) {
+        // Focus got out (a click on the scrim, a trip through browser
+        // chrome): pull it back rather than tab off into the frozen page.
+        e.preventDefault();
+        (e.shiftKey ? last : first).focus();
+      } else if (e.shiftKey && at === 0) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && at === items.length - 1) {
+        e.preventDefault();
+        first.focus();
       }
     });
   }
