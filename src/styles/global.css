@@ -215,6 +215,16 @@ body {
    ================================================================== */
 html.js [data-reveal] {
   opacity: 0;
+  /* The rescue: if the motion module never loads (bundle failure), nothing
+     would ever lift this opacity. The animation forces it after 4s; a booted
+     module writes inline opacity long before then, making this a no-op. */
+  animation: reveal-rescue 0s linear 4s forwards;
+}
+
+@keyframes reveal-rescue {
+  to {
+    opacity: 1;
+  }
 }
 
 /* Stay hidden until motion.ts clips each reveal in initReveals (which sets

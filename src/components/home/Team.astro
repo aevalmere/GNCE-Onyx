@@ -43,7 +43,7 @@ const slug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
                     : 'Rookie season, no previous teams.'}
                 </span>
                 <p class="roster-teams" aria-hidden="true">
-                  {member.teams.length ? member.teams.join(' · ') : 'Rookie season'}
+                  {member.teams.length ? member.teams.join(' · ') : 'Rookie'}
                 </p>
               </div>
             </Reveal>
@@ -64,7 +64,7 @@ const slug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
             </p>
           ))
         ) : (
-          <p class="card-rookie">Rookie season</p>
+          <p class="card-rookie">Rookie</p>
         )}
       </div>
     ))
