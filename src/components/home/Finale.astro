@@ -1,0 +1,152 @@
+---
+/**
+ * Finale — the page's ending on the indigo band: contact and footer merged.
+ * Nothing follows it (BaseLayout's footer is suppressed on home), so it has
+ * to arrive as a sequence rather than land as a slab: the headline splits in,
+ * then the contact wave (three channel rows, then the form), then the quieter
+ * footer wave (nav row rippling across, identity, small print). Two separate
+ * reveal groups, never nested, so the second wave waits for its own scroll.
+ */
+import Reveal from '../Reveal.astro';
+
+const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
+
+/* `pending` marks the value as a .stub (an unknown we still have to fill in). */
+const channels: { label: string; value: string; pending?: string }[] = [
+  { label: 'Email', value: '[placeholder]@gmail.com', pending: 'Email pending' },
+  { label: 'Instagram', value: '@placeholder', pending: 'Handle pending' },
+  { label: 'Find us', value: 'Weston High School, Weston, MA' },
+];
+
+/* Plain-text section list: the no-JS fallback for the gear menu. */
+const links = [
+  { href: `${base}/`, label: 'Home' },
+  { href: '#lineage', label: 'Lineage' },
+  { href: '#team', label: 'Team' },
+  { href: '#season', label: 'Season' },
+  { href: '#outreach', label: 'Outreach' },
+  { href: '#sponsors', label: 'Sponsors' },
+];
+---
+
+<section id="contact" class="finale">
+  <div class="mx-auto max-w-5xl px-5 pt-28 pb-16 sm:px-8 sm:pt-36 sm:pb-20">
+    <h2 class="finale-head type-display" data-split>Get in touch</h2>
+    <Reveal variant="up" class="mt-8 max-w-prose">
+      <p class="text-muted">Sponsorship, questions, or joining the team. Email is fastest.</p>
+    </Reveal>
+
+    <!-- Contact wave: channel rows cascade, the form button lands last. -->
+    <div class="mt-14 sm:mt-16" data-reveal-group>
+      <dl class="hairline border-t">
+        {
+          channels.map((c) => (
+            <Reveal
+              variant="up"
+              class="hairline grid gap-x-8 gap-y-1 border-b py-4 sm:grid-cols-[11rem_1fr] sm:items-baseline"
+            >
+              <dt class="type-label text-muted">{c.label}</dt>
+              <dd class="channel-value">
+                {c.pending ? (
+                  <span class="stub" title={c.pending}>
+                    {c.value}
+                  </span>
+                ) : (
+                  c.value
+                )}
+              </dd>
+            </Reveal>
+          ))
+        }
+      </dl>
+
+      <Reveal variant="up" class="mt-10 flex flex-wrap items-center gap-x-6 gap-y-3">
+        <a href="#" class="btn btn-solid" title="Form link pending" data-magnetic="0.35">
+          Open the form
+        </a>
+        <span class="form-note type-label stub" title="Form link pending">Link pending</span>
+      </Reveal>
+    </div>
+
+    <!-- Footer wave: same rhythm, half the voice. -->
+    <footer class="hairline mt-20 border-t pt-12 sm:mt-24" data-reveal-group>
+      <nav aria-label="Sections">
+        <ul class="foot-links">
+          {
+            links.map((link) => (
+              <Reveal as="li" variant="up">
+                <a class="foot-link type-label" href={link.href}>
+                  {link.label}
+                </a>
+              </Reveal>
+            ))
+          }
+        </ul>
+      </nav>
+
+      <Reveal variant="up" class="mt-12">
+        <p class="foot-name type-display">GNCE Onyx</p>
+        <p class="type-label mt-3 text-muted">
+          FIRST Tech Challenge team <span class="stub" title="Team number pending">#XXXXX</span>
+        </p>
+        <p class="type-label mt-1 text-muted">Weston High School, Weston, MA</p>
+      </Reveal>
+
+      <Reveal
+        variant="up"
+        class="type-label hairline mt-10 flex flex-wrap justify-between gap-x-8 gap-y-2 border-t pt-6 text-muted"
+      >
+        <p>© 2026 GNCE Onyx</p>
+        <p>Rookie season: 2026-2027 BIOBUZZ</p>
+      </Reveal>
+    </footer>
+  </div>
+</section>
+
+<style>
+  /* Full-bleed indigo band, hard machined edge, no gradient. */
+  .finale {
+    background: var(--color-surface);
+  }
+
+  /* The last headline on the page, so it gets the biggest type. */
+  .finale-head {
+    font-size: clamp(2.75rem, 10vw, 7rem);
+  }
+
+  .channel-value {
+    margin: 0;
+    color: var(--color-ink);
+  }
+
+  .form-note {
+    color: var(--color-muted);
+  }
+
+  .foot-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 2rem;
+  }
+
+  .foot-link {
+    color: var(--color-muted);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    padding-bottom: 0.15rem;
+    transition:
+      color 200ms ease,
+      border-color 200ms ease;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .foot-link:hover {
+      color: var(--color-ink);
+      border-color: var(--color-accent);
+    }
+  }
+
+  .foot-name {
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+  }
+</style>
