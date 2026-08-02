@@ -2,7 +2,7 @@
 /**
  * BaseLayout — the single shared shell for every page.
  *
- * Owns: fonts, global styles, the intro cover (once per session), the
+ * Owns: fonts, global styles, the intro cover (every load), the
  * scroll heat rail, cross-page view transitions, GearNav, footer, and
  * the motion engine that drives every scroll animation
  * (see src/scripts/motion.ts).
@@ -23,11 +23,14 @@ interface Props {
   description?: string;
   /** The home page ends in its own contact section, so it skips the Footer. */
   hideFooter?: boolean;
+  /** Paper page: the whole document runs the light band scheme (blog). */
+  light?: boolean;
 }
 const {
   title,
   description = 'GNCE Onyx: a rookie FIRST Tech Challenge team at Weston High School, built by veterans of four GNCE squads, competing in the 2026-2027 BIOBUZZ season.',
   hideFooter = false,
+  light = false,
 } = Astro.props;
 const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
 ---
@@ -52,52 +55,43 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
           setTimeout(function () {
             document.documentElement.classList.remove('will-animate');
           }, 2600);
-          // Intro cover: once per session. The load meter (just below
-          // <body>) counts up with real font loading and lifts the cover
-          // itself; this timeout is only a last resort so the cover can
-          // never get stuck if that script fails to run.
-          if (!sessionStorage.getItem('intro-seen')) {
-            document.documentElement.classList.add('loading');
-            setTimeout(function () {
-              document.documentElement.classList.remove('loading');
-              try {
-                sessionStorage.setItem('intro-seen', '1');
-              } catch (e) {
-                /* storage blocked */
-              }
-            }, 4500);
-          }
+          // Intro cover, every load. The load meter (just below <body>)
+          // counts up with real font loading and lifts the cover itself;
+          // this timeout is only a last resort so the cover can never get
+          // stuck if that script fails to run.
+          document.documentElement.classList.add('loading');
+          setTimeout(function () {
+            document.documentElement.classList.remove('loading');
+          }, 4500);
         }
       } catch (e) {
         /* storage blocked: skip the loader */
       }
     </script>
   </head>
-  <body class="min-h-svh bg-bg text-ink antialiased">
+  <body class:list={['min-h-svh antialiased', light ? 'band-light' : 'bg-bg text-ink']}>
     <a class="skip-link" href="#main">Skip to content</a>
 
-    <!-- Intro cover: a load meter counts up in time with the fonts, then
-         the cover lifts into the hero's entrance. Skipped after first view. -->
+    <!-- Intro cover: one centered count that climbs in time with the
+         fonts, then the cover lifts into the hero's entrance. -->
     <div class="intro" data-intro aria-hidden="true">
       <div class="intro-loader">
         <p class="intro-count">
           <span class="intro-num" data-intro-num>0</span><span class="intro-pct">%</span>
         </p>
-        <div class="intro-gauge"><span class="intro-gauge-fill" data-intro-fill></span></div>
       </div>
     </div>
 
     <!-- Drives the load meter from real font loading (the "text"). Inline
          so counting starts during parse, before the motion module loads,
          and still runs if that module fails. Only active while the cover
-         is up (html.loading), so reduced-motion / repeat visits skip it. -->
+         is up (html.loading), so reduced motion skips it. -->
     <script is:inline>
       (function () {
         var root = document.documentElement;
         if (!root.classList.contains('loading')) return;
         var numEl = document.querySelector('[data-intro-num]');
-        var fillEl = document.querySelector('[data-intro-fill]');
-        if (!numEl || !fillEl) return;
+        if (!numEl) return;
 
         // Real progress: the fraction of the site's font faces that have
         // loaded. document.fonts.ready is the definitive "text is ready".
@@ -140,11 +134,6 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
         function lift() {
           if (done) return;
           done = true;
-          try {
-            sessionStorage.setItem('intro-seen', '1');
-          } catch (e) {
-            /* storage blocked */
-          }
           setTimeout(function () {
             window.__introDone = true;
             root.classList.remove('loading');
@@ -162,12 +151,10 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
           if (shown < 0) shown = 0;
           if (shown >= 1) {
             numEl.textContent = '100';
-            fillEl.style.transform = 'scaleX(1)';
             lift();
             return;
           }
           numEl.textContent = String(Math.max(0, Math.round(shown * 100)));
-          fillEl.style.transform = 'scaleX(' + shown.toFixed(4) + ')';
           requestAnimationFrame(frame);
         }
         requestAnimationFrame(frame);
@@ -233,7 +220,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
         font-family: var(--font-text);
         font-weight: 700;
         line-height: 0.9;
-        color: var(--color-ink);
+        color: var(--color-paper); /* pinned: the cover is black even on paper pages */
         font-variant-numeric: tabular-nums lining-nums;
         font-feature-settings: 'tnum' 1, 'lnum' 1;
       }
@@ -249,7 +236,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
       .intro-pct {
         margin-left: 0.12em;
         font-size: clamp(1.25rem, 4vw, 2.25rem);
-        color: var(--color-muted);
+        color: color-mix(in srgb, var(--color-paper) 60%, transparent);
         transform: translateY(115%);
       }
 
@@ -257,23 +244,6 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
       :global(html.loading) .intro-num,
       :global(html.loading) .intro-pct {
         animation: intro-rise 620ms var(--ease-out-strong) 120ms both;
-      }
-
-      /* Hairline gauge; the crimson fill is driven by the meter script. */
-      .intro-gauge {
-        width: clamp(180px, 30vw, 340px);
-        height: 2px;
-        background: var(--color-line);
-      }
-
-      .intro-gauge-fill {
-        display: block;
-        height: 100%;
-        width: 100%;
-        background: var(--color-accent);
-        transform: scaleX(0);
-        transform-origin: 0 50%;
-        will-change: transform;
       }
 
       @keyframes intro-rise {

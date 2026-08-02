@@ -494,6 +494,12 @@ const links: NavLink[] = [
       } else if (!target) {
         location.hash = hash; // not a section on this page after all
         return;
+      } else if (hash === '#lineage' && document.querySelector('[data-cover-wipe]')) {
+        // Lineage sits pinned under the hero's cover wipe, so measuring the
+        // element is position-dependent (its sticky offset moves). The wipe
+        // always ends exactly one viewport down; land there.
+        if (lenis?.scrollTo) lenis.scrollTo(window.innerHeight, { immediate: reduced.matches });
+        else window.scrollTo({ top: window.innerHeight, behavior });
       } else if (lenis?.scrollTo) {
         lenis.scrollTo(target, { immediate: reduced.matches });
       } else {

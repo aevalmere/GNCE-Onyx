@@ -72,6 +72,7 @@ function boot() {
         initCursorCards();
       }
       // scenes (each no-ops if its element is absent)
+      initCoverWipe();
       initJourney();
       initHorizontalReveal();
       initHScroll();
@@ -551,6 +552,29 @@ function initCursorCards() {
         },
       });
     });
+  });
+}
+
+/* ================================================================== */
+/* SCENE: cover wipe (home). [data-cover-wipe]'s hero pins at the top   */
+/* and slides off to the LEFT, scroll-locked, while the section beneath */
+/* sits already pinned in place (geometry in index.astro). Transform    */
+/* only; the sticky release does the rest.                              */
+/* ================================================================== */
+function initCoverWipe() {
+  const wrap = document.querySelector<HTMLElement>('[data-cover-wipe]');
+  const cover = wrap?.firstElementChild as HTMLElement | null;
+  if (!wrap || !cover) return;
+  gsap.to(cover, {
+    xPercent: -100,
+    ease: 'none',
+    scrollTrigger: {
+      trigger: wrap,
+      start: 'top top',
+      end: () => `+=${window.innerHeight}`,
+      scrub: 0.4,
+      invalidateOnRefresh: true,
+    },
   });
 }
 

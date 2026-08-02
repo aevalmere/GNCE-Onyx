@@ -26,8 +26,12 @@ import Finale from '../components/home/Finale.astro';
   hideFooter
 >
   <div class="curtain">
-    <Hero />
-    <Lineage />
+    <div class="cover-wrap" data-cover-wipe>
+      <Hero />
+    </div>
+    <div class="under-wrap">
+      <Lineage />
+    </div>
     <Team />
     <Build />
     <Season />
@@ -46,6 +50,52 @@ import Finale from '../components/home/Finale.astro';
     position: relative;
     z-index: 2;
     background: var(--color-bg);
+  }
+
+  /* The cover wipe: the hero pins for one viewport while motion.ts slides
+     it off to the LEFT, with Lineage already pinned in place beneath it;
+     both release together and the page scrolls on normally. Mirrors the
+     finale curtain, rotated ninety degrees. Gated behind html.gsap so
+     reduced motion and no-JS get plain flow. */
+  :global(html.gsap) .cover-wrap {
+    position: relative;
+    z-index: 2;
+  }
+
+  :global(html.gsap) .cover-wrap > :global(.hero) {
+    position: sticky;
+    top: 0;
+    background: var(--color-bg);
+    will-change: transform;
+  }
+
+  /* One viewport of sticky travel: the wipe's scroll distance. */
+  :global(html.gsap) .cover-wrap::after {
+    content: '';
+    display: block;
+    height: 100svh;
+  }
+
+  :global(html.gsap) .under-wrap {
+    position: relative;
+    z-index: 1;
+    /* Pulled fully under the cover: Lineage's flow top lands at the very
+       top of the document, pinned there while the hero wipes off it. */
+    margin-top: -200svh;
+  }
+
+  :global(html.gsap) .under-wrap > :global(#lineage) {
+    position: sticky;
+    top: 0;
+    /* Anchor jumps land where the wipe has finished, one viewport past
+       Lineage's flow position. */
+    scroll-margin-top: -100svh;
+  }
+
+  :global(html.gsap) .under-wrap::after {
+    content: '';
+    display: block;
+    height: 100svh;
   }
 
   /* Pulled one viewport under the curtain; the sticky finale holds still

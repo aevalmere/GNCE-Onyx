@@ -26,48 +26,31 @@ the team number, and contact handles are still marked placeholders.
 ```
 src/
 ├── layouts/
-│   └── BaseLayout.astro   # Shared shell: nav, footer, smooth scroll, reveals
+│   └── BaseLayout.astro   # Shared shell: nav, footer, intro cover, motion
 ├── components/
-│   ├── GearNav.astro      # Gear + full-screen menu (the centerpiece)
+│   ├── home/              # The eight one-page sections
+│   ├── GearNav.astro      # Corner toggle + right-side drawer nav
 │   ├── Reveal.astro       # Scroll-driven entrance wrapper
-│   ├── Placeholder.astro  # Marks every Lorem Ipsum slot
+│   ├── Placeholder.astro  # Invisible marker for open content slots
 │   ├── SectionLabel.astro # Small-caps section labels
-│   └── Footer.astro       # Plain-link nav fallback
+│   └── Footer.astro       # Small-print bar (blog + lab pages)
 ├── pages/
-│   ├── index.astro        # Home / Welcome
-│   ├── season.astro       # Season Recap (first season)
-│   ├── outreach/          # Blog: index + one page per post
-│   └── contact.astro      # Contact + Donate (link + channels)
+│   ├── index.astro        # The whole site, one scrolling page
+│   └── outreach/          # One page per blog post
 ├── content/
 │   └── blog/              # Blog posts (one .md file per post)
 └── styles/
-    └── global.css         # Design tokens, textures, reveal system
+    └── global.css         # Design tokens, bands, textures, reveal system
 ```
 
 ## Blog
 
-The Outreach page is a blog. Each post is one markdown file in
-`src/content/blog/` with `title`, `date`, `description` (and optional
-`author`) frontmatter; the filename becomes the URL. The full walkthrough is
-the "How to post" post itself (`src/content/blog/how-to-post.md`). Delete
-that post once real ones exist.
-
-Views, likes, and comments need two free accounts (config in
-`src/lib/services.ts`; the site shows marked stubs until these are set):
-
-1. **giscus** (comments + likes). Enable Discussions on this repo
-   (Settings → General → Features), install the giscus app
-   (github.com/apps/giscus) for the repo, then open giscus.app, enter the
-   repo, pick the "Blog comments" category (create it as an Announcements
-   category in Discussions), and copy the `repoId` and `categoryId` values
-   into `src/lib/services.ts`.
-2. **GoatCounter** (view counts). Create a site at goatcounter.com, then put
-   your site code in `src/lib/services.ts`.
-
-Comment safety: commenting requires GitHub sign-in, which blocks anonymous
-spam. Everything posted lands in this repo's Discussions tab, where the team
-can delete comments, report users, or lock a thread. Check it when a post
-gets traffic.
+The Outreach section of the home page lists the blog. Each post is one
+markdown file in `src/content/blog/` with `title`, `date`, `description`
+(and optional `author`) frontmatter; the filename becomes the URL
+(`/outreach/<filename>/`). Photos go in `public/`; reference them as
+`![alt](/GNCE-Onyx/photo-name.jpg)`. Post pages run the paper scheme with
+a back button; there are no comments or view counters.
 
 ## Dropping in remaining content
 

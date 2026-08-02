@@ -167,8 +167,9 @@ boxes just appear.
 
 Markdown collection in `src/content/blog/`. The home Outreach section lists
 posts as line-hover rows; `outreach/[id].astro` renders a post in
-`.post-body` with a `ViewCounter` (GoatCounter) and `Comments` (giscus),
-both stubbed until IDs are set in `src/lib/services.ts` (see README).
+`.post-body`. Post pages run the paper scheme (`light` on BaseLayout):
+back button, date, title, body, small-print footer. No comments, no
+view counts.
 
 ## Component inventory
 
@@ -180,7 +181,6 @@ both stubbed until IDs are set in `src/lib/services.ts` (see README).
 | `components/Reveal.astro` | `[data-reveal]` wrapper. |
 | `components/GearNav.astro` | Corner toggle (two rules that cross) + right-side drawer: paper panel, boxed links that zoom in, cursor-card descriptors, Lenis smooth anchors. Old filename, no gear. |
 | `components/Placeholder.astro` / `SectionLabel.astro` / `Footer.astro` | Invisible slot markers / label / footer (blog + lab pages only). |
-| `components/ViewCounter.astro` / `Comments.astro` | Blog views / comments, stub until configured. |
 
 ## Conventions
 

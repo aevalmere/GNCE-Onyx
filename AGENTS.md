@@ -60,7 +60,6 @@ Manage the background server with `astro dev stop`, `astro dev status`, and `ast
   text only, no inner markup). See `DESIGN.md` "Motion engine".
 - Blog: posts are markdown in `src/content/blog/` (collection defined in
   `src/content.config.ts`), rendered by `src/pages/outreach/[id].astro`.
-  Comments/views services are configured in `src/lib/services.ts`.
 
 ## Placeholder convention (important)
 

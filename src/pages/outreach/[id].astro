@@ -1,13 +1,12 @@
 ---
 /**
  * Blog post page. One route per markdown file in src/content/blog/.
- * Header → post body → views + comments (giscus).
+ * A paper page: back button, date, title, body. The shared Footer is the
+ * small-print bar.
  */
 import { getCollection, render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import Comments from '../../components/Comments.astro';
 import Reveal from '../../components/Reveal.astro';
-import ViewCounter from '../../components/ViewCounter.astro';
 
 export async function getStaticPaths() {
   const posts = await getCollection('blog');
@@ -24,49 +23,39 @@ const dateStr = post.data.date.toLocaleDateString('en-US', {
 });
 ---
 
-<BaseLayout title={post.data.title} description={post.data.description}>
+<BaseLayout title={post.data.title} description={post.data.description} light>
   <div class="read-progress" data-progress aria-hidden="true"></div>
 
   <article>
     <!-- POST HEADER -->
-    <header class="bg-bg pt-36 pb-16 sm:pt-44">
+    <header class="pt-32 pb-12 sm:pt-40">
       <div class="mx-auto max-w-3xl px-5 sm:px-8">
         <Reveal>
-          <p class="type-label text-muted">
-            <a class="back-link" href={`${base}/#outreach`}>Outreach</a>
-            <span class="text-accent" aria-hidden="true">·</span>
-            {dateStr}
+          <p>
+            <a class="back" href={`${base}/#outreach`} data-magnetic="0.25">
+              <span class="back-arrow" aria-hidden="true">&larr;</span>
+              <span class="back-label type-label">Outreach</span>
+            </a>
           </p>
         </Reveal>
 
-        <h1 class="type-display mt-6 text-[clamp(2rem,6vw,4.5rem)]" data-split>
+        <Reveal delay={90} class="mt-10">
+          <p class="type-label text-muted">{dateStr}</p>
+        </Reveal>
+
+        <h1 class="type-display mt-4 text-[clamp(2rem,6vw,4.5rem)]" data-split>
           {post.data.title}
         </h1>
-
-        <Reveal delay={160} class="mt-6 flex flex-wrap items-baseline gap-x-6 gap-y-2">
-          {post.data.author && (
-            <p class="type-label text-muted">By {post.data.author}</p>
-          )}
-          <ViewCounter />
-        </Reveal>
       </div>
     </header>
 
     <!-- POST BODY -->
-    <div class="bg-bg pb-16">
+    <div class="pb-24 sm:pb-32">
       <div class="post-body mx-auto max-w-3xl px-5 sm:px-8">
         <Content />
       </div>
     </div>
   </article>
-
-  <!-- COMMENTS -->
-  <section class="hairline border-t bg-bg py-16 sm:py-20">
-    <div class="mx-auto max-w-3xl px-5 sm:px-8">
-      <h2 class="type-label mb-8 text-muted">Comments</h2>
-      <Comments />
-    </div>
-  </section>
 </BaseLayout>
 
 <style>
@@ -82,19 +71,40 @@ const dateStr = post.data.date.toLocaleDateString('en-US', {
     transform-origin: 0 0;
   }
 
-  .back-link {
-    color: var(--color-muted);
+  /* Back button: the arrow leads, the word follows. Magnetic pull comes
+     from motion.ts; the arrow slide is the hover's own beat. */
+  .back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.4rem 0;
+    color: var(--color-ink);
     text-decoration: none;
-    border-bottom: 1px solid transparent;
-    transition:
-      color 200ms ease,
-      border-color 200ms ease;
+  }
+
+  .back-arrow {
+    font-size: 1.25rem;
+    line-height: 1;
+    transition: transform 300ms var(--ease-out-strong);
+  }
+
+  .back-label {
+    transition: color 200ms ease;
   }
 
   @media (hover: hover) and (pointer: fine) {
-    .back-link:hover {
-      color: var(--color-ink);
-      border-color: var(--color-ink);
+    .back:hover .back-arrow {
+      transform: translateX(-0.4rem);
+    }
+
+    .back:hover .back-label {
+      color: var(--color-accent);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .back-arrow {
+      transition: none;
     }
   }
 </style>
