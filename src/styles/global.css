@@ -3,7 +3,9 @@
 /* ==================================================================
    GNCE ONYX — design tokens
    Six colors only: black, space indigo, twilight indigo, shadow grey,
-   grape soda, pale slate.
+   grape soda, pale slate. Pale slate works both ends: ink on the black
+   bands, paper under the light ones (see PAPER below), so the count
+   holds at six.
    No idle glows. No gradient fills. Motion and solid color carry the
    life; texture is grain and (non-gradient) frosted glass, used sparingly.
    Type: Uncial Antiqua (display), Grey Qo (script accent), Cardo (body).
@@ -17,9 +19,10 @@
 
   /* Color — the six values + pale slate alphas */
   --color-bg: #000000; /* black — the page */
-  --color-surface: #10254F; /* space indigo — full-bleed section bands */
+  --color-surface: #10254F; /* space indigo — text on paper, small fills */
   --color-panel: #303D6A; /* twilight indigo — glass, raised surfaces */
   --color-steel: #2B2C33; /* shadow grey — media slots, code frames */
+  --color-paper: #C9CFDD; /* pale slate as a surface — light bands, cursor cards */
   --color-line: color-mix(in srgb, #C9CFDD 14%, transparent);
   --color-ink: #C9CFDD; /* pale slate */
   --color-muted: color-mix(in srgb, #C9CFDD 60%, transparent);
@@ -137,13 +140,14 @@ body {
   border: 1px solid var(--color-line);
 }
 
-/* Empty media frame awaiting real content (photos, video). */
+/* Empty media frame awaiting real content (photos, video). No outline: a
+   flat steel field reads as a plate waiting for a picture, where an outlined
+   one reads as an empty box. */
 .slot {
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--color-steel);
-  border: 1px solid var(--color-line);
 }
 
 .hairline {
@@ -160,6 +164,35 @@ body {
 .stub {
   border-bottom: 1px dashed color-mix(in srgb, var(--color-accent) 60%, transparent);
   cursor: help;
+}
+
+/* ==================================================================
+   PAPER — the light bands
+   Space indigo stopped being a background: the alternate bands are pale
+   slate now, with indigo as the type. A paper surface flips the whole ink
+   ramp in place, so every token-driven rule (Tailwind utilities included)
+   follows without a second stylesheet. Sections opt in with .band-light;
+   the cursor cards carry the same paper wherever they float. Grape and
+   shadow grey do not move.
+   ================================================================== */
+.band-light,
+.cursor-card {
+  /* Same ramp shape as the dark one, inverted: full, 62, 40, 18. */
+  --color-ink: var(--color-surface);
+  --color-muted: color-mix(in srgb, var(--color-surface) 62%, transparent);
+  --color-faint: color-mix(in srgb, var(--color-surface) 40%, transparent);
+  --color-line: color-mix(in srgb, var(--color-surface) 18%, transparent);
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+}
+
+/* Selection keeps its grape fill, but the letters on that fill have to stay
+   pale: with the ramp flipped, the global rule would paint indigo on grape
+   and the words disappear. */
+.band-light::selection,
+.band-light ::selection {
+  background: var(--color-accent);
+  color: var(--color-paper);
 }
 
 /* ==================================================================
@@ -247,6 +280,8 @@ html.will-animate .station-letter {
    CURSOR CARDS — hover detail that rides the pointer instead of sitting
    in the layout. Authored anywhere in the page, parked hidden here;
    motion.ts shows one and drives its transform on pointer-fine devices.
+   Paper fill and indigo ink come from the PAPER rule above: the card is a
+   paper tag, the same on a black band or a light one.
    ================================================================== */
 .cursor-card {
   position: fixed;
@@ -254,8 +289,9 @@ html.will-animate .station-letter {
   left: 0;
   z-index: 90;
   padding: 0.9rem 1.1rem;
-  background: var(--color-panel);
-  border: 1px solid var(--color-line);
+  /* A step past a band hairline (18%), because this edge is what holds the
+     tag's shape when it floats over paper. */
+  border: 1px solid color-mix(in srgb, var(--color-surface) 30%, transparent);
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -311,6 +347,33 @@ html.no-js .cursor-card {
 
   .btn-solid:hover {
     filter: brightness(1.2);
+  }
+}
+
+/* A grape fill keeps pale letters even where the ink ramp flipped to indigo:
+   indigo on grape is 2:1 and the label disappears. */
+.band-light .btn-solid {
+  color: var(--color-paper);
+}
+
+/* A button can wear the .stub mark itself (the form link is still pending).
+   .btn's border shorthand outruns .stub, so the dash is redrawn here, and on
+   a grape fill it switches to paper where a grape dash would be nothing. */
+.btn.stub {
+  border-bottom: 1px dashed color-mix(in srgb, var(--color-accent) 60%, transparent);
+}
+
+.btn-solid.stub {
+  border-bottom-color: color-mix(in srgb, var(--color-paper) 60%, transparent);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .band-light .btn:hover {
+    color: var(--color-paper);
+  }
+
+  .btn.stub:hover {
+    border-bottom-color: color-mix(in srgb, var(--color-paper) 60%, transparent);
   }
 }
 

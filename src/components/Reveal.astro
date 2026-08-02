@@ -27,7 +27,7 @@ const Tag = as as 'div';
 <Tag
   class={cls}
   data-reveal={variant}
-  style={delay ? `--reveal-delay:${delay}ms` : undefined}
+  data-reveal-delay={delay || undefined}
 >
   {
     variant === 'clip' ? (

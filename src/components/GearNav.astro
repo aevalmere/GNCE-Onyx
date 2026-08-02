@@ -1,16 +1,21 @@
 ---
 /**
- * GearNav — the gear and the menu behind it.
+ * GearNav — the corner toggle and the drawer behind it. (The file keeps its
+ * old name; the gear itself is gone.)
  *
- * The site's only persistent chrome: a gear pinned to the bottom-right
- * corner that turns with scroll, like it's driving the page. Tapping it
- * opens a full-screen menu of display-type lines that rise in with a
- * stagger. The gear stays on top and closes it.
+ * The site's only persistent chrome: a small machined square pinned to the
+ * bottom-right corner, two rules stacked inside it. Press it and the rules
+ * cross into a close mark while a paper panel slides in from the right edge
+ * over a black scrim. The seven links are hairline boxes that zoom the last
+ * few percent into place as the panel lands.
  *
- * The site is one page, so every line but Home is a section anchor: the
- * click handler closes the menu and hands the trip to Lenis instead of
- * reloading. Hovering a line floats a small card off the cursor saying
- * what is down there.
+ * The nav floats over black and light sections alike, so it carries the
+ * light band set itself (indigo type on paper) instead of inheriting one.
+ *
+ * The site is one page, so every link but Home is a section anchor: the
+ * click handler closes the drawer and hands the trip to Lenis instead of
+ * reloading. Hovering a box floats a small card off the cursor saying what
+ * is down there.
  *
  * Blog posts and the lab page still carry the Footer's plain-text links,
  * so navigation survives without JS.
@@ -59,88 +64,61 @@ const links: NavLink[] = [
     note: 'Email or Instagram',
   },
 ];
-
-// A uniform cog: a solid disc with evenly-spaced scallops cut into the
-// rim (circular silhouette, no teeth sticking out) plus a center bore.
-function gearPath(notches: number, r: number, notchR: number, boreR: number) {
-  const circle = (cx: number, cy: number, rad: number) =>
-    `M ${(cx + rad).toFixed(2)},${cy.toFixed(2)} ` +
-    `A ${rad},${rad} 0 1 0 ${(cx - rad).toFixed(2)},${cy.toFixed(2)} ` +
-    `A ${rad},${rad} 0 1 0 ${(cx + rad).toFixed(2)},${cy.toFixed(2)} Z`;
-  let d = circle(0, 0, r);
-  const step = (Math.PI * 2) / notches;
-  for (let i = 0; i < notches; i++) {
-    const a = i * step;
-    d += ' ' + circle(Math.cos(a) * r, Math.sin(a) * r, notchR);
-  }
-  d += ' ' + circle(0, 0, boreR);
-  return d;
-}
-const gear = gearPath(12, 27, 3.6, 8.5);
 ---
 
-<nav class="gear-nav" id="gear-nav" data-open="false" aria-label="Site">
-  <div class="gear-menu" id="gear-menu" inert>
-    <ul class="gear-menu-list">
+<nav class="nav-root" id="site-nav" data-open="false" aria-label="Site">
+  <div class="nav-scrim" data-nav-scrim aria-hidden="true"></div>
+
+  <div class="nav-drawer" id="nav-drawer" data-lenis-prevent inert>
+    <ul class="nav-list">
       {
         links.map((link, i) => (
-          <li class="gear-menu-item" style={`--i:${i}`}>
-            <span class="gear-menu-mask">
-              <a class="gear-menu-link type-display" href={link.href} data-cursor-card={link.card}>
-                {link.label}
-                <span class="sr-only">{link.spoken ?? link.note}</span>
-              </a>
-            </span>
+          <li class="nav-item" style={`--i:${i}`}>
+            <a class="nav-box type-display" href={link.href} data-cursor-card={link.card}>
+              {link.label}
+              <span class="sr-only">{link.spoken ?? link.note}</span>
+            </a>
           </li>
         ))
       }
     </ul>
-
-    <div class="gear-menu-foot type-label">
-      <p>
-        GNCE Onyx · Team <span class="stub" title="Team number pending">#XXXXX</span>
-      </p>
-      <p>Weston High School</p>
-    </div>
-
-    <!-- Cursor cards: fixed, so their spot in the markup is free. Each one
-         repeats what its link already says in sr-only text, which is why
-         they are decoration to assistive tech. -->
-    {
-      links.map((link) => (
-        <p class="cursor-card nav-card" id={link.card} aria-hidden="true">
-          {link.note}
-        </p>
-      ))
-    }
   </div>
 
-  <span class="gear-hint type-label" aria-hidden="true">Menu</span>
-
   <button
-    class="gear-toggle"
+    class="nav-toggle"
     type="button"
     aria-expanded="false"
-    aria-controls="gear-menu"
-    data-gear-toggle
+    aria-controls="nav-drawer"
+    data-nav-toggle
   >
-    <span class="gear-spin">
-      <svg
-        viewBox="-32 -32 64 64"
-        width="34"
-        height="34"
-        aria-hidden="true"
-        data-gear-svg
-      >
-        <path d={gear} fill="currentColor" fill-rule="evenodd"></path>
-      </svg>
+    <span class="nav-mark" aria-hidden="true">
+      <span class="nav-bar"></span>
+      <span class="nav-bar"></span>
     </span>
     <span class="sr-only">Open navigation</span>
   </button>
+
+  <!-- Cursor cards: fixed, and parked here as siblings of the drawer on
+       purpose. The drawer slides on a transform, and a transform would make
+       it the containing block for anything fixed inside it, which would drag
+       these along with the panel. Each one repeats what its link already says
+       in sr-only text, which is why they are decoration to assistive tech. -->
+  {
+    links.map((link) => (
+      <p class="cursor-card nav-card" id={link.card} aria-hidden="true">
+        {link.note}
+      </p>
+    ))
+  }
 </nav>
 
 <style>
-  .gear-nav {
+  /* The nav is the only stacking context in play here: fixed with a z-index,
+     so the scrim, drawer, toggle and cards below sort among themselves and
+     the whole set sits above the page (and under the intro cover). Keep this
+     element free of transforms so the fixed cards stay pinned to the
+     viewport rather than to the nav. */
+  .nav-root {
     position: fixed;
     right: 1.5rem;
     bottom: 1.5rem;
@@ -148,145 +126,227 @@ const gear = gearPath(12, 27, 3.6, 8.5);
   }
 
   @media (max-width: 640px) {
-    .gear-nav {
+    .nav-root {
       right: 1rem;
       bottom: 1rem;
     }
   }
 
-  /* ---- Toggle ---------------------------------------------------- */
-  .gear-toggle {
-    position: relative;
+  /* ---- Scrim ------------------------------------------------------ */
+  /* Black over the page, and the second way out of the drawer. */
+  .nav-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    background: color-mix(in srgb, var(--color-bg) 55%, transparent);
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 240ms ease,
+      visibility 0s linear 240ms;
+  }
+
+  .nav-root[data-open='true'] .nav-scrim {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 320ms ease;
+  }
+
+  /* ---- Drawer ----------------------------------------------------- */
+  /* Paper panel on the right edge. The light band set is declared here
+     rather than inherited: this thing floats over black and light sections
+     both, so it has to bring its own. Descendants resolve indigo from it. */
+  .nav-drawer {
+    --color-ink: var(--color-surface);
+    --color-muted: color-mix(in srgb, var(--color-surface) 62%, transparent);
+    --color-faint: color-mix(in srgb, var(--color-surface) 40%, transparent);
+    --color-line: color-mix(in srgb, var(--color-surface) 18%, transparent);
+
+    position: fixed;
+    inset-block: 0;
+    right: 0;
     z-index: 2;
+    display: flex;
+    flex-direction: column;
+    width: min(24rem, 88vw);
+    /* Clears the toggle, which stays put and rides on top of the panel. */
+    padding: 1.5rem 1.25rem 7rem;
+    background: var(--color-paper, #c9cfdd);
+    border-left: 1px solid var(--color-line);
+    color: var(--color-ink);
+    overflow-y: auto;
+    overflow-x: clip;
+    overscroll-behavior: contain;
+    visibility: hidden;
+    transform: translateX(100%);
+    transition:
+      transform 300ms var(--ease-out-strong),
+      visibility 0s linear 300ms;
+  }
+
+  .nav-root[data-open='true'] .nav-drawer {
+    visibility: visible;
+    transform: none;
+    transition: transform 460ms var(--ease-out-strong);
+  }
+
+  /* Centred while there is room, scrolled when there is not. */
+  .nav-list {
+    margin: auto 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* Boxes share the pixel between them instead of stacking into a 2px rule. */
+  .nav-item + .nav-item {
+    margin-top: -1px;
+  }
+
+  .nav-box {
+    position: relative;
+    display: block;
+    padding: 1.1rem 1.25rem;
+    border: 1px solid var(--color-line);
+    font-size: clamp(1.45rem, 4.8vw, 1.8rem);
+    color: var(--color-ink);
+    text-decoration: none;
+    opacity: 0;
+    transform: scale(1.06);
+    transition:
+      transform 200ms var(--ease-out-strong),
+      opacity 200ms ease,
+      color 200ms ease;
+  }
+
+  /* Each box zooms the last few percent home behind the sliding panel. */
+  .nav-root[data-open='true'] .nav-box {
+    opacity: 1;
+    transform: none;
+    transition:
+      transform 380ms var(--ease-out-strong),
+      opacity 260ms ease,
+      color 200ms ease;
+    transition-delay:
+      calc(60ms + var(--i) * 35ms),
+      calc(60ms + var(--i) * 35ms),
+      0ms;
+  }
+
+  /* Hover moves nothing: a grape rule runs up the inside edge and the word
+     follows it. A box that grew would shove its neighbours and make the card
+     riding the cursor flicker. */
+  .nav-box::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--color-accent);
+    transform: scaleY(0);
+    transform-origin: 50% 100%;
+    transition: transform 240ms var(--ease-out-strong);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .nav-box:hover {
+      color: var(--color-accent);
+    }
+
+    .nav-box:hover::before {
+      transform: scaleY(1);
+    }
+  }
+
+  .nav-box:focus-visible {
+    color: var(--color-accent);
+  }
+
+  .nav-box:focus-visible::before {
+    transform: scaleY(1);
+  }
+
+  /* ---- Toggle ----------------------------------------------------- */
+  /* Two rules in an indigo square. Open, they cross. */
+  .nav-toggle {
+    position: relative;
+    z-index: 3;
     display: grid;
     place-items: center;
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
+    width: 56px;
+    height: 56px;
     border: 1px solid var(--color-line);
     background: var(--color-surface);
     color: var(--color-ink);
     cursor: pointer;
     transition:
       transform 160ms var(--ease-out-strong),
-      border-color 200ms ease,
-      color 200ms ease;
+      background-color 200ms ease,
+      border-color 200ms ease;
   }
 
-  .gear-toggle:active {
+  .nav-toggle:active {
     transform: scale(0.94);
   }
 
-  .gear-nav[data-open='true'] .gear-toggle {
-    border-color: var(--color-accent);
-    color: var(--color-accent);
-  }
-
-  .gear-spin {
-    display: grid;
-    place-items: center;
-    transition: transform 300ms var(--ease-spring);
-  }
-
-  .gear-nav[data-open='true'] .gear-spin {
-    transform: rotate(45deg);
-  }
-
   @media (hover: hover) and (pointer: fine) {
-    .gear-toggle:hover {
+    .nav-toggle:hover {
+      background: var(--color-accent);
       border-color: var(--color-accent);
-      color: var(--color-accent);
-    }
-
-    .gear-nav[data-open='false'] .gear-toggle:hover .gear-spin {
-      transform: rotate(15deg);
     }
   }
 
-  .gear-hint {
+  .nav-root[data-open='true'] .nav-toggle {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+  }
+
+  .nav-mark {
+    position: relative;
+    display: block;
+    width: 22px;
+    height: 14px;
+  }
+
+  .nav-bar {
     position: absolute;
-    right: calc(100% + 0.75rem);
-    top: 50%;
-    translate: 0 -50%;
-    z-index: 2;
-    color: var(--color-muted);
-    white-space: nowrap;
-    transition: opacity 200ms ease;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: currentColor;
+    transition: transform 300ms var(--ease-out-strong);
   }
 
-  .gear-nav[data-open='true'] .gear-hint {
-    opacity: 0;
+  .nav-bar:first-child {
+    top: 0;
   }
 
-  /* ---- Full-screen menu ------------------------------------------ */
-  .gear-menu {
-    position: fixed;
-    inset: 0;
-    z-index: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: clamp(1.25rem, 4vw, 4rem);
-    background: var(--color-bg);
-    opacity: 0;
-    visibility: hidden;
-    transition:
-      opacity 220ms ease,
-      visibility 0s linear 220ms;
+  .nav-bar:last-child {
+    bottom: 0;
   }
 
-  .gear-nav[data-open='true'] .gear-menu {
-    opacity: 1;
-    visibility: visible;
-    transition: opacity 260ms ease;
+  .nav-root[data-open='true'] .nav-bar:first-child {
+    transform: translateY(6px) rotate(45deg);
   }
 
-  .gear-menu-list {
-    margin: 0;
-    padding: 0;
-    list-style: none;
+  .nav-root[data-open='true'] .nav-bar:last-child {
+    transform: translateY(-6px) rotate(-45deg);
   }
 
-  /* Each line rises out of its own mask. Flex so the link is only as wide
-     as its own word: the hover target (and the card that rides it) belongs
-     to the text, not to the empty half of the row. */
-  .gear-menu-mask {
-    display: flex;
-    overflow: hidden;
-  }
-
-  .gear-menu-link {
-    padding: 0.25rem 0;
-    font-size: clamp(1.75rem, 6.2vh, 3.75rem);
-    color: var(--color-ink);
-    text-decoration: none;
-    transform: translateY(110%);
-    transition:
-      transform 480ms var(--ease-out-strong),
-      color 200ms ease;
-  }
-
-  .gear-nav[data-open='true'] .gear-menu-link {
-    transform: translateY(0);
-    transition-delay: calc(80ms + var(--i) * 45ms), 0ms;
-  }
-
-  /* Colour only. The line must not slide under the pointer: the card it
-     carries would flicker every time the word stepped out from the cursor. */
-  @media (hover: hover) and (pointer: fine) {
-    .gear-menu-link:hover {
-      color: var(--color-accent);
-    }
-  }
-
-  /* ---- Hover cards ----------------------------------------------- */
-  /* .cursor-card (global.css) parks these fixed at 0,0 and motion.ts
-     flies them off the pointer. The menu is its own stacking context, so
-     this z-index only has to beat the list and the foot, both static.
-     Two classes so the overrides win no matter how the sheets order. */
+  /* ---- Hover cards ------------------------------------------------ */
+  /* .cursor-card (global.css) parks these fixed at 0,0 and motion.ts flies
+     them off the pointer. They sort inside the nav's stacking context, so
+     100 only has to beat the toggle, the drawer and the scrim. Paper and
+     indigo are set here for the same reason the drawer sets them: these tags
+     live outside every section. Two classes so the overrides win no matter
+     how the sheets order. */
   .cursor-card.nav-card {
+    --color-ink: var(--color-surface);
+    --color-line: color-mix(in srgb, var(--color-surface) 18%, transparent);
+
     z-index: 100;
     padding: 0.5rem 0.8rem;
+    background: var(--color-paper, #c9cfdd);
     font-family: var(--font-text);
     font-size: 0.9375rem;
     line-height: 1.2;
@@ -294,49 +354,51 @@ const gear = gearPath(12, 27, 3.6, 8.5);
     white-space: nowrap;
   }
 
-  .gear-menu-foot {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 0.5rem 2rem;
-    margin-top: clamp(1.5rem, 6vh, 3.5rem);
-    padding-top: 1rem;
-    border-top: 1px solid var(--color-line);
-    color: var(--color-muted);
-  }
-
+  /* ---- Reduced motion --------------------------------------------- */
+  /* The panel and its boxes swap on opacity alone: no slide, no zoom. The
+     mark still crosses, it just snaps. */
   @media (prefers-reduced-motion: reduce) {
-    .gear-spin,
-    .gear-menu,
-    .gear-nav[data-open='true'] .gear-menu {
-      transition: opacity 180ms ease;
+    .nav-drawer {
+      opacity: 0;
+      transform: none;
+      transition:
+        opacity 150ms ease,
+        visibility 0s linear 150ms;
     }
 
-    .gear-menu-link,
-    .gear-nav[data-open='true'] .gear-menu-link {
+    .nav-root[data-open='true'] .nav-drawer {
+      opacity: 1;
+      transition: opacity 150ms ease;
+    }
+
+    .nav-box,
+    .nav-root[data-open='true'] .nav-box {
+      opacity: 1;
       transform: none;
       transition: color 200ms ease;
       transition-delay: 0ms;
+    }
+
+    .nav-box::before,
+    .nav-bar {
+      transition: none;
     }
   }
 </style>
 
 <script>
-  function initGearNav() {
-    const nav = document.getElementById('gear-nav');
+  function initSiteNav() {
+    const nav = document.getElementById('site-nav');
     if (!nav) return;
-    const toggle = nav.querySelector<HTMLButtonElement>('[data-gear-toggle]');
-    const menu = nav.querySelector<HTMLElement>('#gear-menu');
-    const gearSvg = nav.querySelector<SVGElement>('[data-gear-svg]');
+    const toggle = nav.querySelector<HTMLButtonElement>('[data-nav-toggle]');
+    const drawer = nav.querySelector<HTMLElement>('#nav-drawer');
+    const scrim = nav.querySelector<HTMLElement>('[data-nav-scrim]');
     const srLabel = toggle?.querySelector<HTMLElement>('.sr-only');
-    if (!toggle || !menu) return;
+    if (!toggle || !drawer) return;
 
     const reduced = matchMedia('(prefers-reduced-motion: reduce)');
 
-    const focusables = () => [
-      ...menu.querySelectorAll<HTMLElement>('a[href]'),
-      toggle,
-    ];
+    const focusables = () => [...drawer.querySelectorAll<HTMLElement>('a[href]'), toggle];
 
     const setOpen = (open: boolean) => {
       nav.dataset.open = String(open);
@@ -344,10 +406,10 @@ const gear = gearPath(12, 27, 3.6, 8.5);
       document.documentElement.style.overflow = open ? 'hidden' : '';
       if (srLabel) srLabel.textContent = open ? 'Close navigation' : 'Open navigation';
       if (open) {
-        menu.removeAttribute('inert');
-        menu.querySelector<HTMLAnchorElement>('a')?.focus({ preventScroll: true });
+        drawer.removeAttribute('inert');
+        drawer.querySelector<HTMLAnchorElement>('a')?.focus({ preventScroll: true });
       } else {
-        menu.setAttribute('inert', '');
+        drawer.setAttribute('inert', '');
       }
     };
 
@@ -376,7 +438,7 @@ const gear = gearPath(12, 27, 3.6, 8.5);
       else target.scrollIntoView({ behavior });
 
       // Keyboard users land on the section instead of back at the top of
-      // the DOM, since the menu they were in just went inert.
+      // the DOM, since the drawer they were in just went inert.
       if (target instanceof HTMLElement) {
         if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
         target.focus({ preventScroll: true });
@@ -385,10 +447,17 @@ const gear = gearPath(12, 27, 3.6, 8.5);
 
     toggle.addEventListener('click', () => setOpen(nav.dataset.open !== 'true'));
 
-    menu.addEventListener('click', (e) => {
+    // The scrim is the page, still visible behind the panel: clicking it
+    // means "put the menu away", and the toggle takes focus back.
+    scrim?.addEventListener('click', () => {
+      setOpen(false);
+      toggle.focus();
+    });
+
+    drawer.addEventListener('click', (e) => {
       const link = (e.target as HTMLElement).closest<HTMLAnchorElement>('a[href]');
       if (!link) return;
-      // Cmd/ctrl/shift-click belongs to the browser: leave the menu up.
+      // Cmd/ctrl/shift-click belongs to the browser: leave the drawer up.
       if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
 
       const url = new URL(link.href, location.href);
@@ -406,7 +475,7 @@ const gear = gearPath(12, 27, 3.6, 8.5);
         toggle.focus();
         return;
       }
-      // Keep Tab inside the open menu (links + the gear button).
+      // Keep Tab inside the open drawer (links + the toggle).
       if (e.key === 'Tab') {
         const items = focusables();
         const first = items[0];
@@ -420,27 +489,7 @@ const gear = gearPath(12, 27, 3.6, 8.5);
         }
       }
     });
-
-    // Gear rotates with scroll — transform only, applied inside rAF.
-    if (gearSvg && !reduced.matches) {
-      let queued = false;
-      const spin = () => {
-        queued = false;
-        gearSvg.style.transform = `rotate(${(window.scrollY * 0.22).toFixed(2)}deg)`;
-      };
-      window.addEventListener(
-        'scroll',
-        () => {
-          if (!queued) {
-            queued = true;
-            requestAnimationFrame(spin);
-          }
-        },
-        { passive: true }
-      );
-      spin();
-    }
   }
 
-  initGearNav();
+  initSiteNav();
 </script>
