@@ -3,6 +3,12 @@
  * Blog post page. One route per markdown file in src/content/blog/.
  * A paper page: back button, date, title, body. The shared Footer is the
  * small-print bar.
+ *
+ * This is the deep link and the no-JS route; on the home page the same
+ * post opens as a popup instead (Outreach.astro). The two share a header,
+ * down to the long dateline and the title's size, so arriving either way
+ * looks like arriving at the same post. Only the way out differs: a back
+ * button here, a close control there.
  */
 import { getCollection, render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
@@ -43,7 +49,7 @@ const dateStr = post.data.date.toLocaleDateString('en-US', {
           <p class="type-label text-muted">{dateStr}</p>
         </Reveal>
 
-        <h1 class="type-display mt-4 text-[clamp(2rem,6vw,4.5rem)]" data-split>
+        <h1 class="type-display mt-4 text-[clamp(2rem,5vw,3.75rem)]" data-split>
           {post.data.title}
         </h1>
       </div>

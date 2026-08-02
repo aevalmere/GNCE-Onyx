@@ -1,5 +1,5 @@
 ---
-title: Summer Robotics Seminar, August 15
+title: Summer Robotics Seminar
 date: 2026-08-02
 description: A free afternoon at the Weston Public Library built around ninety minutes of hands-on CAD, with no robotics experience needed.
 author: GNCE Onyx

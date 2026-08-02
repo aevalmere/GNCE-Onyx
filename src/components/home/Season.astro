@@ -3,10 +3,17 @@
  * Season — the rookie season, one row per event.
  *
  * Each event is a hairline-ruled display row that opens into its own panel:
- * the highlight frame and a full-width gallery. Hovering a row floats that
- * event's poster on the pointer (motion.ts cursor cards); opening the row
- * flies that same poster off the cursor into the highlight frame, so the
- * hover and the panel are visibly one object.
+ * the event's poster over a full-width gallery. One panel at a time, so the
+ * reader is never two events deep. Hovering a row floats that event's poster
+ * on the pointer (motion.ts cursor cards); opening the row flies that same
+ * poster off the cursor into the panel, so the hover and the panel are one
+ * object rather than two pictures of it.
+ *
+ * That single object is the rule the whole section is built to: nothing waits
+ * for the poster in the panel (no frame, no plate, just background until it
+ * lands), an open row stops raising its hover poster, and the hand-offs at
+ * both ends of the flight happen inside one frame. The artwork exists in
+ * exactly one place at every instant.
  *
  * Nothing has happened yet, so every block is a marked slot and the poster is
  * the stand-in art. The accordion runs on its own script (below) rather than
@@ -66,8 +73,8 @@ const galleryCols = [
               data-open="false"
             >
               <div class="event-panel-inner">
-                <Placeholder name={`season-${e.key}-highlight`} class="p-3 sm:p-4">
-                  <div class="slot highlight-frame aspect-video">
+                <Placeholder name={`season-${e.key}-highlight`}>
+                  <div class="highlight-frame aspect-video">
                     <span class="poster poster-lg" data-season-dest>
                       <span class="poster-rule" aria-hidden="true"></span>
                       <span class="poster-name type-display">{e.name}</span>
@@ -75,7 +82,7 @@ const galleryCols = [
                   </div>
                 </Placeholder>
 
-                <Placeholder name={`season-${e.key}-gallery`} class="p-3 sm:p-5">
+                <Placeholder name={`season-${e.key}-gallery`} class="py-3 sm:py-5">
                   <div class="gallery">
                     {galleryCols.map((col) => (
                       <div class="gallery-col" data-drift={col.drift}>
@@ -314,7 +321,11 @@ const galleryCols = [
     inset: 0;
   }
 
-  /* The frame is the box the panel poster measures its em against. */
+  /* Not a frame: an empty box with no fill, no edge and nothing in it until
+     the poster arrives. It holds the landing size (the panel's full width at
+     16:9) and it is what the poster measures its em against, and that is all
+     it does. A plate here would be a second steel rectangle sitting in the
+     poster's own shape while the poster flies toward it. */
   .highlight-frame {
     position: relative;
     container-type: inline-size;
@@ -404,15 +415,36 @@ const galleryCols = [
     if (!section) return;
 
     const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+
     // Panels change the page's height, so the scroll scenes need remeasuring.
-    // It runs once, at the end of the whole sequence: a refresh mid-flight
-    // can reflow the page and move the frame out from under the poster.
-    const refresh = () => (window as any).__motion?.ScrollTrigger?.refresh();
+    // Once per interaction, at the end of it, and never while a poster is in
+    // the air: a refresh can reflow the page and move the frame out from
+    // under the flier. Every row shares this sky and this timer, so opening
+    // one event while another sweeps shut still costs exactly one refresh.
+    const airborne = new Set<HTMLElement>();
+    let settleTimer = 0;
+    const settle = () => {
+      clearTimeout(settleTimer);
+      settleTimer = window.setTimeout(() => {
+        if (airborne.size) return settle(); // still flying: ask again
+        (window as any).__motion?.ScrollTrigger?.refresh();
+      }, 140);
+    };
 
     // The box is open and at rest well before the poster seats into it, and
     // both ends of the sequence come to rest on the same family of curve.
     const PANEL = 0.58;
     const FLIGHT = 0.7;
+    const SHUT = 0.5; // asked to close: the box shuts with its own weight
+    const SWEPT = 0.42; // pushed shut by another row: a response, so quicker
+
+    type Row = {
+      btn: HTMLButtonElement;
+      isOpen: () => boolean;
+      expand: () => void;
+      collapse: (swept?: boolean) => void;
+    };
+    const rows: Row[] = [];
 
     section.querySelectorAll<HTMLButtonElement>('[data-season-toggle]').forEach((btn) => {
       const panel = document.getElementById(btn.getAttribute('aria-controls') || '');
@@ -452,20 +484,29 @@ const galleryCols = [
         gsap.set(card, { autoAlpha: 0, scale: 0.92 });
       };
 
+      /* Ghosts leave the page through here and nowhere else: the airborne
+         list is what holds the refresh back, so none of them may drop off
+         it quietly. */
+      const dropGhost = () => {
+        if (!ghost) return;
+        gsap.killTweensOf(ghost);
+        airborne.delete(ghost);
+        ghost.remove();
+        ghost = null;
+      };
+
       const clearFlight = () => {
-        if (ghost) {
-          gsap.killTweensOf(ghost);
-          ghost.remove();
-          ghost = null;
-        }
+        dropGhost();
         if (dest) {
           gsap.killTweensOf(dest);
           gsap.set(dest, { clearProps: 'visibility,clipPath' });
         }
       };
 
-      /* No card to hand off from (keyboard, touch): the frame wipes in behind
-         the opening panel. A clip, never a fade. */
+      /* No card to hand off from (keyboard, touch): the poster wipes itself
+         in behind the opening panel, off its own left edge and onto bare
+         background. A clip, never a fade, and nothing was standing there
+         waiting for it. */
       const wipe = () => {
         const el = dest;
         if (!el) return;
@@ -506,11 +547,16 @@ const galleryCols = [
         g.style.cssText =
           'position:absolute;left:0;top:0;right:auto;bottom:auto;margin:0;z-index:90;' +
           `pointer-events:none;width:${d.width}px;height:${d.height}px;--poster-em:${em}px;`;
+        // Order is the whole trick, and all of it is one task, so the page
+        // paints none of the in-between states: the card went down in
+        // hideCard, the real poster goes down here, the flier goes up, and
+        // only then does anything reach the screen. Hidden rather than
+        // removed, so the box it will land in keeps its exact geometry and
+        // the swap back at the end has nothing to move.
+        gsap.set(el, { visibility: 'hidden' });
         deck.appendChild(g);
         ghost = g;
-        // Hidden, not removed: the frame keeps its steel plate under the
-        // flier, and the swap back at the end has nothing to move.
-        gsap.set(el, { visibility: 'hidden' });
+        airborne.add(g);
 
         // Where the clone's own origin landed, measured rather than assumed:
         // the row's border and the page's scroll are both already in it.
@@ -518,11 +564,15 @@ const galleryCols = [
         const seatX = d.left - o.left;
         const seatY = d.top - o.top;
 
+        // The landing, also one task: the real poster comes back on the same
+        // frame the flier leaves, at the same size in the same place, so the
+        // hand-off has neither two posters nor a gap with none.
         const done = () => {
           gsap.set(el, { clearProps: 'visibility' });
+          airborne.delete(g);
           g.remove();
           if (ghost === g) ghost = null;
-          refresh();
+          settle();
         };
 
         gsap.fromTo(
@@ -576,21 +626,29 @@ const galleryCols = [
       };
 
       const expand = () => {
+        // Read before the flag flips: shut, CSS holds the box at 0; caught
+        // mid-collapse, this is the height it is actually at, so a reopened
+        // panel carries on from there instead of dropping back to nothing.
+        const from = panel.offsetHeight;
         btn.setAttribute('aria-expanded', 'true');
+        // The row's poster is leaving the row. Hover stays down for as long
+        // as that is true, which is not the same as "while open": see the
+        // capture listener at the end of this file.
+        btn.dataset.posterOut = '';
         gsap.killTweensOf(panel);
         panel.dataset.open = 'true';
 
         if (reduced.matches) {
           clearFlight();
           gsap.set(panel, { clearProps: 'height' });
-          refresh();
+          settle();
           return;
         }
 
-        // Measure at the panel's finished height first: the frame has to be
-        // measured where it lands, not where the growing box has it now.
-        // Content is top-anchored under the clip, so that position holds for
-        // the whole tween.
+        // Measure at the panel's finished height first: the landing spot has
+        // to be measured where it lands, not where the growing box has it
+        // now. Content is top-anchored under the clip, so that position
+        // holds for the whole tween.
         gsap.set(panel, { height: 'auto' });
         const full = panel.offsetHeight;
 
@@ -604,29 +662,36 @@ const galleryCols = [
 
         gsap.fromTo(
           panel,
-          { height: 0 },
+          { height: from },
           {
             height: full,
             duration: PANEL,
             ease: 'power3.out',
             onComplete: () => {
               gsap.set(panel, { clearProps: 'height' });
-              // A poster still in the air refreshes when it lands.
-              if (!ghost) refresh();
+              settle();
             },
           }
         );
       };
 
-      const collapse = () => {
+      const collapse = (swept = false) => {
         btn.setAttribute('aria-expanded', 'false');
         gsap.killTweensOf(panel);
         clearFlight();
 
+        // The poster is home only when the panel has actually shut, so that
+        // is when the row gets its hover back. Flip it with aria and a row
+        // sweeping closed under the pointer would raise its own poster on
+        // the cursor while the same poster is still visible in the closing
+        // box: the one duplicate the whole section is built to avoid.
+        const release = () => delete btn.dataset.posterOut;
+
         if (reduced.matches) {
           panel.dataset.open = 'false';
           gsap.set(panel, { clearProps: 'height' });
-          refresh();
+          release();
+          settle();
           return;
         }
 
@@ -635,23 +700,70 @@ const galleryCols = [
           { height: panel.offsetHeight },
           {
             height: 0,
-            duration: 0.5,
-            ease: 'power3.inOut',
+            duration: swept ? SWEPT : SHUT,
+            // Asked for, it shuts with weight; swept aside by another row it
+            // gets out of the way at once and lets the opening row lead.
+            ease: swept ? 'power3.out' : 'power3.inOut',
             onComplete: () => {
               // Handed back to CSS only once the box is actually shut.
               panel.dataset.open = 'false';
               gsap.set(panel, { clearProps: 'height' });
-              refresh();
+              release();
+              settle();
             },
           }
         );
       };
 
-      btn.addEventListener('click', () => {
-        if (btn.getAttribute('aria-expanded') === 'true') collapse();
-        else expand();
+      rows.push({
+        btn,
+        isOpen: () => btn.getAttribute('aria-expanded') === 'true',
+        expand,
+        collapse,
       });
     });
+
+    // One event at a time. Opening a second sweeps the first shut on its own
+    // curve, so the reader is never two panels deep and the page never grows
+    // taller than the section it belongs to. Both rows report themselves
+    // honestly the moment they are asked to: the closing one is closed as
+    // far as anything reading the page is concerned, the animation is only
+    // the picture of it.
+    rows.forEach((row) => {
+      row.btn.addEventListener('click', () => {
+        if (row.isOpen()) {
+          row.collapse();
+          return;
+        }
+        rows.forEach((other) => {
+          if (other !== row && other.isOpen()) other.collapse(true);
+        });
+        row.expand();
+      });
+    });
+
+    /* A row whose poster is out of the row must not raise a second copy of
+       it on the pointer. motion.ts binds pointerenter on the row itself and
+       is not ours to edit, so the event is caught here, one level up, in the
+       capture phase, and stopped before the row's own listener is reached.
+       Clearing data-cursor-card instead would do nothing: motion.ts read
+       that attribute once at boot and its handler closes over the card it
+       found then. Nothing here touches the card, the handler or the state
+       either of them keeps, so the first hover after the panel shuts runs
+       exactly as it always did, from a card that is still resting where the
+       pointer left it. Only pointerenter is swallowed: pointerleave has to
+       get through, or a card handed over mid-flight would never be released,
+       and pointermove only nudges an already hidden box. */
+    section.addEventListener(
+      'pointerenter',
+      (e) => {
+        const row = e.target;
+        if (row instanceof HTMLElement && row.matches('[data-season-toggle][data-poster-out]')) {
+          e.stopPropagation();
+        }
+      },
+      true
+    );
   }
 
   initSeason();
