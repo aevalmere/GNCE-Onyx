@@ -8,10 +8,10 @@ import Reveal from '../Reveal.astro';
 ---
 
 <section class="hero" aria-label="GNCE Onyx">
-  <div class="mx-auto w-full max-w-5xl px-5 sm:px-8">
+  <div class="mx-auto w-full max-w-[88rem] px-5 sm:px-8">
     <Reveal variant="up" delay={70}><p class="hero-script type-script">GNCE Onyx</p></Reveal>
     <h1 class="hero-title type-display mt-4" data-split="intro">A rookie team of championship veterans.</h1>
-    <Reveal variant="up" delay={110} class="mt-12">
+    <Reveal variant="up" delay={110} class="mt-12 sm:mt-14">
       <p class="hero-cta">
         <a href="#sponsors" class="btn btn-solid" data-magnetic="0.4">Sponsor the team</a>
         <a href="#season" class="hero-link">Our first season</a>
@@ -29,15 +29,19 @@ import Reveal from '../Reveal.astro';
   }
 
   .hero-script {
-    font-size: clamp(2.5rem, 6vw, 3.6rem);
+    font-size: clamp(2.5rem, 6vw, 4rem);
     color: var(--color-accent);
     line-height: 0.9;
   }
 
+  /* The headline owns the wide measure: it scales until it breaks into two
+     long lines across the 88rem column, so a 1920 viewport gets a headline
+     and not a headline with a field of black beside it. The ch cap is what
+     forces that second line; without it the sentence would run on. */
   .hero-title {
-    font-size: clamp(2.25rem, 5.5vw, 4.25rem);
+    font-size: clamp(2.25rem, 6.2vw, 6rem);
     line-height: 1.03;
-    max-width: 24ch;
+    max-width: 25ch;
   }
 
   .hero-cta {

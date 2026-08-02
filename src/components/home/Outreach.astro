@@ -38,8 +38,8 @@ const longDate = (d: Date) =>
 ---
 
 <section id="outreach" class="band-light">
-  <div class="mx-auto max-w-5xl px-5 pt-24 pb-14 sm:px-8 sm:pt-32 sm:pb-16">
-    <h2 class="type-display text-[clamp(2.5rem,7vw,5.5rem)]" data-split>Outreach</h2>
+  <div class="mx-auto max-w-[88rem] px-5 pt-24 pb-14 sm:px-8 sm:pt-32 sm:pb-16">
+    <h2 class="type-display text-[clamp(2.5rem,7vw,6.5rem)]" data-split>Outreach</h2>
   </div>
 
   <!-- TICKER: the kinds of events we run, geared to the scroll -->
@@ -55,7 +55,7 @@ const longDate = (d: Date) =>
   </div>
 
   <!-- POSTS: line-hover rows, wiping in from alternating sides -->
-  <div class="mx-auto max-w-5xl px-5 py-20 sm:px-8 sm:py-24">
+  <div class="mx-auto max-w-[88rem] px-5 py-20 sm:px-8 sm:py-24">
     <div data-reveal-group>
       {
         entries.map(({ post }, i) => (
@@ -80,8 +80,8 @@ const longDate = (d: Date) =>
   </div>
 
   <!-- THE ASK: we want to be at their event, not the other way round -->
-  <div class="mx-auto max-w-5xl px-5 pb-24 sm:px-8 sm:pb-32">
-    <h3 class="type-display text-[clamp(2rem,5vw,3.75rem)]" data-split>
+  <div class="mx-auto max-w-[88rem] px-5 pb-24 sm:px-8 sm:pb-32">
+    <h3 class="type-display text-[clamp(2rem,5vw,5rem)]" data-split>
       Got an event? We want in.
     </h3>
     <Reveal variant="up" delay={90} class="mt-10">
@@ -131,7 +131,7 @@ const longDate = (d: Date) =>
      padding is descender room, since the track is clipped. */
   .marquee {
     overflow: clip;
-    padding-block: 1rem;
+    padding-block: clamp(1rem, 1.6vw, 1.5rem);
   }
 
   .marquee-track {
@@ -140,9 +140,13 @@ const longDate = (d: Date) =>
     will-change: transform;
   }
 
+  /* The cap has to keep one run wider than the viewport: the track holds two
+     copies and wraps at half its width, so a run narrower than the screen
+     opens a hole in the ticker. 4.5vw is the rate that already clears it, and
+     the cap only lets it stop growing past a very wide screen. */
   .marquee-run {
     white-space: nowrap;
-    font-size: clamp(1.9rem, 4.5vw, 3.1rem);
+    font-size: clamp(1.9rem, 4.5vw, 4.5rem);
     line-height: 1.1;
     color: transparent;
     -webkit-text-stroke: 1px color-mix(in srgb, var(--color-ink) 48%, transparent);
@@ -161,12 +165,13 @@ const longDate = (d: Date) =>
      so a row can never slide out from under the pointer, and the movement
      is a transform rather than the padding this used to animate. */
   .post-row {
+    --row-pad: 2rem;
     position: relative;
     display: grid;
     grid-template-columns: 9rem 1fr;
     gap: 0 2rem;
     align-items: baseline;
-    padding: 2rem 0;
+    padding: var(--row-pad) 0;
     text-decoration: none;
     color: var(--color-ink);
   }
@@ -180,7 +185,7 @@ const longDate = (d: Date) =>
   .post-marker {
     position: absolute;
     left: 0;
-    top: 2.35rem;
+    top: calc(var(--row-pad) + 0.35rem);
     width: 1.25rem;
     height: 2px;
     background: var(--color-accent);
@@ -196,7 +201,7 @@ const longDate = (d: Date) =>
 
   .post-title {
     display: block;
-    font-size: clamp(1.5rem, 3vw, 2.25rem);
+    font-size: clamp(1.5rem, 3vw, 2.5rem);
     line-height: 1.1;
     transition: color 200ms ease;
   }
@@ -212,6 +217,31 @@ const longDate = (d: Date) =>
     .post-row {
       grid-template-columns: 1fr;
       gap: 0.5rem 0;
+    }
+  }
+
+  /* On the wide band the row stops stacking and reads across: date, title,
+     then the line about it, first baselines level, so a post is one entry in
+     a ledger instead of a block with a paragraph hanging under it. The extra
+     row padding buys back the height the side-by-side gives up. */
+  @media (min-width: 64rem) {
+    .post-row {
+      --row-pad: 2.5rem;
+      grid-template-columns: 10rem 1fr;
+      gap: 0 2.5rem;
+    }
+
+    .post-body-col {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+      gap: 0 clamp(2rem, 4vw, 4rem);
+      align-items: baseline;
+    }
+
+    .post-desc {
+      margin-top: 0;
+      max-width: 52ch;
+      font-size: 1rem;
     }
   }
 
