@@ -129,21 +129,23 @@ trick per section:
   with each member's previous teams (static fallback on touch).
 - **Build** (`#build`): one short blurb, a connective beat.
 - **Season** (`#season`): collapsible event rows (Qualifier 1 / Qualifier 2
-  / States / More to come); the hover poster flies from the cursor card
-  into the highlight frame on open, then a cross-drift gallery. Accordion
-  logic lives in the component's own script. The flight is being refined to
-  a seamless single-object scale: poster and destination share one aspect
-  ratio, one tween, and no visible hand-off, so it reads as the same object
-  growing rather than a clone swapping in.
+  / States / More to come), exclusive: opening one sweeps the other shut.
+  The hover poster flies from the cursor card into its seat on bare
+  background (no waiting plate; keyboard and touch wipe the poster itself
+  in), then a cross-drift gallery. Poster and seat share one aspect ratio
+  and one tween, so it reads as the same object growing; an open row raises
+  no hover poster until it closes. Accordion logic lives in the component's
+  own script.
 - **Outreach** (`#outreach`): velocity ticker · post rows · invite-us CTA.
 - **Sponsors** (`#sponsors`): scrubbed recognition ladder, no amounts.
 - **Finale** (`#contact`): the curtain reveal. Everything above it scrolls
   up like a sheet being lifted off a static first viewport, so the section
   arrives already assembled: no stagger, no reveal wrappers, no split type.
-  Its remainder scrolls normally once the curtain clears. Content is only
-  what a visitor needs to reach the team: the big "Get in touch" headline,
-  the email and Instagram rows, the form button, and one line of small
-  print.
+  Its remainder scrolls normally once the curtain clears. Content: the
+  "Backed by" sponsor wall (placeholder names until real sponsors land),
+  the big "Get in touch" headline, two machined icon keys that expand
+  horizontally to reveal the email and Instagram values, the form button,
+  and the shared `<Footer />` small print.
 - **Blog post**: reading-progress bar · masked title.
 
 Old page URLs (`/season/`, `/contact/`, `/outreach/`) redirect to their
@@ -153,23 +155,26 @@ section anchors via `astro.config.mjs` redirects.
 chrome). A small indigo square sits in the bottom-right corner with two
 rules stacked inside it; pressing it crosses them into a close mark and
 slides a paper drawer in from the right edge over a black scrim, roughly
-24rem wide and full height. The links are hairline boxes, one per section,
-stacked and sharing their edges; they zoom the last few percent into place
-with a short stagger as the panel lands. Hover moves nothing: a grape rule
-runs up the inside edge and the word follows it, because a box that grew
-would shove its neighbours and make the cursor card flicker. Each box keeps
-its cursor-card descriptor and its sr-only line. Section changes go in the
+24rem wide and full height. The links are bare display type, one per
+section, stacked on one left margin; they zoom the last few percent into
+place with a short stagger as the panel lands. Hover moves nothing: the
+word goes grape, because a link that grew would shove its neighbours and
+make the cursor card flicker. Each link keeps its cursor-card descriptor
+and its sr-only line. Section changes go in the
 `links` array here and in `Footer.astro`, which carries the plain-text
 fallback on blog and lab pages. Under reduced motion the panel and its
 boxes just appear.
 
 ## The blog (Outreach)
 
-Markdown collection in `src/content/blog/`. The home Outreach section lists
-posts as line-hover rows; `outreach/[id].astro` renders a post in
-`.post-body`. Post pages run the paper scheme (`light` on BaseLayout):
-back button, date, title, body, small-print footer. No comments, no
-view counts.
+Markdown collection in `src/content/blog/`. The home Outreach section
+lists posts as line-hover rows and opens each one as a paper popup in
+place (real dialog, Lenis-aware scroll lock, focus returned to the row);
+`outreach/[id].astro` stays as the deep-link and no-JS page with the same
+header. Post pages run the paper scheme (`light` on BaseLayout): back
+button, date, title, body, small-print footer. No comments, no view
+counts. The intro cover runs only on the home page (`intro` on
+BaseLayout).
 
 ## Component inventory
 
@@ -179,8 +184,8 @@ view counts.
 | `layouts/BaseLayout.astro` | Shell: fonts, intro cover, heat rail, view transitions, GearNav, footer (`hideFooter` on home), imports motion. |
 | `components/home/*.astro` | The eight one-page sections, composed by `pages/index.astro`. |
 | `components/Reveal.astro` | `[data-reveal]` wrapper. |
-| `components/GearNav.astro` | Corner toggle (two rules that cross) + right-side drawer: paper panel, boxed links that zoom in, cursor-card descriptors, Lenis smooth anchors. Old filename, no gear. |
-| `components/Placeholder.astro` / `SectionLabel.astro` / `Footer.astro` | Invisible slot markers / label / footer (blog + lab pages only). |
+| `components/GearNav.astro` | Corner toggle (two rules that cross) + right-side drawer: paper panel, bare display-type links that zoom in, cursor-card descriptors, Lenis smooth anchors. Old filename, no gear. |
+| `components/Placeholder.astro` / `SectionLabel.astro` / `Footer.astro` | Invisible slot markers / label / the shared small print (blog + lab pages, and inside the Finale). |
 
 ## Conventions
 
