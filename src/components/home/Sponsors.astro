@@ -1,0 +1,90 @@
+---
+/**
+ * Sponsors — black band, second to last. The recognition ladder is the whole
+ * pitch: four rungs, low to high, no amounts and no "what the money buys"
+ * copy. Rungs wipe in one at a time on scrub via [data-ladder]/[data-rung].
+ * Closes on the packet slot and the magnetic CTA into the contact section.
+ */
+import Placeholder from '../Placeholder.astro';
+import Reveal from '../Reveal.astro';
+
+const rungs = [
+  {
+    tier: 'Portfolio',
+    gets: 'Every sponsor is named in the engineering portfolio judges read at every event, and listed on this site.',
+  },
+  { tier: 'Out loud', gets: 'Thanked by name at our outreach events.' },
+  { tier: 'Instagram', gets: 'Your own thank-you post on the team feed.' },
+  { tier: 'Shirts', gets: 'Your name on the team shirts, printed once before the season.' },
+];
+---
+
+<section id="sponsors">
+  <div class="mx-auto max-w-5xl px-5 py-28 sm:px-8 sm:py-36">
+    <span class="mark" aria-hidden="true"></span>
+    <h2 class="type-display text-[clamp(2.25rem,7vw,5rem)]" data-split>Back the build.</h2>
+
+    <dl class="ladder mt-14" data-ladder>
+      {
+        rungs.map((rung) => (
+          <div class="rung hairline" data-rung>
+            <dt class="type-display rung-tier text-accent">{rung.tier}</dt>
+            <dd class="rung-gets text-muted">{rung.gets}</dd>
+          </div>
+        ))
+      }
+    </dl>
+
+    <Reveal variant="up" class="packet mt-14">
+      <Placeholder name="contact-sponsor-packet" class="px-4 py-3">
+        <p class="type-label text-muted">Sponsor packet, PDF</p>
+      </Placeholder>
+      <a href="#contact" class="btn btn-solid" data-magnetic="0.4">Get in touch</a>
+    </Reveal>
+  </div>
+</section>
+
+<style>
+  /* Grape rule above the headline: the only garnish on a black section. */
+  .mark {
+    display: block;
+    width: 2.75rem;
+    height: 3px;
+    margin-bottom: 1.75rem;
+    background: var(--color-accent);
+  }
+
+  .ladder {
+    border-top: 1px solid var(--color-line);
+  }
+
+  .rung {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem 2rem;
+    border-bottom: 1px solid var(--color-line);
+    padding: 1.1rem 0;
+    will-change: clip-path;
+  }
+
+  /* Uncial runs wide: the tier column is roomier than the contact-page one. */
+  .rung-tier {
+    width: 10rem;
+    flex: none;
+    font-size: 1.25rem;
+  }
+
+  .rung-gets {
+    flex: 1;
+    min-width: 14rem;
+    margin: 0;
+  }
+
+  .packet {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1.75rem 2rem;
+  }
+</style>
