@@ -2,11 +2,12 @@
 /**
  * Home — the whole site on one scrolling page.
  *
- * Eight sections, each a component in src/components/home/ with its own
- * motion trick, alternating black and Space Indigo bands. GearNav doubles
- * as the scroll nav (anchor ids live on each section) and Finale carries
- * the contact block plus the footer matter, so the shared Footer is
- * suppressed here. Blog posts keep their own pages under /outreach/.
+ * Seven sections ride inside an opaque curtain that scrolls up over the
+ * pinned finale: the finale's first viewport is revealed in place as the
+ * curtain lifts, then its remainder scrolls normally (pure CSS: negative
+ * pull, sticky child, one-viewport spacer). GearNav doubles as the scroll
+ * nav; Finale carries the contact block and footer matter, so the shared
+ * Footer is suppressed here. Blog posts keep their own pages.
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Hero from '../components/home/Hero.astro';
@@ -24,12 +25,49 @@ import Finale from '../components/home/Finale.astro';
   description="GNCE Onyx is a rookie FIRST Tech Challenge team at Weston High School, built by championship veterans, competing in the 2026-2027 BIOBUZZ season."
   hideFooter
 >
-  <Hero />
-  <Lineage />
-  <Team />
-  <Build />
-  <Season />
-  <Outreach />
-  <Sponsors />
-  <Finale />
+  <div class="curtain">
+    <Hero />
+    <Lineage />
+    <Team />
+    <Build />
+    <Season />
+    <Outreach />
+    <Sponsors />
+  </div>
+
+  <div class="finale-wrap">
+    <Finale />
+  </div>
 </BaseLayout>
+
+<style>
+  /* The curtain: everything above the finale, opaque, painting over it. */
+  .curtain {
+    position: relative;
+    z-index: 2;
+    background: var(--color-bg);
+  }
+
+  /* Pulled one viewport under the curtain; the sticky finale holds still
+     while the curtain lifts off it, then scrolls out its remainder. The
+     ::after spacer grants exactly one viewport of sticky travel. */
+  .finale-wrap {
+    position: relative;
+    z-index: 1;
+    margin-top: -100svh;
+  }
+
+  .finale-wrap > :global(#contact) {
+    position: sticky;
+    top: 0;
+    /* Anchor jumps must land where the curtain has fully lifted, one
+       viewport past the finale's flow position. */
+    scroll-margin-top: -100svh;
+  }
+
+  .finale-wrap::after {
+    content: '';
+    display: block;
+    height: 100svh;
+  }
+</style>
