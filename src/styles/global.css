@@ -289,6 +289,42 @@ html.will-animate .station-letter {
 }
 
 /* ==================================================================
+   TYPE UNDER THE POINTER
+   Two gestures, both transform only, both pointer-fine.
+   Display headings are handled in motion.ts: the character the pointer
+   crosses dips back under the split mask and the dip travels outward
+   through the line, which is the entrance again, one beat long.
+   The script flourish is one short line, so it answers in CSS: it lifts
+   off its baseline and leans, the way a signature does when you nudge
+   the paper. Nothing glows, nothing fades.
+   ================================================================== */
+@media (hover: hover) and (pointer: fine) {
+  .type-script {
+    /* The flourish is block level, so its box runs the whole measure and
+       the hover would fire an arm's length past the last letter. Shrink
+       the box onto the words; still a block, so no inline leading creeps
+       in underneath it. */
+    width: fit-content;
+    transform-origin: 0 85%;
+    transition: transform 260ms var(--ease-out-strong);
+  }
+
+  .type-script:hover {
+    transform: translateY(-0.05em) rotate(-1.75deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .type-script {
+    transition: none;
+  }
+
+  .type-script:hover {
+    transform: none;
+  }
+}
+
+/* ==================================================================
    CURSOR CARDS — hover detail that rides the pointer instead of sitting
    in the layout. Authored anywhere in the page, parked hidden here;
    motion.ts shows one and drives its transform on pointer-fine devices.

@@ -81,6 +81,7 @@ function boot() {
       initParallax();
       initCounters();
       if (FINE) {
+        initSplitHover();
         initMagnetic();
         initHoverPreview();
         initCursorCards();
@@ -276,8 +277,80 @@ function initSplits() {
 function resplitAll() {
   document.querySelectorAll<HTMLElement>('[data-split]').forEach((el) => {
     (el as any)._st?.kill();
+    (el as any)._hover?.kill(); // the characters it was holding are about to go
     delete el.dataset.splitDone;
     buildSplit(el);
+  });
+}
+
+/* ================================================================== */
+/* Hover on a split heading: the entrance, borrowed for one beat.       */
+/*                                                                     */
+/* Every heading arrives by riding its letters up from behind the line. */
+/* On hover the letter the pointer crosses drops back under that same   */
+/* mask and the dip travels outward through its neighbours, then the    */
+/* line is exactly where it was. No new mechanic, no fade, no glow:     */
+/* one property, the same one the entrance moves.                       */
+/*                                                                     */
+/* Rules it holds to: pointer-fine only (bound in run()); once per      */
+/* visit, re-armed when the pointer leaves the heading; never while the */
+/* entrance is still playing; never on a heading that sits inside a     */
+/* control, which already answers the pointer its own way.              */
+/* ================================================================== */
+const RIPPLE_DIP = 24; // yPercent: enough for the mask to bite, never a word's shape
+const RIPPLE_DOWN = 0.12;
+const RIPPLE_BACK = 0.2;
+const RIPPLE_SPREAD = 0.13; // longest the wave may take to cross the whole line
+
+/** The entrance owns yPercent until it is finished with it. A scrubbed
+ *  heading is done when its trigger has passed its end; the intro cascade
+ *  (and any heading opened by the failsafe) is done when the last character
+ *  it staggers has landed. Either way the test is the resting position. */
+function rippleReady(el: HTMLElement, chars: HTMLElement[]) {
+  if ((el as any)._st && (el as any)._st.progress < 0.999) return false;
+  const last = chars[chars.length - 1];
+  return !!last && Math.abs((gsap.getProperty(last, 'yPercent') as number) || 0) < 0.5;
+}
+
+function initSplitHover() {
+  document.querySelectorAll<HTMLElement>('[data-split]').forEach((el) => {
+    if (el.closest('a,button,[role="button"],label,summary')) return;
+    let armed = true;
+
+    el.addEventListener('pointerleave', () => (armed = true));
+
+    // pointerover, not pointerenter: the heading is a block, so its box runs
+    // to the end of the measure. Arriving over the empty tail of a line is
+    // not arriving at the words — stay armed until a character is actually
+    // under the pointer, and let that character be where the wave starts.
+    el.addEventListener('pointerover', (e) => {
+      if (!armed) return;
+      const hit = (e.target as Element | null)?.closest?.('.split-char') as HTMLElement | null;
+      if (!hit) return;
+      const chars = gsap.utils.toArray<HTMLElement>('.split-char', el);
+      const idx = chars.indexOf(hit);
+      if (idx < 0 || !rippleReady(el, chars)) return;
+      armed = false;
+
+      const stagger = {
+        amount: Math.min(RIPPLE_SPREAD, chars.length * 0.012),
+        from: idx,
+      };
+      const st = (el as any)._st;
+      const tl = gsap.timeline({
+        // Scrolled back into its own entrance window mid-gesture: hand the
+        // characters over rather than tug against the scrub.
+        onUpdate: () => {
+          if (st && st.progress < 0.999) {
+            gsap.set(chars, { yPercent: 0 });
+            tl.kill();
+          }
+        },
+      });
+      tl.to(chars, { yPercent: RIPPLE_DIP, duration: RIPPLE_DOWN, ease: 'power2.out', stagger })
+        .to(chars, { yPercent: 0, duration: RIPPLE_BACK, ease: 'power3.out', stagger }, RIPPLE_DOWN);
+      (el as any)._hover = tl;
+    });
   });
 }
 
