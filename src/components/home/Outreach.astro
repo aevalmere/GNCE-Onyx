@@ -1,0 +1,158 @@
+---
+/**
+ * Outreach — indigo band. Headline, the velocity ticker, then the blog posts
+ * as line-hover rows wiping in from alternating sides, and a closing ask to
+ * be invited somewhere. Posts keep their own pages at /outreach/<id>/.
+ */
+import { getCollection } from 'astro:content';
+import Reveal from '../Reveal.astro';
+
+const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
+const posts = (await getCollection('blog')).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf()
+);
+const fmt = (d: Date) =>
+  d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+---
+
+<section id="outreach" class="bg-surface">
+  <div class="mx-auto max-w-5xl px-5 pt-24 pb-14 sm:px-8 sm:pt-32 sm:pb-16">
+    <h2 class="type-display text-[clamp(2.5rem,7vw,5.5rem)]" data-split>Outreach</h2>
+  </div>
+
+  <!-- TICKER: the kinds of events we run, geared to the scroll -->
+  <div class="marquee" data-marquee aria-hidden="true">
+    <div class="marquee-track" data-marquee-track>
+      <span class="marquee-run type-display">
+        Robot demos · school workshops · scout nights · STEM fairs ·&nbsp;
+      </span>
+      <span class="marquee-run type-display">
+        Robot demos · school workshops · scout nights · STEM fairs ·&nbsp;
+      </span>
+    </div>
+  </div>
+
+  <!-- POSTS: line-hover rows, wiping in from alternating sides -->
+  <div class="mx-auto max-w-5xl px-5 py-20 sm:px-8 sm:py-24">
+    <div class="hairline border-t" data-reveal-group>
+      {
+        posts.map((post, i) => (
+          <Reveal variant={i % 2 ? 'right' : 'left'}>
+            <a class="post-row" href={`${base}/outreach/${post.id}/`}>
+              <span class="post-marker" aria-hidden="true" />
+              <span class="post-date type-label text-muted">{fmt(post.data.date)}</span>
+              <span class="post-body-col">
+                <span class="post-title type-display">{post.data.title}</span>
+                <span class="post-desc text-muted">{post.data.description}</span>
+              </span>
+            </a>
+          </Reveal>
+        ))
+      }
+    </div>
+    {posts.length === 0 && <p class="text-muted">No posts yet.</p>}
+  </div>
+
+  <!-- THE ASK: we want to be at their event, not the other way round -->
+  <div class="mx-auto max-w-5xl px-5 pb-24 sm:px-8 sm:pb-32">
+    <h3 class="type-display text-[clamp(2rem,5vw,3.75rem)]" data-split>
+      Got an event? We want in.
+    </h3>
+    <Reveal variant="up" class="mt-8">
+      <p class="ask-line">
+        Classroom visits, scout nights, STEM fairs: we bring the competition
+        robot, and the kids drive it.
+      </p>
+    </Reveal>
+    <Reveal variant="up" delay={90} class="mt-10">
+      <a href="#contact" class="btn btn-solid" data-magnetic="0.4">Invite us</a>
+    </Reveal>
+  </div>
+</section>
+
+<style>
+  /* Ticker band: oversized outlined display type, hairline-ruled. Purely
+     decorative (aria-hidden); the motion engine gears it to scroll velocity. */
+  .marquee {
+    overflow: clip;
+    border-block: 1px solid var(--color-line);
+    padding-block: 1rem;
+  }
+
+  .marquee-track {
+    display: flex;
+    width: max-content;
+    will-change: transform;
+  }
+
+  .marquee-run {
+    white-space: nowrap;
+    font-size: clamp(1.9rem, 4.5vw, 3.1rem);
+    line-height: 1.1;
+    color: transparent;
+    -webkit-text-stroke: 1px color-mix(in srgb, var(--color-ink) 38%, transparent);
+  }
+
+  .ask-line {
+    color: var(--color-muted);
+    font-size: 1.0625rem;
+    line-height: 1.55;
+    max-width: 52ch;
+  }
+
+  .post-row {
+    position: relative;
+    display: grid;
+    grid-template-columns: 9rem 1fr;
+    gap: 0 2rem;
+    align-items: baseline;
+    border-bottom: 1px solid var(--color-line);
+    padding: 1.75rem 0 1.75rem 1.5rem;
+    text-decoration: none;
+    color: var(--color-ink);
+    transition: padding-left 300ms var(--ease-out-strong);
+  }
+
+  .post-marker {
+    position: absolute;
+    left: 0;
+    top: 2.1rem;
+    width: 0;
+    height: 2px;
+    background: var(--color-accent);
+    transition: width 300ms var(--ease-out-strong);
+  }
+
+  .post-title {
+    display: block;
+    font-size: clamp(1.5rem, 3vw, 2.25rem);
+    line-height: 1.1;
+    transition: color 200ms ease;
+  }
+
+  .post-desc {
+    display: block;
+    margin-top: 0.5rem;
+    max-width: 46ch;
+    font-size: 0.95rem;
+  }
+
+  @media (max-width: 640px) {
+    .post-row {
+      grid-template-columns: 1fr;
+      gap: 0.5rem 0;
+    }
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .post-row:hover {
+      padding-left: 2.75rem;
+    }
+    .post-row:hover .post-marker {
+      width: 1.75rem;
+    }
+    .post-row:hover .post-title {
+      color: var(--color-accent);
+    }
+  }
+</style>
