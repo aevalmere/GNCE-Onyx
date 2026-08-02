@@ -2,11 +2,13 @@
 /**
  * Lineage — the record four GNCE teams brought into this rookie season.
  *
- * Paper band, second on the page. Team numbers count up from zero;
- * each award is one ruled line in a ledger (name left, year right), wiping
- * in as a single staggered wave per team. 22489 and 26112 carry the long
- * lists, so they take the wide top row; 26413 and 26111 sit in a shorter
- * register beneath with the right third left open.
+ * Paper band, second on the page. Team numbers count up from zero; each
+ * award is one line in a ledger (name left, year right), wiping in as a
+ * single staggered wave per team. Nothing rules the rows apart: the space
+ * between them and the year column holding the right edge do that work,
+ * and the only lines left are the ones that open a team. 22489 and 26112
+ * carry the long lists, so they take the wide top row; 26413 and 26111 sit
+ * in a shorter register beneath with the right third left open.
  */
 import Reveal from '../Reveal.astro';
 
@@ -128,7 +130,8 @@ const compact = [
     }
   }
 
-  /* Every team hangs off a rule; the featured pair gets the grape one. */
+  /* The two rules in the section, and both are structural: every team hangs
+     off one, and the featured pair gets it in grape. */
   .team {
     border-top: 1px solid var(--color-line);
     padding-top: 1rem;
@@ -152,12 +155,19 @@ const compact = [
     font-size: clamp(2rem, 4.6vw, 3.1rem);
   }
 
+  /* The gap carries what the row rules used to. Long award names wrap, so
+     it has to beat the 1.45 line-height inside a row by enough that two
+     lines of one award never read as two awards: 1.15rem leaves nearly
+     twice the distance between neighbours that there is between the lines
+     of one. */
   .awards {
+    display: grid;
+    gap: 1.15rem;
     margin-top: 1.5rem;
   }
 
-  /* One award per ruled line: name left, year right, like a results sheet.
-     The row lives INSIDE the Reveal wrapper: attribute-scoped styles never
+  /* One award per line: name left, year right, like a results sheet. The
+     row lives INSIDE the Reveal wrapper: attribute-scoped styles never
      reach elements another component renders, so a class on <Reveal> would
      silently lose this flex and smush the year into the name. */
   .award {
@@ -165,8 +175,6 @@ const compact = [
     align-items: baseline;
     justify-content: space-between;
     gap: 1.5rem;
-    border-top: 1px solid var(--color-line);
-    padding: 0.6rem 0;
   }
 
   .award-name {
@@ -176,12 +184,15 @@ const compact = [
     text-wrap: pretty;
   }
 
+  /* The right edge of the ledger is now the only vertical the eye can hang
+     on, so the year reads at muted rather than faint: faint indigo on paper
+     lands near 2.9:1, which is thin for a column doing structural work. */
   .award-year {
     flex: none;
     font-size: 0.8125rem;
     font-weight: 700;
     letter-spacing: 0.08em;
-    color: var(--color-faint);
+    color: var(--color-muted);
     font-variant-numeric: tabular-nums lining-nums;
   }
 </style>

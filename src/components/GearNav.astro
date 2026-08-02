@@ -6,16 +6,18 @@
  * The site's only persistent chrome: a small machined square pinned to the
  * bottom-right corner, two rules stacked inside it. Press it and the rules
  * cross into a close mark while a paper panel slides in from the right edge
- * over a black scrim. The seven links are hairline boxes that zoom the last
- * few percent into place as the panel lands.
+ * over a black scrim. The seven links carry no chrome of their own: bare
+ * display type stacked on one left margin, zooming the last few percent
+ * into place as the panel lands. The panel's own left edge is the single
+ * hairline in the component.
  *
  * The nav floats over black and light sections alike, so it carries the
  * light band set itself (indigo type on paper) instead of inheriting one.
  *
  * The site is one page, so every link but Home is a section anchor: the
  * click handler closes the drawer and hands the trip to Lenis instead of
- * reloading. Hovering a box floats a small card off the cursor saying what
- * is down there.
+ * reloading. Hovering a link floats a small card off the cursor saying
+ * what is down there.
  *
  * Blog posts and the lab page carry the Footer's plain-text links, which is
  * also where navigation goes when there is no JS: a button that cannot open
@@ -72,7 +74,7 @@ const links: NavLink[] = [
       {
         links.map((link, i) => (
           <li class="nav-item" style={`--i:${i}`}>
-            <a class="nav-box type-display" href={link.href} data-cursor-card={link.card}>
+            <a class="nav-link type-display" href={link.href} data-cursor-card={link.card}>
               {link.label}
               <span class="sr-only">{link.note}</span>
             </a>
@@ -183,9 +185,9 @@ const links: NavLink[] = [
     background: var(--color-paper);
     border-left: 1px solid var(--color-line);
     color: var(--color-ink);
-    /* Scrolls when the boxes outgrow a short viewport. The clip on x is
-       what keeps the closed boxes (held at 1.06) from asking for a
-       horizontal bar on the way in. */
+    /* Scrolls when the links outgrow a short viewport. The clip on x is
+       what keeps the closed links (held at 1.12, growing rightwards off
+       their left margin) from asking for a horizontal bar on the way in. */
     overflow-y: auto;
     overflow-x: clip;
     overscroll-behavior: contain;
@@ -209,33 +211,43 @@ const links: NavLink[] = [
     list-style: none;
   }
 
-  /* Boxes share the pixel between them instead of stacking into a 2px rule. */
+  /* Nothing rules these apart, so the gap does the grouping. It is smaller
+     than a line of the type it separates: seven words on one margin read as
+     one list, not seven announcements. */
   .nav-item + .nav-item {
-    margin-top: -1px;
+    margin-top: 0.35rem;
   }
 
-  .nav-box {
-    position: relative;
+  /* Shrink-wrapped on purpose. A full-width link would hand hover, and the
+     focus ring from global.css, a panel-wide rectangle: exactly the box
+     this drawer just lost. The vertical padding is hit area rather than
+     chrome, lifting a bare line of type to a comfortable target. */
+  .nav-link {
     display: block;
-    padding: 1.1rem 1.25rem;
-    border: 1px solid var(--color-line);
-    font-size: clamp(1.45rem, 4.8vw, 1.8rem);
+    width: fit-content;
+    padding: 0.45rem 0;
+    font-size: clamp(1.6rem, 5.4vw, 2.1rem);
     color: var(--color-ink);
     text-decoration: none;
     opacity: 0;
-    transform: scale(1.06);
+    transform: scale(1.12);
+    transform-origin: 0% 50%;
     transition:
       transform 200ms var(--ease-out-strong),
       opacity 160ms ease,
       color 200ms ease;
   }
 
-  /* Each box zooms the last few percent home behind the sliding panel. The
-     stagger is short enough that the seventh settles as the panel lands
-     (6 x 26ms + 300ms against the panel's 420ms), and transform outruns
-     opacity so it reads as a push in, not a fade. Going out, no delays: the
-     whole set leaves with the panel. */
-  .nav-root[data-open='true'] .nav-box {
+  /* Each link zooms the last few percent home behind the sliding panel.
+     With no box edge to read the scale against the delta went up (1.12,
+     from the 1.06 the boxes needed) and the origin moved to the left
+     margin: the words all hang off one line, so that line is what they
+     contract onto. Scaling about the centre would swim the left edge
+     sideways and the margin would wobble. The stagger is short enough that
+     the seventh settles as the panel lands (6 x 26ms + 300ms against the
+     panel's 420ms), and transform outruns opacity so it reads as a push in,
+     not a fade. Going out, no delays: the whole set leaves with the panel. */
+  .nav-root[data-open='true'] .nav-link {
     opacity: 1;
     transform: none;
     transition:
@@ -248,38 +260,20 @@ const links: NavLink[] = [
       0ms;
   }
 
-  /* Hover moves nothing: a grape rule runs up the inside edge and the word
-     follows it. A box that grew would shove its neighbours and make the card
-     riding the cursor flicker. */
-  .nav-box::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    background: var(--color-accent);
-    transform: scaleY(0);
-    transform-origin: 50% 100%;
-    transition: transform 240ms var(--ease-out-strong);
-  }
-
+  /* Hover moves nothing and adds nothing: the word turns grape. Size stays
+     put because a link that grew would shove its neighbours and make the
+     card riding the cursor flicker, and the marker rule that used to run up
+     the inside edge went with the box it hung on. Keyboard focus takes the
+     same grape and keeps the ring from global.css on top of it, so focus is
+     still louder than hover. */
   @media (hover: hover) and (pointer: fine) {
-    .nav-box:hover {
+    .nav-link:hover {
       color: var(--color-accent);
     }
-
-    .nav-box:hover::before {
-      transform: scaleY(1);
-    }
   }
 
-  .nav-box:focus-visible {
+  .nav-link:focus-visible {
     color: var(--color-accent);
-  }
-
-  .nav-box:focus-visible::before {
-    transform: scaleY(1);
   }
 
   /* ---- Toggle ----------------------------------------------------- */
@@ -365,7 +359,7 @@ const links: NavLink[] = [
   }
 
   /* ---- Reduced motion --------------------------------------------- */
-  /* The panel, the scrim and the boxes just appear: no slide, no zoom, no
+  /* The panel, the scrim and the links just appear: no slide, no zoom, no
      fade. The mark still crosses, it just snaps, and the press gives its
      feedback in colour instead of a nudge. */
   @media (prefers-reduced-motion: reduce) {
@@ -380,15 +374,14 @@ const links: NavLink[] = [
       transform: none;
     }
 
-    .nav-box,
-    .nav-root[data-open='true'] .nav-box {
+    .nav-link,
+    .nav-root[data-open='true'] .nav-link {
       opacity: 1;
       transform: none;
       transition: color 200ms ease;
       transition-delay: 0ms;
     }
 
-    .nav-box::before,
     .nav-bar {
       transition: none;
     }
