@@ -20,8 +20,8 @@ const featured = [
       { name: 'Motivate Award 2nd Place, Worlds Jemison Division', year: '2025' },
       { name: 'Hardware Mastery Honorable Mention, Multinational Tech Invitational', year: '2025' },
       { name: 'Mechatronics Synergy Award, Multinational Tech Invitational', year: '2026' },
-      { name: 'Control Award, Michiana International Premier Event', year: '' },
-      { name: 'Finalist Alliance, Michiana International Premier Event', year: '' },
+      { name: 'Control Award, Michiana International Premier Event', year: '2026' },
+      { name: 'Finalist Alliance, Michiana International Premier Event', year: '2026' },
     ],
   },
   {
@@ -56,9 +56,11 @@ const compact = [
             <ul class="awards" data-reveal-group>
               {team.awards.map((a) => (
                 <li>
-                  <Reveal variant="left" class="award">
-                    <span class="award-name">{a.name}</span>
-                    {a.year && <span class="award-year">{a.year}</span>}
+                  <Reveal variant="left">
+                    <span class="award">
+                      <span class="award-name">{a.name}</span>
+                      {a.year && <span class="award-year">{a.year}</span>}
+                    </span>
                   </Reveal>
                 </li>
               ))}
@@ -79,9 +81,11 @@ const compact = [
               <ul class="awards" data-reveal-group>
                 {team.awards.map((a) => (
                   <li>
-                    <Reveal variant="left" class="award">
-                      <span class="award-name">{a.name}</span>
-                      {a.year && <span class="award-year">{a.year}</span>}
+                    <Reveal variant="left">
+                      <span class="award">
+                        <span class="award-name">{a.name}</span>
+                        {a.year && <span class="award-year">{a.year}</span>}
+                      </span>
                     </Reveal>
                   </li>
                 ))}
@@ -152,12 +156,15 @@ const compact = [
     margin-top: 1.5rem;
   }
 
-  /* One award per ruled line: name left, year right, like a results sheet. */
+  /* One award per ruled line: name left, year right, like a results sheet.
+     The row lives INSIDE the Reveal wrapper: attribute-scoped styles never
+     reach elements another component renders, so a class on <Reveal> would
+     silently lose this flex and smush the year into the name. */
   .award {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
-    gap: 1.25rem;
+    gap: 1.5rem;
     border-top: 1px solid var(--color-line);
     padding: 0.6rem 0;
   }

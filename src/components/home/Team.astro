@@ -10,15 +10,7 @@
  */
 import Reveal from '../Reveal.astro';
 
-// Previous GNCE teams. `cred` sets the card; `plain` is the sentence-case
-// form the sr-only and the static fallback share. 26111 has no award record.
-const teams: Record<string, { cred: string; plain: string }> = {
-  '22489': { cred: 'State champion · Worlds', plain: 'state champion, Worlds' },
-  '26112': { cred: 'Worlds', plain: 'Worlds' },
-  '26413': { cred: 'State qualifier', plain: 'state qualifier' },
-  '26111': { cred: '', plain: '' },
-};
-
+// Previous GNCE team numbers only; the Lineage section carries the record.
 const roster: { name: string; teams: string[] }[] = [
   { name: 'Ethan Zhang', teams: ['22489', '26111'] },
   { name: 'Ethan Zhuang', teams: ['26112', '26111'] },
@@ -30,7 +22,6 @@ const roster: { name: string; teams: string[] }[] = [
 ];
 
 const slug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-const lineage = (num: string) => (teams[num].plain ? `${num} (${teams[num].plain})` : num);
 ---
 
 <section id="team">
@@ -48,11 +39,11 @@ const lineage = (num: string) => (teams[num].plain ? `${num} (${teams[num].plain
                 <p class="roster-name">{member.name}</p>
                 <span class="sr-only">
                   {member.teams.length
-                    ? `Previous teams: ${member.teams.map(lineage).join('; ')}.`
+                    ? `Previous teams: ${member.teams.join(', ')}.`
                     : 'Rookie season, no previous teams.'}
                 </span>
                 <p class="roster-teams" aria-hidden="true">
-                  {member.teams.length ? member.teams.map(lineage).join(' · ') : 'Rookie season'}
+                  {member.teams.length ? member.teams.join(' · ') : 'Rookie season'}
                 </p>
               </div>
             </Reveal>
@@ -70,7 +61,6 @@ const lineage = (num: string) => (teams[num].plain ? `${num} (${teams[num].plain
           member.teams.map((num) => (
             <p class="card-team">
               <span class="card-num">{num}</span>
-              {teams[num].cred && <span class="card-cred">{teams[num].cred}</span>}
             </p>
           ))
         ) : (
@@ -172,18 +162,6 @@ const lineage = (num: string) => (teams[num].plain ? `${num} (${teams[num].plain
     font-size: 1.5rem;
     line-height: 1;
     font-variant-numeric: tabular-nums lining-nums;
-  }
-
-  .card-cred {
-    display: block;
-    margin-top: 0.2rem;
-    font-family: var(--font-text);
-    font-size: 0.625rem;
-    font-weight: 700;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    white-space: nowrap;
-    color: var(--color-muted);
   }
 
   .card-rookie {
