@@ -15,6 +15,13 @@
  * both ends of the flight happen inside one frame. The artwork exists in
  * exactly one place at every instant.
  *
+ * The other rule is that the row you clicked is the one thing on screen that
+ * must not move. One panel at a time means opening a row usually shuts one
+ * above it, and the height that leaves the page above the click drags the
+ * clicked header up the screen while its own panel opens downward. So the
+ * scroll gives back exactly what the collapse takes, every frame, and the
+ * header sits still through the whole transition.
+ *
  * Nothing has happened yet, so every block is a marked slot and the poster is
  * the stand-in art. The accordion runs on its own script (below) rather than
  * the motion engine, so it still opens when that engine is off.
@@ -39,7 +46,7 @@ const galleryCols = [
 ---
 
 <section id="season" class="season" aria-labelledby="season-title">
-  <div class="mx-auto max-w-5xl px-5 pt-28 pb-32 sm:px-8 sm:pt-40 sm:pb-44">
+  <div class="mx-auto max-w-[88rem] px-5 pt-28 pb-32 sm:px-8 sm:pt-40 sm:pb-44">
     <span class="mark" aria-hidden="true"></span>
     <h2 id="season-title" class="season-title type-display" data-split>Biobuzz</h2>
     <Reveal variant="up" class="mt-6">
@@ -454,6 +461,9 @@ const galleryCols = [
 
     type Row = {
       btn: HTMLButtonElement;
+      // The box whose height moves the page. Kept on the row so the scroll
+      // corrector can ask every panel whether the page is still settling.
+      panel: HTMLElement;
       isOpen: () => boolean;
       expand: () => void;
       collapse: (swept?: boolean) => void;
@@ -761,11 +771,113 @@ const galleryCols = [
 
       rows.push({
         btn,
+        panel,
         isOpen: () => btn.getAttribute('aria-expanded') === 'true',
         expand,
         collapse,
       });
     });
+
+    /* ---- Holding the clicked row still -------------------------------
+       A row sweeping shut ABOVE the click takes its height out of the page
+       above the clicked header, so the header rides up the screen on the
+       collapse while its own panel opens downward under it: the one thing
+       the reader is looking at is the one thing that moves. The scroll pays
+       it back, frame by frame, before anything reaches the screen.
+
+       What is measured is the row's place in the document, not on the
+       screen, so the correction is exactly the height the collapse removed
+       and nothing else. A reader who scrolls mid-transition moves the page,
+       not the row, and passes straight through this untouched. */
+    const scrollByPx = (dy: number) => {
+      const before = window.scrollY;
+      const to = Math.max(0, before + dy);
+      // Lenis owns the scroll while the engine is up, so the correction has
+      // to land in its state as well as the window's: move the window alone
+      // and its next frame puts the page straight back.
+      const motion = (window as any).__motion;
+      const lenis = motion?.lenis;
+      // A gesture in flight is a value being eased toward a target, and the
+      // honest way to correct under one is to move the whole frame of
+      // reference: shift where it is, where it is going and where it thinks
+      // it started, all by the same amount, and the reader's scroll carries
+      // on through the correction without losing a pixel of its distance.
+      const gesture = lenis?.animate;
+      if (lenis && gesture?.isRunning && typeof gesture.value === 'number') {
+        const d = to - lenis.animatedScroll;
+        lenis.animatedScroll = to;
+        lenis.targetScroll += d;
+        gesture.value += d;
+        gesture.from += d;
+        gesture.to += d;
+        window.scrollTo({ top: to, behavior: 'instant' });
+        // Lenis is what normally tells ScrollTrigger the page moved, and it
+        // has already spoken for this frame: say it again, so the scrubbed
+        // scenes paint the scroll we just corrected and not the one before.
+        motion.ScrollTrigger?.update?.();
+      } else if (lenis) {
+        // Nothing in flight to protect: hand it to Lenis outright. Forced,
+        // so a locked or stopped instance still takes the fix.
+        lenis.scrollTo(to, { immediate: true, force: true });
+      } else {
+        // No engine (reduced motion, or it failed to boot). Instant by name,
+        // because the stylesheet asks html for smooth scrolling and this is
+        // a correction, not a journey.
+        window.scrollTo({ top: to, behavior: 'instant' });
+      }
+      return window.scrollY - before; // what the page actually gave back
+    };
+
+    let unhold: (() => void) | null = null;
+
+    /* Read the clicked row's document position now; hand back the starter
+       for the corrector, so the caller can set the panels moving first and
+       hold the row from the same frame they start. */
+    const hold = (btn: HTMLElement) => {
+      unhold?.();
+      const where = () => btn.getBoundingClientRect().top + window.scrollY;
+      let last = where();
+      // Sub-pixel remainders and anything the page refused (already at the
+      // very top) are carried, not dropped: the debt is settled on a later
+      // frame instead of quietly becoming drift. A quarter pixel is under
+      // the rounding some browsers put on the scroll offset, so the tail of
+      // a collapse never turns into a jitter of its own.
+      let owed = 0;
+      const square = () => {
+        const now = where();
+        owed += now - last;
+        last = now;
+        if (Math.abs(owed) > 0.25) owed -= scrollByPx(owed);
+      };
+
+      return () => {
+        if (reduced.matches) {
+          // Panels cut rather than tween, so the whole move has already
+          // happened: one correction in the same frame covers it.
+          square();
+          return;
+        }
+        let idle = 0;
+        const giveUp = performance.now() + 1600;
+        const tick = () => {
+          square();
+          if (rows.some((r) => gsap.isTweening(r.panel))) idle = 0;
+          else idle += 1;
+          // Two quiet frames past the last panel: the tween's final render
+          // and the height being handed back to CSS both land in the frame
+          // it completes, and both are worth measuring.
+          if (idle > 1 || performance.now() > giveUp) unhold?.();
+        };
+        unhold = () => {
+          gsap.ticker.remove(tick);
+          unhold = null;
+        };
+        // Last on the ticker on purpose: it measures the frame GSAP has just
+        // laid out and Lenis has just scrolled, before that frame is painted.
+        gsap.ticker.add(tick);
+        square();
+      };
+    };
 
     // One event at a time. Opening a second sweeps the first shut on its own
     // curve, so the reader is never two panels deep and the page never grows
@@ -773,16 +885,25 @@ const galleryCols = [
     // honestly the moment they are asked to: the closing one is closed as
     // far as anything reading the page is concerned, the animation is only
     // the picture of it.
-    rows.forEach((row) => {
+    rows.forEach((row, index) => {
       row.btn.addEventListener('click', () => {
+        // Whatever the last click was holding, this one supersedes.
+        unhold?.();
         if (row.isOpen()) {
           row.collapse();
           return;
         }
+        // Only what is above the click can move it: a panel shutting below
+        // gives its height back below the row. Anything still tweening up
+        // there counts as well, open or not, since a row caught mid-collapse
+        // is holding height that is on its way out.
+        const above = rows.some((o, i) => i < index && (o.isOpen() || gsap.isTweening(o.panel)));
+        const start = above ? hold(row.btn) : null;
         rows.forEach((other) => {
           if (other !== row && other.isOpen()) other.collapse(true);
         });
         row.expand();
+        start?.();
       });
     });
 
