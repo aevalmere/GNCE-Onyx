@@ -47,9 +47,10 @@ Manage the background server with `astro dev stop`, `astro dev status`, and `ast
 - The WebGL ONYX word (`src/scripts/onyx3d.ts` + `src/data/onyx-glyphs.ts`)
   is parked on the unlinked page `/lab/onyx/`. Keep it building and usable;
   don't link it from nav/footer or re-import it on other pages.
-- Navigation is `src/components/GearNav.astro` (orbital gear hub), now a
-  scroll nav over the one-page home: section anchor changes go in its
-  `links` array, `Footer.astro`, AND the Finale section's footer links.
+- Navigation is `src/components/GearNav.astro` (corner toggle opening a
+  right-side paper drawer; old filename, no gear), a scroll nav over the
+  one-page home: section anchor changes go in its `links` array AND
+  `Footer.astro` (blog/lab pages).
 - Design tokens live in the `@theme` block of `src/styles/global.css`;
   Tailwind v4 derives utilities from them (`bg-bg`, `text-accent`,
   `ease-out-strong`, ...). There is no `tailwind.config.*`.
