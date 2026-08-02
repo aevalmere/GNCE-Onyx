@@ -9,6 +9,11 @@
  * is nothing to load, nothing to navigate to, and the band keeps its
  * scroll position underneath. The rows stay real links to /outreach/<id>/,
  * which is where a modified click, a crawler and a visitor without JS go.
+ *
+ * Nothing in the band is ruled. The ticker lost the lines above and below
+ * it, the list lost the hairline under every row, and what separates the
+ * posts now is the date column, the size of the display titles and four
+ * rems of paper between them.
  */
 import { getCollection, render } from 'astro:content';
 import Reveal from '../Reveal.astro';
@@ -86,7 +91,9 @@ const longDate = (d: Date) =>
 
   <!-- POPUPS: one per post, parked at the end of the band. Plain markup on
        purpose: no reveal wrappers, no split type, nothing gated behind the
-       motion engine, so a post still reads if GSAP never boots. -->
+       motion engine, so a post still reads if GSAP never boots. The header
+       is the standalone page's header (long date, then the title at the
+       same size), so arriving either way looks like the same post. -->
   {
     entries.map(({ post, Content }) => (
       <dialog class="post-pop" id={`pop-${post.id}`} aria-labelledby={`pop-${post.id}-title`}>
@@ -142,10 +149,13 @@ const longDate = (d: Date) =>
   }
 
   /* ---- Post rows -------------------------------------------------- */
-  /* No rules: the date column, the display title and the air between rows
-     do the separating, and the only line in the list is the grape marker,
-     which appears on intent. Text sits flush with the section margin at
-     rest, so the list lines up with the headlines above and below.
+  /* No rules at all, not even one edge: a season's posts make a short
+     list, and a ruled short list reads as a table with rows missing. The
+     date column and four rems of paper between titles do the separating,
+     and the only line that ever appears is the grape marker, on intent.
+
+     Text sits flush with the section margin at rest, so the list lines up
+     with the headlines above and below.
 
      Hover slides the two columns, not the anchor: the hit area stays put,
      so a row can never slide out from under the pointer, and the movement
@@ -161,6 +171,12 @@ const longDate = (d: Date) =>
     color: var(--color-ink);
   }
 
+  /* The mark the date uncovers when it steps aside. It scales rather than
+     growing its width, so the paint stays on the compositor, and it grows
+     off its own left end. It sits level with the top of the title's caps,
+     which barely moves across the title's clamp, and it stays inside the
+     row's box on purpose: the reveal wrapper keeps a clip-path once it has
+     played, so anything hung out in the margin would be clipped away. */
   .post-marker {
     position: absolute;
     left: 0;
@@ -199,31 +215,43 @@ const longDate = (d: Date) =>
     }
   }
 
+  /* Arriving by keyboard turns the title grape, on every machine and for
+     every motion preference: the ring says where you are, the colour says
+     what it is. No slide, since the ring already marks the row and the
+     content sliding inside a ring that stays put reads as a glitch. */
+  .post-row:focus-visible .post-title {
+    color: var(--color-accent);
+  }
+
   @media (hover: hover) and (pointer: fine) {
-    .post-row:hover .post-date,
-    .post-row:hover .post-body-col {
-      transform: translateX(2rem);
-    }
-    .post-row:hover .post-marker {
-      width: 1.25rem;
-    }
     .post-row:hover .post-title {
       color: var(--color-accent);
     }
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .post-marker,
-    .post-date,
-    .post-body-col {
-      transition: none;
+  /* The step aside, and the mark it uncovers. This is the only movement in
+     the row, so a visitor who asked for less gets the colour above and
+     nothing else: not a snapped slide, no slide. Dropping it also keeps
+     the marker off the date, which is only clear of it because the date
+     moved. Asking for the preference in the query rather than undoing the
+     rule further down means source order cannot get this wrong. */
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    .post-row:hover .post-date,
+    .post-row:hover .post-body-col {
+      transform: translateX(2rem);
+    }
+
+    .post-row:hover .post-marker {
+      transform: scaleX(1);
     }
   }
 
   /* ---- Post popup ------------------------------------------------- */
   /* A paper sheet in the top layer. The light ramp is declared here rather
      than inherited: a modal renders outside its band, and this one has to
-     read the same wherever it is opened from. */
+     read the same wherever it is opened from. Same numbers as .band-light,
+     so the rendered markdown resolves exactly as it does on the post's own
+     page. */
   .post-pop {
     --color-ink: var(--color-surface);
     --color-muted: color-mix(in srgb, var(--color-surface) 70%, transparent);
@@ -252,8 +280,10 @@ const longDate = (d: Date) =>
     justify-content: center;
   }
 
-  /* Custom properties do not reach ::backdrop in older engines, hence the
-     literal fallback for the one token it needs. */
+  /* Heavier than the drawer's scrim (55%) because this one has to separate
+     paper from paper: the sheet opens over the band it belongs to. The
+     literal fallback covers engines where custom properties never reached
+     ::backdrop; --color-bg is black either way. */
   .post-pop::backdrop {
     background: color-mix(in srgb, var(--color-bg, #000000) 62%, transparent);
     opacity: 0;
@@ -267,8 +297,9 @@ const longDate = (d: Date) =>
 
   /* The resting state is the closed one, so the transition declared here
      is the exit: dismissal snaps, opening takes its time (below). The
-     sheet unrolls from its top edge instead of fading, which is the same
-     clip language the reveals use. */
+     sheet unrolls downward off its top edge while it settles the last
+     1.5rem up, which is a clip wipe, not a fade: nothing here crosses
+     through opacity. */
   .pop-panel {
     position: relative;
     display: flex;
@@ -292,7 +323,8 @@ const longDate = (d: Date) =>
   }
 
   /* Machined square in the corner, the nav toggle's sibling: a solid fill
-     rather than an outlined box, so the post can scroll under it. */
+     rather than an outlined box, and the post scrolls under it the same
+     way the page scrolls under the toggle. */
   .pop-close {
     position: absolute;
     top: 0.75rem;
@@ -345,10 +377,11 @@ const longDate = (d: Date) =>
     transform: translateY(-50%) rotate(-45deg);
   }
 
-  /* The post scrolls in here, and only here: the page behind is held
-     still while this is up (see the script). It takes focus on open so
-     arrow keys read the post straight away, and its ring turns inward so
-     the sheet's own edge does not clip it. */
+  /* The post scrolls in here, and only here: the page behind is held still
+     while this is up (see the script). It takes focus on open so arrow
+     keys and space read the post straight away, and its ring turns inward
+     so the sheet's own edge does not clip it. Shift-tab from there is the
+     close button, which is the first thing in the sheet. */
   .pop-scroll {
     flex: 1 1 auto;
     min-height: 0;
@@ -360,6 +393,8 @@ const longDate = (d: Date) =>
     outline-offset: -3px;
   }
 
+  /* Top padding clears the close button; the measure lands near 64
+     characters at the sheet's full width. */
   .pop-col {
     padding: 3.25rem clamp(1.5rem, 5vw, 3rem) 3rem;
   }
@@ -373,7 +408,8 @@ const longDate = (d: Date) =>
     margin-top: 2rem;
   }
 
-  /* Reduced motion: the sheet is simply there, and gone. */
+  /* Reduced motion: the sheet is simply there, and gone. The press keeps
+     its feedback in colour instead of a nudge. */
   @media (prefers-reduced-motion: reduce) {
     .pop-panel,
     .post-pop[data-open='true'] .pop-panel {
@@ -402,22 +438,31 @@ const longDate = (d: Date) =>
   // Post popups. Every row is a real link to the post's own page; this
   // takes over the plain left click only, so modified clicks, crawlers,
   // a missing <dialog> and no JS at all still navigate. Nothing here
-  // touches GSAP: the popup is CSS transitions and two class-free state
-  // flips, and it works whether or not the motion engine ever boots.
+  // touches GSAP: the popup is CSS transitions and one attribute flip, and
+  // it works whether or not the motion engine ever boots.
   function initPostPopups() {
     const section = document.getElementById('outreach');
     if (!section) return;
     const rows = [...section.querySelectorAll<HTMLAnchorElement>('[data-post-open]')];
     if (!rows.length) return;
+    // Without showModal there is no top layer, no backdrop and no inert
+    // page, and half a modal is worse than none: leave the rows as links.
     if (typeof HTMLDialogElement === 'undefined' || !('showModal' in HTMLDialogElement.prototype))
       return;
 
     const root = document.documentElement;
     const reduced = matchMedia('(prefers-reduced-motion: reduce)');
     const engine = () => (window as any).__motion;
-    const pops = [...section.querySelectorAll<HTMLDialogElement>('.post-pop')];
 
+    // The sheet's exit transition, plus a frame. Keep in step with the
+    // 240ms on .pop-panel above.
+    const EXIT_MS = 260;
+
+    // The sheet on screen, whether it is arriving, sitting or leaving.
+    // Only one can exist: a modal makes the rest of the page inert, so a
+    // second row cannot be clicked while this one is up.
     let live: HTMLDialogElement | null = null;
+    let leaving = false;
     let opener: HTMLElement | null = null;
     let exitTimer = 0;
 
@@ -427,8 +472,8 @@ const longDate = (d: Date) =>
     // sees. Losing the scrollbar widens the viewport, so its width goes
     // back on as page padding and as --nav-lock for the corner toggle:
     // same frame, so nothing slides sideways. Only one of the drawer and
-    // a popup can be up at a time (a modal makes the page inert), so the
-    // two share the property without stepping on each other.
+    // a popup can be up at a time, so the two share the property without
+    // stepping on each other.
     const holdPage = (hold: boolean) => {
       const lenis = engine()?.lenis;
       if (hold) {
@@ -446,18 +491,14 @@ const longDate = (d: Date) =>
     };
 
     const open = (pop: HTMLDialogElement, row: HTMLElement) => {
-      // A second row clicked mid-exit: cancel the pending close and put
-      // any sheet that is still up away before this one goes over it.
-      window.clearTimeout(exitTimer);
-      pops.forEach((other) => {
-        if (other !== pop && other.open) other.close();
-      });
-
       opener = row;
       live = pop;
+      leaving = false;
       if (!pop.open) pop.showModal();
       holdPage(true);
 
+      // A post reopened from the row starts at the top, not where the last
+      // reader left it.
       const scroller = pop.querySelector<HTMLElement>('[data-pop-scroll]');
       if (scroller) scroller.scrollTop = 0;
       // The sheet has to be measured closed before the open state can
@@ -465,22 +506,30 @@ const longDate = (d: Date) =>
       void pop.offsetWidth;
       pop.dataset.open = 'true';
       // Focus goes to the post, not the close button, so arrow keys and
-      // space scroll it immediately. Tab from there reaches close.
+      // space scroll it immediately.
       scroller?.focus({ preventScroll: true });
     };
 
     const close = () => {
       const pop = live;
       if (!pop) return;
-      live = null;
+      // Dismissed twice on the way out (escape held, a second click): the
+      // reader is done waiting, so drop the rest of the exit.
+      if (leaving) {
+        window.clearTimeout(exitTimer);
+        pop.close();
+        return;
+      }
+      leaving = true;
       pop.dataset.open = 'false';
       // Under reduced motion there is no exit to wait out.
       if (reduced.matches) pop.close();
-      else exitTimer = window.setTimeout(() => pop.close(), 260);
+      else exitTimer = window.setTimeout(() => pop.close(), EXIT_MS);
     };
 
     rows.forEach((row) => {
       const pop = document.getElementById(row.dataset.postOpen ?? '');
+      // A row whose sheet is missing stays a plain link to the post page.
       if (!(pop instanceof HTMLDialogElement)) return;
       // Only true now that the popup is wired, which is why it is set here
       // rather than in the markup.
@@ -493,15 +542,20 @@ const longDate = (d: Date) =>
       });
     });
 
-    pops.forEach((pop) => {
+    section.querySelectorAll<HTMLDialogElement>('.post-pop').forEach((pop) => {
       pop.querySelector<HTMLButtonElement>('[data-pop-close]')?.addEventListener('click', close);
 
       // Backdrop click. The press and the release both have to land out
       // there, or selecting text inside and letting go over the margin
-      // would throw the post away mid-sentence.
+      // would throw the post away mid-sentence. (A click that starts on
+      // the backdrop and ends on the sheet reports the dialog as its
+      // target too, which is why the release is checked on its own.)
       let fromBackdrop = false;
       pop.addEventListener('pointerdown', (e) => {
         fromBackdrop = e.target === pop;
+      });
+      pop.addEventListener('pointerup', (e) => {
+        if (e.target !== pop) fromBackdrop = false;
       });
       pop.addEventListener('click', (e) => {
         if (fromBackdrop && e.target === pop) close();
@@ -516,11 +570,13 @@ const longDate = (d: Date) =>
       });
 
       // Whatever route it took out, this is where the page comes back and
-      // the row that opened it takes focus again.
+      // the row that opened it takes focus again. The page never moved
+      // while the sheet was up, so the row is still under the pointer.
       pop.addEventListener('close', () => {
         window.clearTimeout(exitTimer);
-        live = null;
         pop.removeAttribute('data-open');
+        live = null;
+        leaving = false;
         holdPage(false);
         opener?.focus({ preventScroll: true });
         opener = null;
