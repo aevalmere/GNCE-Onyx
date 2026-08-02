@@ -74,7 +74,7 @@ const galleryCols = [
             >
               <div class="event-panel-inner">
                 <Placeholder name={`season-${e.key}-highlight`}>
-                  <div class="highlight-frame aspect-video">
+                  <div class="poster-seat aspect-video">
                     <span class="poster poster-lg" data-season-dest>
                       <span class="poster-rule" aria-hidden="true"></span>
                       <span class="poster-name type-display">{e.name}</span>
@@ -82,7 +82,7 @@ const galleryCols = [
                   </div>
                 </Placeholder>
 
-                <Placeholder name={`season-${e.key}-gallery`} class="py-3 sm:py-5">
+                <Placeholder name={`season-${e.key}-gallery`}>
                   <div class="gallery">
                     {galleryCols.map((col) => (
                       <div class="gallery-col" data-drift={col.drift}>
@@ -240,9 +240,9 @@ const galleryCols = [
 
   /* ---- Panel ------------------------------------------------------ */
   /* Clipped always, so the height tween has a hard edge and the drifting
-     gallery columns shear inside the frame instead of into the section.
-     It also keeps the panel's content top-anchored while the box grows,
-     which is what lets the poster aim at the frame from the first frame. */
+     gallery columns shear inside the box instead of into the section. It
+     also keeps the panel's content top-anchored while the box grows, which
+     is what lets the poster aim at its seat from the first frame. */
   .event-panel {
     overflow: clip;
   }
@@ -260,7 +260,7 @@ const galleryCols = [
     display: flex;
     flex-direction: column;
     gap: clamp(2.5rem, 5vw, 4rem);
-    /* Air above the frame so the panel opens into space, not straight off
+    /* Air above the poster so the panel opens into space, not straight off
        the row's own rule. */
     padding-top: 3rem;
     padding-bottom: clamp(3rem, 6vw, 5rem);
@@ -277,8 +277,8 @@ const galleryCols = [
   /* ---- Poster ----------------------------------------------------- */
   /* One composition at two sizes. Every measurement inside the poster is em,
      and the em is 3.6% of the poster's own width (cqw, read off the box
-     around it), so the card on the pointer and the frame in the panel are
-     the same artwork at two scales. Both boxes are 16:9 for the same reason:
+     around it), so the one on the pointer and the one in the panel are the
+     same artwork at two scales. Both boxes are 16:9 for the same reason:
      the flight between them is then a single uniform scale with nothing to
      stretch and nothing to reflow.
      No outline: like every media slot it is a flat steel plate waiting for a
@@ -315,18 +315,18 @@ const galleryCols = [
     aspect-ratio: 16 / 9;
   }
 
-  /* Exactly the frame, so the frame's ratio is the poster's ratio. */
+  /* Exactly the seat, so the landing ratio is the poster's own ratio. */
   .poster-lg {
     position: absolute;
     inset: 0;
   }
 
-  /* Not a frame: an empty box with no fill, no edge and nothing in it until
-     the poster arrives. It holds the landing size (the panel's full width at
-     16:9) and it is what the poster measures its em against, and that is all
-     it does. A plate here would be a second steel rectangle sitting in the
-     poster's own shape while the poster flies toward it. */
-  .highlight-frame {
+  /* The seat, not a frame: no fill, no edge, nothing in it until the poster
+     arrives. It holds the landing size (the panel's full width at 16:9) and
+     it is what the poster measures its em against, and that is all it does.
+     A plate here would be a second steel rectangle standing in the poster's
+     own shape while the poster is still flying toward it. */
+  .poster-seat {
     position: relative;
     container-type: inline-size;
   }
@@ -415,12 +415,26 @@ const galleryCols = [
     if (!section) return;
 
     const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+    const fine = matchMedia('(hover: hover) and (pointer: fine)');
 
-    // Panels change the page's height, so the scroll scenes need remeasuring.
-    // Once per interaction, at the end of it, and never while a poster is in
-    // the air: a refresh can reflow the page and move the frame out from
-    // under the flier. Every row shares this sky and this timer, so opening
-    // one event while another sweeps shut still costs exactly one refresh.
+    // Where the pointer last was in this section. A row that gets its hover
+    // back under a reader who has not moved needs a position to put the card
+    // at, and the only honest one is the last place the pointer was seen.
+    // Over as well as move, because a page that scrolls under a still hand
+    // changes which row is under it without a single move event.
+    let at: { x: number; y: number } | null = null;
+    const track = (e: PointerEvent) => {
+      if (fine.matches) at = { x: e.clientX, y: e.clientY };
+    };
+    section.addEventListener('pointermove', track, { capture: true, passive: true });
+    section.addEventListener('pointerover', track, { capture: true, passive: true });
+
+    // Panels change the page's height, so the scroll scenes need remeasuring:
+    // every open, every close, and every close another row forced. It runs
+    // once per interaction, at the end of it, and never while a poster is in
+    // the air, because a refresh can reflow the page and move the seat out
+    // from under the flier. Every row shares this sky and this timer, so
+    // opening one event while another sweeps shut costs exactly one refresh.
     const airborne = new Set<HTMLElement>();
     let settleTimer = 0;
     const settle = () => {
@@ -453,9 +467,9 @@ const galleryCols = [
       const card = document.getElementById(btn.dataset.cursorCard || '');
       const face = card?.querySelector<HTMLElement>('.poster') || null;
       // The flier is parked in the row rather than on the viewport: whatever
-      // moves the frame while the poster is in the air (a scroll, a sibling
-      // panel opening above it, a reflow) moves both by the same amount, so
-      // the landing stays exact.
+      // moves the seat while the poster is in the air (a scroll, a sibling
+      // panel sweeping shut above it, a reflow) moves both by the same
+      // amount, so the landing stays exact.
       const deck = (btn.closest('.event') as HTMLElement) || document.body;
       let ghost: HTMLElement | null = null;
 
@@ -474,14 +488,34 @@ const galleryCols = [
         return rect.width > 0 && rect.height > 0 ? { rect, opacity } : null;
       };
 
-      /* Drop the card out from under the pointer on the same frame the flight
-         starts, so the poster is never in two places and nothing fades out
-         behind the flier. motion.ts owns the card's position tweens; only its
-         visibility is killed here, and the next hover raises it again. */
+      /* Drop the card out from under the pointer on the same frame the poster
+         starts moving, so the artwork is never in two places and nothing
+         fades out behind the flier. It runs on every open, not just the ones
+         that fly: a card caught a frame into its own entrance is too faint to
+         take off from, and left alone it would go on rising to full on the
+         pointer while the poster wiped into the panel. Killing the tween is
+         the point, not the value. motion.ts owns the card's position
+         separately, so the next hover raises it exactly where it stands. */
       const hideCard = () => {
         if (!card) return;
         gsap.killTweensOf(card, 'autoAlpha,opacity,visibility,scale');
         gsap.set(card, { autoAlpha: 0, scale: 0.92 });
+      };
+
+      /* Hand the card back. A pointer already inside the row when the panel
+         shuts will never send another pointerenter, so without this the row
+         would sit there dead until the reader stepped off it and back on.
+         motion.ts binds that event itself and wants nothing from it but a
+         position, so the card is raised by the very handler that would have
+         raised it. Two guards, because a wrong position is worse than none:
+         the pointer has to still be over the row, and the last place we saw
+         it has to still be inside the row's box. */
+      const raiseCard = () => {
+        const p = at;
+        if (!card || !p || !fine.matches || !btn.matches(':hover')) return;
+        const r = btn.getBoundingClientRect();
+        if (p.x < r.left || p.x > r.right || p.y < r.top || p.y > r.bottom) return;
+        btn.dispatchEvent(new PointerEvent('pointerenter', { clientX: p.x, clientY: p.y }));
       };
 
       /* Ghosts leave the page through here and nowhere else: the airborne
@@ -527,18 +561,20 @@ const galleryCols = [
       /* The flier is a clone of the destination: the panel is clipped, so the
          real poster could never travel outside it. Both boxes are 16:9 and
          both compositions are em-driven off their own width, so the clone is
-         the card's poster at takeoff and the frame's poster at landing with
+         the card's poster at takeoff and the seat's poster at landing with
          nothing but scale in between. Transform only, one tween. */
       const fly = (from: DOMRect, opacity: number) => {
         const el = dest;
         if (!el) return;
+        // Anything left over from a previous open goes first, so the seat is
+        // measured as it will actually be flown into.
+        clearFlight();
         const d = el.getBoundingClientRect();
         if (!d.width || !d.height) return wipe();
-        clearFlight();
 
-        // Away from the frame the clone has no box to measure cqw against, so
-        // the em is pinned to the one the frame resolved: the artwork is
-        // frozen at destination size and only scale changes.
+        // Away from the seat the clone has no container to measure cqw
+        // against, so the em is pinned to the one the seat resolved: the
+        // artwork is frozen at landing size and only scale changes.
         const em = parseFloat(getComputedStyle(el).fontSize) || 0;
         const g = el.cloneNode(true) as HTMLElement;
         g.removeAttribute('data-season-dest');
@@ -590,14 +626,14 @@ const galleryCols = [
             scale: 1,
             duration: FLIGHT,
             // Let go, then set down: an object released from the pointer
-            // accelerates out of rest and decelerates into the frame, and the
+            // accelerates out of rest and decelerates into the seat, and the
             // long flat tail means it is already still when the real poster
             // takes over. Cubic, not quartic: a quartic in-half holds the
             // poster on the cursor for a fifth of a second after the click,
             // which reads as lag on the one beat the eye is locked to it.
             ease: 'power3.inOut',
             onComplete: () => {
-              // Measured again against the live frame: if anything moved it
+              // Measured again against the live seat: if anything moved it
               // while the poster was in the air, the gap closes on a short
               // curve instead of a cut.
               const gr = g.getBoundingClientRect();
@@ -639,7 +675,11 @@ const galleryCols = [
         panel.dataset.open = 'true';
 
         if (reduced.matches) {
+          // A cut, and the poster is simply in the panel. The card still goes
+          // down: reduced motion can be switched on with the page already
+          // running, and the engine's cards would outlive the switch.
           clearFlight();
+          hideCard();
           gsap.set(panel, { clearProps: 'height' });
           settle();
           return;
@@ -652,13 +692,13 @@ const galleryCols = [
         gsap.set(panel, { height: 'auto' });
         const full = panel.offsetHeight;
 
+        // Read the card, then put it down, then move the poster: the row is
+        // giving its artwork up either way, and the pointer must not be
+        // holding a copy of it while the panel takes delivery.
         const live = liveFace();
-        if (live) {
-          hideCard();
-          fly(live.rect, live.opacity);
-        } else {
-          wipe();
-        }
+        hideCard();
+        if (live) fly(live.rect, live.opacity);
+        else wipe();
 
         gsap.fromTo(
           panel,
@@ -680,12 +720,16 @@ const galleryCols = [
         gsap.killTweensOf(panel);
         clearFlight();
 
-        // The poster is home only when the panel has actually shut, so that
-        // is when the row gets its hover back. Flip it with aria and a row
-        // sweeping closed under the pointer would raise its own poster on
-        // the cursor while the same poster is still visible in the closing
-        // box: the one duplicate the whole section is built to avoid.
-        const release = () => delete btn.dataset.posterOut;
+        // The poster is back in the row's gift only when the panel has
+        // actually shut, so that is when the row gets its hover back. Flip it
+        // with aria instead and a row sweeping closed under the pointer would
+        // raise its own poster on the cursor while the same poster is still
+        // visible in the closing box: the one duplicate the whole section is
+        // built to avoid.
+        const release = () => {
+          delete btn.dataset.posterOut;
+          raiseCard();
+        };
 
         if (reduced.matches) {
           panel.dataset.open = 'false';
@@ -745,15 +789,16 @@ const galleryCols = [
     /* A row whose poster is out of the row must not raise a second copy of
        it on the pointer. motion.ts binds pointerenter on the row itself and
        is not ours to edit, so the event is caught here, one level up, in the
-       capture phase, and stopped before the row's own listener is reached.
+       capture phase, and stopped before the row's own listener is reached
+       (enter events do not bubble, but capture still runs down to them).
        Clearing data-cursor-card instead would do nothing: motion.ts read
        that attribute once at boot and its handler closes over the card it
-       found then. Nothing here touches the card, the handler or the state
+       found then. Nothing here touches the card, the handler, or the state
        either of them keeps, so the first hover after the panel shuts runs
-       exactly as it always did, from a card that is still resting where the
-       pointer left it. Only pointerenter is swallowed: pointerleave has to
-       get through, or a card handed over mid-flight would never be released,
-       and pointermove only nudges an already hidden box. */
+       exactly as it always did. Only pointerenter is swallowed: pointerleave
+       has to get through or a card handed over mid-flight would never be
+       released, pointerover keeps the tracked position honest, and
+       pointermove only nudges an already hidden box. */
     section.addEventListener(
       'pointerenter',
       (e) => {
