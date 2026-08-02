@@ -63,6 +63,12 @@ Under reduced motion the module bows out and static CSS stands in.
 - `[data-parallax="±px"]`, `[data-count]` (number counter),
   `[data-magnetic]` (cursor pull, pointer-fine), `[data-hover-preview]`
   (image beside cursor, needs `[data-preview-root]` + `[data-preview-img]`).
+- `[data-cursor-card="id"]` — hover detail that rides the pointer: the
+  trigger floats the element `#id.cursor-card` beside the cursor
+  (viewport-clamped, edge-flipping, pointer-fine only). Triggers must carry
+  the same info accessibly (sr-only text plus a static line on coarse
+  pointers / reduced motion). Used by the roster, the season rows, and the
+  gear menu descriptors.
 
 **Scenes** (named, run only when their element exists):
 - The WebGL ONYX journey (`src/scripts/onyx3d.ts` + `src/data/onyx-glyphs.ts`)
@@ -90,24 +96,35 @@ Under reduced motion the module bows out and static CSS stands in.
 One trick per section: no two sections on a page share an entrance or
 scroll behaviour.
 
-## Per-page specialties
+## The one-page structure
 
-- **Home**: type-first lander: split hero headline · count-up squad
-  numbers · diagonal-wipe robot panel · roster rows wiping in from
-  alternating sides · magnetic sponsor CTA close. (The old WebGL ONYX
-  journey lives at `/lab/onyx/`, unlinked.)
-- **Season**: kinetic header · diagonal build log (velocity skew,
-  cross-drift panels) · screen-on highlight match · flip-card awards ·
-  cross-drift gallery columns.
-- **Outreach**: kinetic header · velocity ticker · post rows wiping in
-  from alternating sides · ink-in CTA paragraph · magnetic CTA.
-- **Contact**: kinetic header · cursor-tilt glass channels · scrubbed tier
-  ladder · corner-wipe partner rows · magnetic contact CTA.
+The whole site is `src/pages/index.astro`, composing eight sections from
+`src/components/home/` over alternating black / Space Indigo bands. GearNav
+doubles as the scroll nav (anchor ids in parentheses); `Finale` carries the
+footer, so BaseLayout gets `hideFooter` on home. Blog posts keep their own
+pages; `/lab/onyx/` stays parked and unlinked. One trick per section:
+
+- **Hero**: split intro headline · script accent · magnetic CTA.
+- **Lineage** (`#lineage`): count-up team numbers · staggered award ledger.
+- **Team** (`#team`): rows wiping in from alternating sides · cursor cards
+  with each member's previous teams (static fallback on touch).
+- **Build** (`#build`): one short blurb, a connective beat.
+- **Season** (`#season`): collapsible event rows (Qualifier 1 / Qualifier 2
+  / States / More to come); the hover poster flies from the cursor card
+  into the highlight frame on open; per-event awards strip and cross-drift
+  gallery. Accordion logic lives in the component's own script.
+- **Outreach** (`#outreach`): velocity ticker · post rows · invite-us CTA.
+- **Sponsors** (`#sponsors`): scrubbed recognition ladder, no amounts.
+- **Finale** (`#contact`): two staggered reveal waves; contact channels
+  plus the footer matter (nav anchors, identity, small print).
 - **Blog post**: reading-progress bar · masked title.
+
+Old page URLs (`/season/`, `/contact/`, `/outreach/`) redirect to their
+section anchors via `astro.config.mjs` redirects.
 
 ## The blog (Outreach)
 
-Markdown collection in `src/content/blog/`. `outreach/index.astro` lists
+Markdown collection in `src/content/blog/`. The home Outreach section lists
 posts as line-hover rows; `outreach/[id].astro` renders a post in
 `.post-body` with a `ViewCounter` (GoatCounter) and `Comments` (giscus),
 both stubbed until IDs are set in `src/lib/services.ts` (see README).
@@ -117,15 +134,16 @@ both stubbed until IDs are set in `src/lib/services.ts` (see README).
 | Component | Purpose |
 | --- | --- |
 | `scripts/motion.ts` | Motion engine: primitives + scenes. Reduced-motion safe. |
-| `layouts/BaseLayout.astro` | Shell: fonts, intro cover, heat rail, view transitions, GearNav, footer, imports motion. |
+| `layouts/BaseLayout.astro` | Shell: fonts, intro cover, heat rail, view transitions, GearNav, footer (`hideFooter` on home), imports motion. |
+| `components/home/*.astro` | The eight one-page sections, composed by `pages/index.astro`. |
 | `components/Reveal.astro` | `[data-reveal]` wrapper. |
-| `components/GearNav.astro` | Gear button + full-screen menu. |
-| `components/Placeholder.astro` / `SectionLabel.astro` / `Footer.astro` | Content slots / label / footer. |
+| `components/GearNav.astro` | Gear button + full-screen scroll-nav menu (cursor-card descriptors, Lenis smooth anchors). |
+| `components/Placeholder.astro` / `SectionLabel.astro` / `Footer.astro` | Content slots / label / footer (blog + lab pages only). |
 | `components/ViewCounter.astro` / `Comments.astro` | Blog views / comments, stub until configured. |
 
 ## Conventions
 
 - Content column: `mx-auto max-w-5xl px-5 sm:px-8` (blog body `max-w-3xl`).
 - Section rhythm varies on purpose; don't metronome identical sections.
-- At most one `.type-label` eyebrow per page opening; most sections open
-  with a display headline.
+- No eyebrows: sections open with a display headline, plus the `.mark`
+  grape bar on black bands. `.type-label` is for metadata only.

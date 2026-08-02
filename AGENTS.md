@@ -1,8 +1,11 @@
 # Agent guide
 
 Astro 7 + Tailwind CSS 4 website for a rookie FIRST Tech Challenge (FTC)
-robotics team. Currently a design/structure skeleton: all copy is Lorem
-Ipsum placeholders awaiting a content pass.
+robotics team. The whole site is one scrollable page
+(`src/pages/index.astro` composing `src/components/home/`); blog posts and
+the parked `/lab/onyx/` page are the only separate routes. Copy is real;
+media and a few identity facts (team number, email, Instagram, form link)
+are still placeholder slots.
 
 ## Development
 
@@ -44,8 +47,9 @@ Manage the background server with `astro dev stop`, `astro dev status`, and `ast
 - The WebGL ONYX word (`src/scripts/onyx3d.ts` + `src/data/onyx-glyphs.ts`)
   is parked on the unlinked page `/lab/onyx/`. Keep it building and usable;
   don't link it from nav/footer or re-import it on other pages.
-- Navigation is `src/components/GearNav.astro` (orbital gear hub). Page list
-  changes go in its `links` array AND `Footer.astro`.
+- Navigation is `src/components/GearNav.astro` (orbital gear hub), now a
+  scroll nav over the one-page home: section anchor changes go in its
+  `links` array, `Footer.astro`, AND the Finale section's footer links.
 - Design tokens live in the `@theme` block of `src/styles/global.css`;
   Tailwind v4 derives utilities from them (`bg-bg`, `text-accent`,
   `ease-out-strong`, ...). There is no `tailwind.config.*`.

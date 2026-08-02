@@ -1,291 +1,35 @@
 ---
 /**
- * Home — a clean type-first lander. Four blocks the WebGL journey once
- * carried (who we are, lineage, robot, team), each with one motion trick:
- * a hero headline that cascades on load, count-up veteran numbers with
- * their credentials, design values beside pointer-reactive spec cards,
- * roster rows wiping in from alternating sides, and a magnetic close.
+ * Home — the whole site on one scrolling page.
  *
- * The WebGL ONYX journey this replaced is parked, fully working, at
- * /lab/onyx/ (src/pages/lab/onyx.astro). It is unlinked on purpose.
+ * Eight sections, each a component in src/components/home/ with its own
+ * motion trick, alternating black and Space Indigo bands. GearNav doubles
+ * as the scroll nav (anchor ids live on each section) and Finale carries
+ * the contact block plus the footer matter, so the shared Footer is
+ * suppressed here. Blog posts keep their own pages under /outreach/.
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
-import Reveal from '../components/Reveal.astro';
-
-const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
-
-// The four GNCE teams our veterans came from. Credentials are the veterans'
-// published record (world championship + international); confirm the exact
-// result per number before this ships as fact.
-const veterans = [
-  { num: '22489', cred: 'World Championship' },
-  { num: '26112', cred: 'World Championship' },
-  { num: '26413', cred: 'International' },
-  { num: '26111', cred: 'International' },
-];
-
-const values = [
-  { lead: 'Field-serviceable.', body: 'Every subsystem comes off with the tools already on the cart.' },
-  { lead: 'Simple beats clever.', body: 'Fewer parts to break, and the ones that do we rebuild between matches.' },
-  { lead: 'Built to finish.', body: 'It has to run the last qualifier as well as the first.' },
-];
-
-const specs = [
-  { key: 'Size', depth: 30 },
-  { key: 'Weight', depth: 18 },
-  { key: 'Drivetrain', depth: 24 },
-];
-
-const roster = [
-  'Ethan Zhang',
-  'Ethan Zhuang',
-  'Anson Su',
-  'Adrian Chang',
-  'Leo Li',
-  'Nicholas Colli',
-  'Raymond Liu',
-];
+import Hero from '../components/home/Hero.astro';
+import Lineage from '../components/home/Lineage.astro';
+import Team from '../components/home/Team.astro';
+import Build from '../components/home/Build.astro';
+import Season from '../components/home/Season.astro';
+import Outreach from '../components/home/Outreach.astro';
+import Sponsors from '../components/home/Sponsors.astro';
+import Finale from '../components/home/Finale.astro';
 ---
 
 <BaseLayout
   title="Home"
   description="GNCE Onyx is a rookie FIRST Tech Challenge team at Weston High School, built by championship veterans, competing in the 2026-2027 BIOBUZZ season."
+  hideFooter
 >
-  <!-- HERO: the headline cascades on load as the cover lifts. -->
-  <section class="hero" aria-label="GNCE Onyx">
-    <div class="mx-auto w-full max-w-5xl px-5 sm:px-8">
-      <Reveal variant="up"><p class="type-label text-muted">First Tech Challenge · Weston, MA</p></Reveal>
-      <Reveal variant="up" delay={70}><p class="hero-script type-script mt-6">GNCE Onyx</p></Reveal>
-      <h1 class="hero-title type-display mt-4" data-split="intro">A rookie team of championship veterans.</h1>
-      <Reveal variant="up" delay={40} class="mt-8 max-w-prose">
-        <p class="text-muted">Built for the 2026-2027 BIOBUZZ season, presented by RTX.</p>
-      </Reveal>
-      <Reveal variant="up" delay={110} class="mt-10">
-        <p class="hero-cta">
-          <a href={`${base}/contact/`} class="btn btn-solid" data-magnetic="0.4">Sponsor the team</a>
-          <a href={`${base}/season/`} class="hero-link">Our first season</a>
-        </p>
-      </Reveal>
-    </div>
-  </section>
-
-  <!-- LINEAGE: purple band. Numbers count up, credentials underneath. -->
-  <section class="section-alt">
-    <div class="mx-auto max-w-5xl px-5 py-24 sm:px-8 sm:py-32">
-      <h2 class="type-display text-[clamp(1.75rem,4vw,3rem)]" data-split>Four of our seven are GNCE veterans.</h2>
-      <div class="mt-14 grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-4" data-reveal-group>
-        {
-          veterans.map((v) => (
-            <Reveal variant="up">
-              <div class="stat hairline border-t pt-4">
-                <p class="stat-num" data-count={v.num}>
-                  {v.num}
-                </p>
-                <p class="stat-cred type-label text-muted mt-2">
-                  <span class="stub" title="Confirm this team's exact result">{v.cred}</span>
-                </p>
-              </div>
-            </Reveal>
-          ))
-        }
-      </div>
-    </div>
-  </section>
-
-  <!-- ROBOT: coal, crimson mark. Values, then pointer-reactive spec cards. -->
-  <section class="mx-auto max-w-5xl px-5 py-24 sm:px-8 sm:py-32">
-    <span class="mark" aria-hidden="true"></span>
-    <h2 class="type-display text-[clamp(1.75rem,4vw,3rem)]" data-split>How we build</h2>
-    <ul class="values mt-10 max-w-2xl" data-reveal-group>
-      {
-        values.map((v) => (
-          <li>
-            <Reveal variant="up">
-              <p class="value"><b>{v.lead}</b> {v.body}</p>
-            </Reveal>
-          </li>
-        ))
-      }
-    </ul>
-
-    <div class="float-grid mt-16" data-float>
-      {
-        specs.map((s) => (
-          <article class="float-card glass" data-float-card data-depth={s.depth}>
-            <div class="float-inner">
-              <p class="type-label text-muted">{s.key}</p>
-              <p class="float-val type-display"><span class="stub" title="Set at kickoff">TBD</span></p>
-            </div>
-          </article>
-        ))
-      }
-    </div>
-  </section>
-
-  <!-- TEAM: purple band. Seven names, wiping in from alternating sides. -->
-  <section class="section-alt">
-    <div class="mx-auto max-w-5xl px-5 py-24 sm:px-8 sm:py-32">
-      <h2 class="type-display text-[clamp(1.75rem,4vw,3rem)]" data-split>Our team</h2>
-      <ul class="mt-12" data-reveal-group>
-        {
-          roster.map((name, i) => (
-            <li>
-              <Reveal variant={i % 2 ? 'left' : 'right'} class="hairline border-t">
-                <p class="roster-name py-4">{name}</p>
-              </Reveal>
-            </li>
-          ))
-        }
-      </ul>
-    </div>
-  </section>
-
-  <!-- CLOSE: coal, crimson mark. -->
-  <section class="mx-auto max-w-5xl px-5 pb-36 pt-24 sm:px-8 sm:pt-32">
-    <span class="mark" aria-hidden="true"></span>
-    <h2 class="type-display text-[clamp(2.25rem,7vw,5rem)]" data-split>Back the build.</h2>
-    <Reveal variant="up" class="mt-8 max-w-prose">
-      <p class="text-muted">
-        We are a rookie team funding a first season from scratch. Every dollar
-        goes to parts, registration, and time on the practice field. Sponsors
-        ride on the robot and stand with us in the pit.
-      </p>
-    </Reveal>
-    <Reveal variant="up" class="mt-10">
-      <p>
-        <a href={`${base}/contact/`} class="btn btn-solid" data-magnetic="0.4">Sponsor the team</a>
-      </p>
-    </Reveal>
-  </section>
+  <Hero />
+  <Lineage />
+  <Team />
+  <Build />
+  <Season />
+  <Outreach />
+  <Sponsors />
+  <Finale />
 </BaseLayout>
-
-<style>
-  /* Section variety within the locked palette: full-bleed purple band
-     (darker step) with a hard machined edge, no gradient. */
-  .section-alt {
-    background: var(--color-surface);
-  }
-
-  /* Crimson accent mark above coal-section headings (structural, not decor). */
-  .mark {
-    display: block;
-    width: 2.75rem;
-    height: 3px;
-    margin-bottom: 1.75rem;
-    background: var(--color-accent);
-  }
-
-  .hero {
-    display: flex;
-    align-items: center;
-    min-height: 100svh;
-    padding: 6rem 0 4rem;
-  }
-
-  .hero-script {
-    font-size: clamp(2.5rem, 6vw, 3.6rem);
-    color: var(--color-accent);
-    line-height: 0.9;
-  }
-
-  .hero-title {
-    font-size: clamp(2.25rem, 5.5vw, 4.25rem);
-    line-height: 1.03;
-    max-width: 24ch;
-  }
-
-  .hero-cta {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 1.5rem;
-  }
-
-  .hero-link {
-    color: var(--color-ink);
-    font-weight: 700;
-    font-size: 0.9375rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    text-decoration: underline;
-    text-underline-offset: 0.35em;
-    text-decoration-color: var(--color-accent);
-  }
-
-  /* Veteran numbers: body serif with fixed-width digits so the count-up
-     never jitters the layout. */
-  .stat-num {
-    font-family: var(--font-text);
-    font-weight: 700;
-    font-size: clamp(1.6rem, 3.4vw, 2.4rem);
-    line-height: 1;
-    font-variant-numeric: tabular-nums lining-nums;
-  }
-
-  .stat-cred {
-    font-size: 0.6875rem;
-  }
-
-  /* Design values: bold lead phrase, muted follow-through. */
-  .values {
-    display: flex;
-    flex-direction: column;
-    gap: 1.1rem;
-  }
-
-  .value {
-    font-size: 1.0625rem;
-    line-height: 1.5;
-    color: var(--color-muted);
-    max-width: 52ch;
-  }
-
-  .value b {
-    color: var(--color-ink);
-    font-weight: 700;
-  }
-
-  /* Floating spec cards: pointer-reactive, driven by motion.ts. */
-  .float-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.25rem;
-    perspective: 1000px;
-  }
-
-  .float-card {
-    padding: 1.6rem;
-    min-height: 9.5rem;
-    display: flex;
-    transform-style: preserve-3d;
-    will-change: transform;
-  }
-
-  .float-inner {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    gap: 1.75rem;
-    width: 100%;
-  }
-
-  .float-val {
-    font-size: clamp(1.75rem, 3vw, 2.4rem);
-    line-height: 1;
-  }
-
-  @media (max-width: 640px) {
-    .float-grid {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  /* Roster: cleaner body serif, not the distressed display face, so seven
-     names read cleanly at a glance. */
-  .roster-name {
-    font-family: var(--font-text);
-    font-weight: 700;
-    font-size: clamp(1.4rem, 3vw, 2rem);
-    line-height: 1.2;
-  }
-</style>
