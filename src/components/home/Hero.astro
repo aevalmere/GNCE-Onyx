@@ -1,8 +1,8 @@
 ---
 /**
  * Hero — the full-viewport opener on black. Script line, then the headline
- * cascading per character as the intro cover lifts, then one line of context
- * and the two CTAs. Both CTAs are in-page anchors: Lenis smooth-scrolls them.
+ * cascading per character as the intro cover lifts, then the two CTAs. Both
+ * CTAs are in-page anchors: Lenis smooth-scrolls them.
  */
 import Reveal from '../Reveal.astro';
 ---
@@ -11,10 +11,7 @@ import Reveal from '../Reveal.astro';
   <div class="mx-auto w-full max-w-5xl px-5 sm:px-8">
     <Reveal variant="up" delay={70}><p class="hero-script type-script">GNCE Onyx</p></Reveal>
     <h1 class="hero-title type-display mt-4" data-split="intro">A rookie team of championship veterans.</h1>
-    <Reveal variant="up" delay={40} class="mt-8 max-w-prose">
-      <p class="text-muted">Built for the 2026-2027 BIOBUZZ season, presented by RTX.</p>
-    </Reveal>
-    <Reveal variant="up" delay={110} class="mt-10">
+    <Reveal variant="up" delay={110} class="mt-12">
       <p class="hero-cta">
         <a href="#sponsors" class="btn btn-solid" data-magnetic="0.4">Sponsor the team</a>
         <a href="#season" class="hero-link">Our first season</a>

@@ -1,13 +1,13 @@
 ---
 /**
- * Build — a short beat on the indigo band between the roster and the season.
+ * Build — a short beat on the paper band between the roster and the season.
  * Deliberately small: a headline and one line of build philosophy, so the
  * season log next door keeps the room.
  */
 import Reveal from '../Reveal.astro';
 ---
 
-<section id="build" class="section-alt">
+<section id="build" class="band-light">
   <div class="mx-auto max-w-5xl px-5 py-16 sm:px-8 sm:py-20">
     <h2 class="type-display text-[clamp(1.75rem,4vw,3rem)]" data-split>How we build</h2>
     <Reveal variant="up" class="mt-8">
@@ -21,11 +21,7 @@ import Reveal from '../Reveal.astro';
 </section>
 
 <style>
-  /* Full-bleed indigo band with a hard machined edge, no gradient. */
-  .section-alt {
-    background: var(--color-surface);
-  }
-
+  /* Indigo on paper: colour comes from the band-light token flip. */
   .build-line {
     color: var(--color-muted);
     font-size: 1.0625rem;
