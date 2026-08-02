@@ -55,6 +55,9 @@ import Finale from '../components/home/Finale.astro';
     position: relative;
     z-index: 1;
     margin-top: -100svh;
+    /* Paper behind the pinned finale, so a retracting mobile URL bar
+       (svh vs lvh) can never flash black below the frame. */
+    background: var(--color-paper);
   }
 
   .finale-wrap > :global(#contact) {

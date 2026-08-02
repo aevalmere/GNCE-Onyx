@@ -3,9 +3,8 @@
  * Sponsors — black band, second to last. The recognition ladder is the whole
  * pitch: four rungs, low to high, no amounts and no "what the money buys"
  * copy. Rungs wipe in one at a time on scrub via [data-ladder]/[data-rung].
- * Closes on the packet slot and the magnetic CTA into the contact section.
+ * Closes on the magnetic CTA into the contact section.
  */
-import Placeholder from '../Placeholder.astro';
 import Reveal from '../Reveal.astro';
 
 const rungs = [
@@ -35,10 +34,7 @@ const rungs = [
       }
     </dl>
 
-    <Reveal variant="up" class="packet mt-14">
-      <Placeholder name="contact-sponsor-packet" class="px-4 py-3">
-        <p class="type-label text-muted">Sponsor packet, PDF</p>
-      </Placeholder>
+    <Reveal variant="up" class="mt-14">
       <a href="#contact" class="btn btn-solid" data-magnetic="0.4">Get in touch</a>
     </Reveal>
   </div>
@@ -79,12 +75,5 @@ const rungs = [
     flex: 1;
     min-width: 14rem;
     margin: 0;
-  }
-
-  .packet {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 1.75rem 2rem;
   }
 </style>

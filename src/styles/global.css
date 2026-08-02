@@ -179,8 +179,10 @@ body {
 .cursor-card {
   /* Same ramp shape as the dark one, inverted: full, 62, 40, 18. */
   --color-ink: var(--color-surface);
-  --color-muted: color-mix(in srgb, var(--color-surface) 62%, transparent);
-  --color-faint: color-mix(in srgb, var(--color-surface) 40%, transparent);
+  /* Indigo needs a heavier hand than slate: 62/40 lands under 4:1 on paper
+     for small type, so the light ramp runs hotter than the dark one. */
+  --color-muted: color-mix(in srgb, var(--color-surface) 70%, transparent);
+  --color-faint: color-mix(in srgb, var(--color-surface) 52%, transparent);
   --color-line: color-mix(in srgb, var(--color-surface) 18%, transparent);
   background-color: var(--color-paper);
   color: var(--color-ink);
