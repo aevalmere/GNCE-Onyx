@@ -3,138 +3,256 @@
  * Finale — the last frame, on paper. index.astro pins this section and
  * scrolls the rest of the page off it like a curtain, so it has to read as
  * one still picture instead of a sequence: no reveals, no split headline,
- * nothing that arrives. The headline owns the top field, the contact ledger
- * sits under it with the form button on its right edge, and the small print
- * rides the bottom rule. Sized to one viewport, so what the curtain
- * uncovers is the whole thing.
+ * nothing that arrives. The sponsor wall holds the top edge, "Get in touch"
+ * owns the lower half with the two contact keys and the form button, and the
+ * shared small print closes the bottom. Sized to one viewport, so what the
+ * curtain uncovers is the whole thing.
  *
  * No transforms or positioning on the root: the sticky comes from
  * index.astro and anything here would fight it.
+ *
+ * The small print is the same <Footer /> the blog pages render, imported
+ * rather than retyped so the two can never drift. Its top hairline stays and
+ * it is the only rule in the frame: it separates the colophon from the page
+ * proper, which is the one job hairlines still have.
  */
-
-/* `pending` marks the value as a .stub (an unknown we still have to fill in). */
-const channels = [
-  { label: 'Email', value: '[placeholder]@gmail.com', pending: 'Email pending' },
-  { label: 'Instagram', value: '@placeholder', pending: 'Handle pending' },
-];
+import Footer from '../Footer.astro';
+import Placeholder from '../Placeholder.astro';
 ---
 
 <section id="contact" class="finale band-light">
-  <div class="finale-frame mx-auto max-w-5xl px-5 sm:px-8">
-    <h2 class="finale-head type-display">Get in touch</h2>
+  <div class="finale-frame mx-auto w-full max-w-5xl px-5 sm:px-8">
+    <div class="wall">
+      <h2 class="wall-head type-display">Backed by</h2>
 
-    <div class="reach">
-      <dl class="channels">
-        {
-          channels.map((c) => (
-            <div class="channel">
-              <dt class="channel-label type-label">{c.label}</dt>
-              <dd class="channel-value">
-                <span class="stub" title={c.pending}>{c.value}</span>
-              </dd>
-            </div>
-          ))
-        }
-      </dl>
-
-      <a href="#" class="btn btn-solid stub cta" title="Form link pending" data-magnetic="0.35">
-        Open the form
-      </a>
+      <Placeholder name="finale-sponsors">
+        <ul class="wall-list">
+          <li class="wall-name type-display">Sponsor 1</li>
+          <li class="wall-name type-display">Sponsor 2</li>
+          <li class="wall-name type-display">Sponsor 3</li>
+        </ul>
+      </Placeholder>
     </div>
 
-    <p class="small-print type-label">
-      © 2026 GNCE Onyx · Weston High School · Team&nbsp;<span class="stub" title="Team number pending">#XXXXX</span>
-    </p>
+    <div class="reach">
+      <h2 class="reach-head type-display">Get in touch</h2>
+
+      <div class="reach-row">
+        <!-- Two keys, no labels: the glyph is the whole control until a
+             pointer or the keyboard opens it. Envelope and Instagram are
+             drawn here rather than pulled from a set, on the same 24 grid at
+             the same stroke weight. -->
+        <a class="pin" href="#" title="Email pending">
+          <span class="sr-only">Email</span>
+          <svg
+            class="pin-glyph"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            aria-hidden="true"
+          >
+            <rect x="3" y="5.5" width="18" height="13"></rect>
+            <path d="M3 5.5 L12 13 L21 5.5"></path>
+          </svg>
+          <span class="pin-slot">
+            <span class="pin-clip">
+              <span class="pin-value stub" title="Email pending">[placeholder]@gmail.com</span>
+            </span>
+          </span>
+        </a>
+
+        <a class="pin" href="#" title="Handle pending">
+          <span class="sr-only">Instagram</span>
+          <svg
+            class="pin-glyph"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            aria-hidden="true"
+          >
+            <rect x="3" y="3" width="18" height="18" rx="3"></rect>
+            <circle cx="12" cy="12" r="4"></circle>
+            <circle cx="17" cy="7" r="1.05" fill="currentColor" stroke="none"></circle>
+          </svg>
+          <span class="pin-slot">
+            <span class="pin-clip">
+              <span class="pin-value stub" title="Handle pending">@placeholder</span>
+            </span>
+          </span>
+        </a>
+
+        <a href="#" class="btn btn-solid stub cta" title="Form link pending" data-magnetic="0.35">
+          Open the form
+        </a>
+      </div>
+    </div>
   </div>
+
+  <Footer />
 </section>
 
 <style>
-  /* One viewport tall, flex column so the small print can hold the bottom
-     edge whatever the frame's height. Paper fill and indigo ink come from
-     .band-light. */
+  /* One viewport tall, flex column: the frame takes what it needs and the
+     small print holds the bottom edge whatever the height. Paper fill and
+     indigo ink come from .band-light. */
   .finale {
     display: flex;
     flex-direction: column;
     min-height: 100svh;
-    /* The band's muted step (62% ink) falls short of 4.5:1 at label size on
-       paper, so the quiet type here holds at 78%. */
-    --quiet: color-mix(in srgb, var(--color-ink) 78%, transparent);
   }
 
   .finale-frame {
     display: flex;
     flex: 1;
     flex-direction: column;
-    width: 100%;
-    padding-block: clamp(4rem, 9svh, 7rem) clamp(1.75rem, 4svh, 2.75rem);
+    padding-block: clamp(3.5rem, 8svh, 6rem) clamp(1.75rem, 4svh, 2.75rem);
   }
 
-  /* The site's last headline, so it takes the whole top field. Capped
-     against viewport height as well: on a short landscape screen a 12vw
-     headline would push the ledger out of the frame. */
-  .finale-head {
-    font-size: clamp(3rem, min(12vw, 20svh), 8.75rem);
+  /* ---- Sponsor wall ------------------------------------------------ */
+  /* Names are the content here, so they run larger than the heading over
+     them. No plates, no boxes: three names on bare paper, spread across the
+     measure, waiting to be swapped for real ones. */
+  .wall-head {
+    font-size: clamp(1.5rem, 2.8vw, 2rem);
   }
 
-  .reach {
+  .wall-list {
     display: flex;
-    flex-direction: column;
-    margin-top: clamp(3rem, 10svh, 6.5rem);
-    margin-bottom: clamp(2rem, 6svh, 4rem);
+    flex-wrap: wrap;
+    gap: clamp(0.75rem, 2svh, 1.5rem) clamp(1.75rem, 5vw, 4.5rem);
+    margin-top: clamp(1.25rem, 3svh, 2rem);
   }
 
-  /* Ledger: one rule over the group, one under each row. */
-  .channels {
-    border-top: 1px solid var(--color-line);
-  }
-
-  .channel {
-    display: grid;
-    gap: 0.15rem 2rem;
-    border-bottom: 1px solid var(--color-line);
-    padding-block: clamp(1.1rem, 2.8svh, 1.9rem);
-  }
-
-  .channel-label {
-    color: var(--quiet);
-  }
-
-  .channel-value {
-    margin: 0;
-    font-size: clamp(1.35rem, 2.8vw, 2.1rem);
-    line-height: 1.35;
-  }
-
-  /* The one grape mark on the frame, parked on the far side of the ledger
-     so it balances the headline instead of stacking under it. */
-  .cta {
-    align-self: flex-start;
-    margin-top: clamp(1.75rem, 4svh, 2.5rem);
-  }
-
-  .small-print {
-    margin-top: auto;
-    border-top: 1px solid var(--color-line);
-    padding-top: clamp(1.25rem, 3svh, 1.75rem);
-    color: var(--quiet);
+  .wall-name {
+    font-size: clamp(1.75rem, 4.2vw, 3.25rem);
   }
 
   @media (min-width: 640px) {
-    .channel {
-      grid-template-columns: 11rem 1fr;
-      align-items: baseline;
-    }
-
-    .cta {
-      align-self: flex-end;
+    .wall-list {
+      justify-content: space-between;
     }
   }
 
-  /* The nav toggle parks over the bottom right corner; keep the wrapped
-     small print out from under it. */
-  @media (max-width: 639px) {
-    .small-print {
-      padding-right: 3.75rem;
+  /* ---- Get in touch ------------------------------------------------ */
+  /* Pushed into the lower half: the wall holds the top edge, this holds the
+     bottom, and the air between them is the composition. The padding is the
+     floor for that gap on a short screen, where the auto margin goes to
+     nothing. */
+  .reach {
+    margin-top: auto;
+    padding-top: clamp(2.5rem, 8svh, 6rem);
+  }
+
+  /* The site's last headline, so it takes the field. Capped against viewport
+     height as well: on a short landscape screen a 10vw headline would push
+     the controls out of the frame. */
+  .reach-head {
+    font-size: clamp(2.75rem, min(10vw, 16svh), 8rem);
+  }
+
+  .reach-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1.25rem 0.75rem;
+    margin-top: clamp(1.75rem, 4svh, 2.75rem);
+  }
+
+  /* Machined keys: a solid indigo block with the glyph centred in it, no
+     outline and no label. 54px square at rest, which is the hit area too. */
+  .pin {
+    display: inline-flex;
+    align-items: center;
+    height: 3.375rem;
+    padding-inline: 1rem;
+    background: var(--color-surface);
+    color: var(--color-paper);
+    transition: transform 160ms var(--ease-out-strong);
+  }
+
+  .pin:active {
+    transform: scale(0.97);
+  }
+
+  .pin-glyph {
+    flex: none;
+    width: 1.375rem;
+    height: 1.375rem;
+  }
+
+  /* The expansion: a grid track running 0fr to 1fr, so the block itself gets
+     wider and the address is uncovered by the moving edge. Width is the point
+     of the gesture, which makes this the one place on the site that animates
+     a layout property instead of a transform. The glyph is outside the track,
+     so it neither moves nor scales while the block opens. */
+  .pin-slot {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .pin-clip {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    overflow: clip;
+  }
+
+  .pin-value {
+    /* Never squeezed by the closing track: it holds its width and gets
+       clipped instead, so the letters do not reflow mid-open. */
+    flex: none;
+    padding-left: 0.85rem;
+    font-size: 0.9375rem;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    /* Paper dash: .stub draws a grape one, which is nothing on indigo. */
+    border-bottom-color: color-mix(in srgb, var(--color-paper) 60%, transparent);
+    /* .stub also asks for the help cursor; inside a link the pointer wins. */
+    cursor: inherit;
+  }
+
+  /* Closed at rest only where there is a pointer to open it with. Touch gets
+     both keys standing open, which is the honest state for a device that
+     cannot hover and beats a two-tap rule nobody is told about. */
+  @media (hover: hover) and (pointer: fine) {
+    .pin-slot {
+      grid-template-columns: 0fr;
+      transition: grid-template-columns 400ms var(--ease-out-strong);
+    }
+
+    .pin-value {
+      transform: translateX(-0.4rem);
+      transition: transform 400ms var(--ease-out-strong);
+    }
+
+    .pin:hover .pin-slot,
+    .pin:focus-visible .pin-slot {
+      grid-template-columns: 1fr;
+    }
+
+    .pin:hover .pin-value,
+    .pin:focus-visible .pin-value {
+      transform: none;
+    }
+  }
+
+  /* Reduced motion: the block opens and the address lands, both at once and
+     both instantly. The press feedback stays, same as every other button. */
+  @media (prefers-reduced-motion: reduce) {
+    .pin-slot,
+    .pin-value {
+      transition: none;
+    }
+  }
+
+  /* The one grape mark on the frame, parked on the far side of the keys so it
+     balances the headline instead of stacking under it. Under 640 it wraps to
+     its own line and sits on the left margin with everything else. */
+  @media (min-width: 640px) {
+    .cta {
+      margin-left: auto;
     }
   }
 </style>

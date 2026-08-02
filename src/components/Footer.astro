@@ -1,14 +1,18 @@
 ---
 /**
- * Footer — the small print only, for pages outside the one-page home
- * (blog posts, lab). Home ends with the Finale section instead; the way
- * back from a post is its header back-link and the drawer nav.
+ * Footer — the small print, and the only place it is written. Blog and lab
+ * pages get it after <main>; the home page suppresses that copy and the
+ * Finale renders this same component inside its own frame, so the two can
+ * never drift.
+ *
+ * The top hairline is the one rule left on it: it seats the colophon under
+ * the page proper, which is a real content break rather than decoration.
  */
 ---
 
 <footer class="hairline border-t">
   <p
-    class="type-label mx-auto flex max-w-5xl flex-wrap justify-between gap-x-8 gap-y-1 px-5 py-6 text-muted sm:px-8"
+    class="foot-print type-label mx-auto flex max-w-5xl flex-wrap justify-between gap-x-8 gap-y-1 px-5 py-6 text-muted sm:px-8"
   >
     <span>© 2026 GNCE Onyx</span>
     <span>
@@ -16,3 +20,15 @@
     </span>
   </p>
 </footer>
+
+<style>
+  /* The nav toggle parks over the bottom right corner of every page, and this
+     print is the last thing under it. On narrow screens, where the toggle
+     tucks in to 1rem, the wrapped lines have to clear its 56px square. Typed
+     with the element to outrank the padding utilities either way. */
+  @media (max-width: 640px) {
+    p.foot-print {
+      padding-inline-end: 4.5rem;
+    }
+  }
+</style>
