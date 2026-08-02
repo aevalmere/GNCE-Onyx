@@ -1,17 +1,19 @@
 # Design System — GNCE Onyx
 
 A dark, medieval-modern identity built for a scroll-driven experience.
-Coal-black fields, one crimson accent, two purple steps, and a distinctive
+Black fields, indigo bands and panels, one grape accent, and a distinctive
 uncial + script + old-style-serif type system. Typography carries the
 identity; motion is the life. Read this (and the skills in `.claude/skills/`)
 before touching UI.
 
 ## Principles
 
-1. **Four colors, two purple steps.** `#0A0908` coal, `#1A0F20` +
-   `#2B1B2F` purple (darker / lighter), `#6E0D25` crimson, `#E8E2DC`
-   off-white, plus off-white alphas for rules and muted text. Crimson and
-   purple both read as text on coal (intentional low-key contrast).
+1. **Six colors.** `#000000` black (fields), `#10254F` space indigo
+   (full-bleed section bands), `#303D6A` twilight indigo (glass, raised
+   surfaces), `#2B2C33` shadow grey (`--color-steel`: media slots, code
+   frames), `#823A80` grape soda (accent), `#C9CFDD` pale slate (ink),
+   plus pale slate alphas for rules and muted text. Grape reads as text on
+   black (intentional low-key contrast).
 2. **No idle glows. No gradient fills.** Life comes from motion and solid
    color. Texture is film grain and *non-gradient* frosted glass (uniform
    tint + blur + hairline), used sparingly. No ambient/looping glow.
@@ -36,10 +38,12 @@ before touching UI.
 | `--font-display` | Uncial Antiqua | Headlines, the ONYX wordmark |
 | `--font-script` | Grey Qo | One script flourish per page |
 | `--font-text` | Cardo | Body, labels (`.type-label` = spaced small caps) |
-| `--color-bg` | `#0a0908` | Coal background |
-| `--color-surface` / `--color-panel` | `#1a0f20` / `#2b1b2f` | Purple, darker / lighter (glass, footer) |
-| `--color-accent` | `#6e0d25` | Crimson: fills, accent text, markers |
-| `--color-ink` / `--color-muted` | `#e8e2dc` / ash 60% | Text / secondary text |
+| `--color-bg` | `#000000` | Black background |
+| `--color-surface` | `#10254F` | Space indigo: full-bleed alternate section bands |
+| `--color-panel` | `#303D6A` | Twilight indigo: glass panels, raised surfaces, footer |
+| `--color-steel` | `#2B2C33` | Shadow grey: media slots, code frames, quiet surfaces |
+| `--color-accent` | `#823A80` | Grape soda: fills, accent text, markers |
+| `--color-ink` / `--color-muted` | `#C9CFDD` / pale slate 60% | Text / secondary text |
 | `--ease-out-strong` etc. | cubic-beziers | Entrances, on-screen movement, spring |
 
 ## Motion engine — `src/scripts/motion.ts`

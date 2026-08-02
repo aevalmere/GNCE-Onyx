@@ -2,7 +2,8 @@
 
 /* ==================================================================
    GNCE ONYX — design tokens
-   Four colors only: coal, purple (two steps), crimson, off-white.
+   Six colors only: black, space indigo, twilight indigo, shadow grey,
+   grape soda, pale slate.
    No idle glows. No gradient fills. Motion and solid color carry the
    life; texture is grain and (non-gradient) frosted glass, used sparingly.
    Type: Uncial Antiqua (display), Grey Qo (script accent), Cardo (body).
@@ -14,15 +15,16 @@
   --font-text: 'Cardo', Georgia, serif;
   --font-code: ui-monospace, 'SFMono-Regular', Menlo, monospace;
 
-  /* Color — the four values (purple in two steps) + off-white alphas */
-  --color-bg: #0a0908; /* coal */
-  --color-surface: #1a0f20; /* purple, darker step */
-  --color-panel: #2b1b2f; /* purple, lighter step */
-  --color-line: color-mix(in srgb, #e8e2dc 14%, transparent);
-  --color-ink: #e8e2dc; /* off-white */
-  --color-muted: color-mix(in srgb, #e8e2dc 60%, transparent);
-  --color-faint: color-mix(in srgb, #e8e2dc 38%, transparent);
-  --color-accent: #6e0d25; /* crimson */
+  /* Color — the six values + pale slate alphas */
+  --color-bg: #000000; /* black — the page */
+  --color-surface: #10254F; /* space indigo — full-bleed section bands */
+  --color-panel: #303D6A; /* twilight indigo — glass, raised surfaces */
+  --color-steel: #2B2C33; /* shadow grey — media slots, code frames */
+  --color-line: color-mix(in srgb, #C9CFDD 14%, transparent);
+  --color-ink: #C9CFDD; /* pale slate */
+  --color-muted: color-mix(in srgb, #C9CFDD 60%, transparent);
+  --color-faint: color-mix(in srgb, #C9CFDD 38%, transparent);
+  --color-accent: #823A80; /* grape soda */
 
   /* Motion — strong curves (emil-design-eng); never ease-in on UI. */
   --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
@@ -140,7 +142,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-surface);
+  background: var(--color-steel);
   border: 1px solid var(--color-line);
 }
 
@@ -242,7 +244,30 @@ html.will-animate .station-letter {
 }
 
 /* ==================================================================
-   BUTTONS — tactile press (emil), crimson fill for legibility on coal.
+   CURSOR CARDS — hover detail that rides the pointer instead of sitting
+   in the layout. Authored anywhere in the page, parked hidden here;
+   motion.ts shows one and drives its transform on pointer-fine devices.
+   ================================================================== */
+.cursor-card {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 90;
+  padding: 0.9rem 1.1rem;
+  background: var(--color-panel);
+  border: 1px solid var(--color-line);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  will-change: transform;
+}
+
+html.no-js .cursor-card {
+  display: none;
+}
+
+/* ==================================================================
+   BUTTONS — tactile press (emil), grape fill for legibility on black.
    Hover draws a border in, no glow.
    ================================================================== */
 .btn {
@@ -350,12 +375,12 @@ html.will-animate .station-letter {
 .post-body code {
   font-family: var(--font-code);
   font-size: 0.85em;
-  background: var(--color-surface);
+  background: var(--color-steel);
   padding: 0.15em 0.4em;
 }
 
 .post-body pre {
-  background: var(--color-surface) !important;
+  background: var(--color-steel) !important;
   border: 1px solid var(--color-line);
   padding: 1rem 1.25rem;
   overflow-x: auto;
