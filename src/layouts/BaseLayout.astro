@@ -2,12 +2,12 @@
 /**
  * BaseLayout — the single shared shell for every page.
  *
- * Owns: fonts, global styles, the intro cover (every load), the
- * scroll heat rail, cross-page view transitions, GearNav, footer, and
- * the motion engine that drives every scroll animation
- * (see src/scripts/motion.ts).
+ * Owns: fonts, global styles, the intro cover, the scroll heat rail,
+ * cross-page view transitions, GearNav, footer, and the motion engine
+ * that drives every scroll animation (see src/scripts/motion.ts).
  *
  * `hideFooter` drops the Footer for pages that end on their own terms.
+ * `intro` opts a page into the load cover; only the home page does.
  */
 import '@fontsource/uncial-antiqua';
 import '@fontsource/grey-qo';
@@ -25,12 +25,15 @@ interface Props {
   hideFooter?: boolean;
   /** Paper page: the whole document runs the light band scheme (blog). */
   light?: boolean;
+  /** Run the intro cover and its load meter. Home page only. */
+  intro?: boolean;
 }
 const {
   title,
   description = 'GNCE Onyx: a rookie FIRST Tech Challenge team at Weston High School, built by veterans of four GNCE squads, competing in the 2026-2027 BIOBUZZ season.',
   hideFooter = false,
   light = false,
+  intro = false,
 } = Astro.props;
 const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
 ---
@@ -44,8 +47,24 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     <link rel="icon" type="image/svg+xml" href={`${base}/favicon.svg`} />
     <meta name="generator" content={Astro.generator} />
     <title>{title} · GNCE Onyx</title>
-    <script is:inline>
+    <script is:inline define:vars={{ intro }}>
       document.documentElement.classList.replace('no-js', 'js');
+
+      // Every page opens at its own beginning. Reloads and returning
+      // visits hand back a saved scroll offset, which drops you into the
+      // middle of a pinned scene with none of its entrance played, so we
+      // take the restore away and pin the window at the top. This runs in
+      // <head>, ahead of both the browser's restore and the first paint.
+      // A real deep link (/#season) keeps its fragment and lands there.
+      try {
+        if (!location.hash) {
+          if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+          window.scrollTo(0, 0);
+        }
+      } catch (e) {
+        /* history locked down: the browser keeps its own restore */
+      }
+
       // Set motion flags synchronously, before first paint, so the page
       // never flashes the pre-animation state. The motion module clears
       // these once it boots; the failsafes clear them if it never does.
@@ -55,111 +74,123 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
           setTimeout(function () {
             document.documentElement.classList.remove('will-animate');
           }, 2600);
-          // Intro cover, every load. The load meter (just below <body>)
-          // counts up with real font loading and lifts the cover itself;
-          // this timeout is only a last resort so the cover can never get
-          // stuck if that script fails to run.
-          document.documentElement.classList.add('loading');
-          setTimeout(function () {
-            document.documentElement.classList.remove('loading');
-          }, 4500);
+          // Intro cover: home page only, and only with motion allowed.
+          // The load meter (just below <body>) counts up with real font
+          // loading and lifts the cover itself; this timeout is only a
+          // last resort so the cover can never get stuck if that script
+          // fails to run.
+          if (intro) {
+            document.documentElement.classList.add('loading');
+            setTimeout(function () {
+              document.documentElement.classList.remove('loading');
+            }, 4500);
+          }
         }
       } catch (e) {
-        /* storage blocked: skip the loader */
+        /* matchMedia missing: skip the flags, motion still boots */
       }
     </script>
   </head>
   <body class:list={['min-h-svh antialiased', light ? 'band-light' : 'bg-bg text-ink']}>
     <a class="skip-link" href="#main">Skip to content</a>
 
-    <!-- Intro cover: one centered count that climbs in time with the
-         fonts, then the cover lifts into the hero's entrance. -->
-    <div class="intro" data-intro aria-hidden="true">
-      <div class="intro-loader">
-        <p class="intro-count">
-          <span class="intro-num" data-intro-num>0</span><span class="intro-pct">%</span>
-        </p>
-      </div>
-    </div>
+    {
+      intro && (
+        <Fragment>
+          <!-- Intro cover: one centered count that climbs in time with the
+               fonts, then the cover lifts into the hero's entrance. -->
+          <div class="intro" data-intro aria-hidden="true">
+            <p class="intro-count">
+              <span class="intro-line">
+                <span class="intro-num" data-intro-num>0</span><span class="intro-pct">%</span>
+              </span>
+            </p>
+          </div>
 
-    <!-- Drives the load meter from real font loading (the "text"). Inline
-         so counting starts during parse, before the motion module loads,
-         and still runs if that module fails. Only active while the cover
-         is up (html.loading), so reduced motion skips it. -->
-    <script is:inline>
-      (function () {
-        var root = document.documentElement;
-        if (!root.classList.contains('loading')) return;
-        var numEl = document.querySelector('[data-intro-num]');
-        if (!numEl) return;
+          <!-- Drives the load meter from real font loading (the "text").
+               Inline so counting starts during parse, before the motion
+               module loads, and still runs if that module fails. Only
+               active while the cover is up (html.loading), so reduced
+               motion skips it. -->
+          <script is:inline>
+            (function () {
+              var root = document.documentElement;
+              if (!root.classList.contains('loading')) return;
+              var numEl = document.querySelector('[data-intro-num]');
+              if (!numEl) return;
 
-        // Real progress: the fraction of the site's font faces that have
-        // loaded. document.fonts.ready is the definitive "text is ready".
-        var target = 0;
-        var fonts = document.fonts;
-        if (fonts && fonts.load) {
-          var specs = [
-            '1em "Uncial Antiqua"',
-            '1em "Grey Qo"',
-            '1em "Cardo"',
-            '700 1em "Cardo"',
-            'italic 1em "Cardo"',
-          ];
-          var loaded = 0;
-          var step = function () {
-            loaded++;
-            target = Math.max(target, loaded / specs.length);
-          };
-          specs.forEach(function (s) {
-            fonts.load(s).then(step, step);
-          });
-          fonts.ready.then(
-            function () {
-              target = 1;
-            },
-            function () {
-              target = 1;
-            }
-          );
-        } else {
-          target = 1;
-        }
+              // Real progress: the fraction of the site's font faces that
+              // have loaded. document.fonts.ready is the definitive
+              // "text is ready".
+              var target = 0;
+              var fonts = document.fonts;
+              if (fonts && fonts.load) {
+                var specs = [
+                  '1em "Uncial Antiqua"',
+                  '1em "Grey Qo"',
+                  '1em "Cardo"',
+                  '700 1em "Cardo"',
+                  'italic 1em "Cardo"',
+                ];
+                var loaded = 0;
+                var step = function () {
+                  loaded++;
+                  target = Math.max(target, loaded / specs.length);
+                };
+                specs.forEach(function (s) {
+                  fonts.load(s).then(step, step);
+                });
+                fonts.ready.then(
+                  function () {
+                    target = 1;
+                  },
+                  function () {
+                    target = 1;
+                  }
+                );
+              } else {
+                target = 1;
+              }
 
-        var start = performance.now();
-        var MIN = 900; // a real screen, never a flash, even from cache
-        var MAX = 3400; // never hang
-        var shown = 0;
-        var done = false;
+              var start = performance.now();
+              var MIN = 900; // a real screen, never a flash, even from cache
+              var MAX = 3400; // never hang
+              var shown = 0;
+              var done = false;
 
-        function lift() {
-          if (done) return;
-          done = true;
-          setTimeout(function () {
-            window.__introDone = true;
-            root.classList.remove('loading');
-            document.dispatchEvent(new Event('intro:done'));
-          }, 160); // a beat on 100 before the cover lifts
-        }
+              function lift() {
+                if (done) return;
+                done = true;
+                setTimeout(function () {
+                  window.__introDone = true;
+                  root.classList.remove('loading');
+                  document.dispatchEvent(new Event('intro:done'));
+                }, 160); // a beat on 100 before the cover lifts
+              }
 
-        function frame(now) {
-          var elapsed = now - start;
-          // Track real loading, but never outrun the time floor, and force
-          // it home past MAX. goal only ever rises, so the count is monotonic.
-          var goal = elapsed >= MAX ? 1 : Math.min(target, elapsed / MIN);
-          shown += (goal - shown) * 0.16;
-          if (goal - shown < 0.004) shown = goal;
-          if (shown < 0) shown = 0;
-          if (shown >= 1) {
-            numEl.textContent = '100';
-            lift();
-            return;
-          }
-          numEl.textContent = String(Math.max(0, Math.round(shown * 100)));
-          requestAnimationFrame(frame);
-        }
-        requestAnimationFrame(frame);
-      })();
-    </script>
+              function frame(now) {
+                var elapsed = now - start;
+                // Track real loading, but never outrun the time floor, and
+                // force it home past MAX. goal only ever rises, so the
+                // count is monotonic.
+                var goal = elapsed >= MAX ? 1 : Math.min(target, elapsed / MIN);
+                shown += (goal - shown) * 0.16;
+                if (goal - shown < 0.004) shown = goal;
+                if (shown < 0) shown = 0;
+                if (shown >= 1) {
+                  numEl.textContent = '100';
+                  lift();
+                  return;
+                }
+                numEl.textContent = String(Math.max(0, Math.round(shown * 100)));
+                requestAnimationFrame(frame);
+              }
+              requestAnimationFrame(frame);
+            })();
+          </script>
+        </Fragment>
+      )
+    }
 
     <!-- Heat rail: fills with scroll like a gauge. Scroll-driven CSS;
          browsers without support simply never show it. -->
@@ -204,51 +235,59 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
         display: none;
       }
 
-      .intro-loader {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 1.4rem;
-      }
-
-      /* Tabular Cardo so the digits hold their box while the number climbs. */
+      /* The mask. Full leading plus padding is real headroom: the clip
+         edge stands clear of the glyphs on every side, so the digits and
+         the % print whole. Tabular Cardo so the digits hold their box
+         while the number climbs. */
       .intro-count {
         overflow: clip;
-        display: flex;
-        align-items: baseline;
-        justify-content: center;
+        padding: 0.14em 0.1em;
         font-family: var(--font-text);
         font-weight: 700;
-        line-height: 0.9;
+        font-size: clamp(3rem, 11vw, 7rem);
+        line-height: 1;
         color: var(--color-paper); /* pinned: the cover is black even on paper pages */
         font-variant-numeric: tabular-nums lining-nums;
         font-feature-settings: 'tnum' 1, 'lnum' 1;
       }
 
+      /* Number and % rise as one line, so both clear the mask by the same
+         distance. Held apart they did not: a percentage translate reads
+         the element's own box, and the small % box never travelled far
+         enough to hide, leaving its top edge showing. The animation is
+         unconditional and fills forwards, so the count stays landed while
+         the cover lifts instead of snapping back down with the class. */
+      .intro-line {
+        display: flex;
+        align-items: baseline;
+        justify-content: center;
+        transform: translateY(135%);
+        animation: intro-rise 620ms var(--ease-out-strong) 120ms both;
+      }
+
       .intro-num {
-        display: inline-block;
         min-width: 3ch;
         text-align: right;
-        font-size: clamp(3rem, 11vw, 7rem);
-        transform: translateY(115%);
       }
 
       .intro-pct {
         margin-left: 0.12em;
         font-size: clamp(1.25rem, 4vw, 2.25rem);
         color: color-mix(in srgb, var(--color-paper) 60%, transparent);
-        transform: translateY(115%);
-      }
-
-      /* Masked rise on appear (no fade), matching the split-text language. */
-      :global(html.loading) .intro-num,
-      :global(html.loading) .intro-pct {
-        animation: intro-rise 620ms var(--ease-out-strong) 120ms both;
       }
 
       @keyframes intro-rise {
         to {
           transform: translateY(0);
+        }
+      }
+
+      /* Reduced motion never raises the cover, so the count simply sits
+         where it lands. */
+      @media (prefers-reduced-motion: reduce) {
+        .intro-line {
+          transform: none;
+          animation: none;
         }
       }
 
