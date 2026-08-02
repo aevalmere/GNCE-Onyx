@@ -4,17 +4,60 @@
  *
  * The site's only persistent chrome: a gear pinned to the bottom-right
  * corner that turns with scroll, like it's driving the page. Tapping it
- * opens a full-screen menu: four display-type lines that rise in with a
+ * opens a full-screen menu of display-type lines that rise in with a
  * stagger. The gear stays on top and closes it.
  *
- * Footer carries plain-text links, so navigation still works without JS.
+ * The site is one page, so every line but Home is a section anchor: the
+ * click handler closes the menu and hands the trip to Lenis instead of
+ * reloading. Hovering a line floats a small card off the cursor saying
+ * what is down there.
+ *
+ * Blog posts and the lab page still carry the Footer's plain-text links,
+ * so navigation survives without JS.
  */
 const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
-const links = [
-  { href: `${base}/`, numeral: 'I', label: 'Home' },
-  { href: `${base}/season/`, numeral: 'II', label: 'Season' },
-  { href: `${base}/outreach/`, numeral: 'III', label: 'Outreach' },
-  { href: `${base}/contact/`, numeral: 'IV', label: 'Contact' },
+type NavLink = {
+  href: string;
+  label: string;
+  card: string;
+  note: string;
+  spoken?: string;
+};
+const links: NavLink[] = [
+  { href: `${base}/`, label: 'Home', card: 'nav-card-home', note: 'Back to the top' },
+  {
+    href: `${base}/#lineage`,
+    label: 'Lineage',
+    card: 'nav-card-lineage',
+    note: 'The teams we came from',
+  },
+  { href: `${base}/#team`, label: 'Team', card: 'nav-card-team', note: 'Seven students' },
+  {
+    href: `${base}/#season`,
+    label: 'Season',
+    card: 'nav-card-season',
+    note: 'Qualifier 1 · Qualifier 2 · States',
+    // Spoken version: the dots read as noise to a screen reader.
+    spoken: 'Qualifier 1, Qualifier 2, States',
+  },
+  {
+    href: `${base}/#outreach`,
+    label: 'Outreach',
+    card: 'nav-card-outreach',
+    note: 'Posts and events we show up to',
+  },
+  {
+    href: `${base}/#sponsors`,
+    label: 'Sponsors',
+    card: 'nav-card-sponsors',
+    note: 'Recognition, low to high',
+  },
+  {
+    href: `${base}/#contact`,
+    label: 'Contact',
+    card: 'nav-card-contact',
+    note: 'Email or Instagram',
+  },
 ];
 
 // A uniform cog: a solid disc with evenly-spaced scallops cut into the
@@ -34,33 +77,24 @@ function gearPath(notches: number, r: number, notchR: number, boreR: number) {
   return d;
 }
 const gear = gearPath(12, 27, 3.6, 8.5);
-
-const current = Astro.url.pathname.replace(/\/+$/, '') || '/';
-const isCurrent = (href: string) => (href.replace(/\/+$/, '') || '/') === current;
 ---
 
 <nav class="gear-nav" id="gear-nav" data-open="false" aria-label="Site">
   <div class="gear-menu" id="gear-menu" inert>
-    <ol class="gear-menu-list">
+    <ul class="gear-menu-list">
       {
         links.map((link, i) => (
           <li class="gear-menu-item" style={`--i:${i}`}>
             <span class="gear-menu-mask">
-              <a
-                class="gear-menu-link type-display"
-                href={link.href}
-                aria-current={isCurrent(link.href) ? 'page' : undefined}
-              >
-                <span class="gear-menu-numeral type-label" aria-hidden="true">
-                  {link.numeral}
-                </span>
+              <a class="gear-menu-link type-display" href={link.href} data-cursor-card={link.card}>
                 {link.label}
+                <span class="sr-only">{link.spoken ?? link.note}</span>
               </a>
             </span>
           </li>
         ))
       }
-    </ol>
+    </ul>
 
     <div class="gear-menu-foot type-label">
       <p>
@@ -68,6 +102,17 @@ const isCurrent = (href: string) => (href.replace(/\/+$/, '') || '/') === curren
       </p>
       <p>Weston High School</p>
     </div>
+
+    <!-- Cursor cards: fixed, so their spot in the markup is free. Each one
+         repeats what its link already says in sr-only text, which is why
+         they are decoration to assistive tech. -->
+    {
+      links.map((link) => (
+        <p class="cursor-card nav-card" id={link.card} aria-hidden="true">
+          {link.note}
+        </p>
+      ))
+    }
   </div>
 
   <span class="gear-hint type-label" aria-hidden="true">Menu</span>
@@ -202,18 +247,17 @@ const isCurrent = (href: string) => (href.replace(/\/+$/, '') || '/') === curren
     list-style: none;
   }
 
-  /* Each line rises out of its own mask */
+  /* Each line rises out of its own mask. Flex so the link is only as wide
+     as its own word: the hover target (and the card that rides it) belongs
+     to the text, not to the empty half of the row. */
   .gear-menu-mask {
-    display: block;
+    display: flex;
     overflow: hidden;
   }
 
   .gear-menu-link {
-    display: flex;
-    align-items: baseline;
-    gap: 1.25rem;
-    padding: 0.375rem 0;
-    font-size: clamp(2.5rem, 9vh, 5rem);
+    padding: 0.25rem 0;
+    font-size: clamp(1.75rem, 6.2vh, 3.75rem);
     color: var(--color-ink);
     text-decoration: none;
     transform: translateY(110%);
@@ -224,23 +268,30 @@ const isCurrent = (href: string) => (href.replace(/\/+$/, '') || '/') === curren
 
   .gear-nav[data-open='true'] .gear-menu-link {
     transform: translateY(0);
-    transition-delay: calc(80ms + var(--i) * 55ms), 0ms;
+    transition-delay: calc(80ms + var(--i) * 45ms), 0ms;
   }
 
-  .gear-menu-numeral {
-    color: var(--color-accent);
-    min-width: 2.5rem;
-  }
-
-  .gear-menu-link[aria-current='page'] {
-    color: var(--color-accent);
-  }
-
+  /* Colour only. The line must not slide under the pointer: the card it
+     carries would flicker every time the word stepped out from the cursor. */
   @media (hover: hover) and (pointer: fine) {
     .gear-menu-link:hover {
       color: var(--color-accent);
-      transform: translateX(0.5rem);
     }
+  }
+
+  /* ---- Hover cards ----------------------------------------------- */
+  /* .cursor-card (global.css) parks these fixed at 0,0 and motion.ts
+     flies them off the pointer. The menu is its own stacking context, so
+     this z-index only has to beat the list and the foot, both static.
+     Two classes so the overrides win no matter how the sheets order. */
+  .cursor-card.nav-card {
+    z-index: 100;
+    padding: 0.5rem 0.8rem;
+    font-family: var(--font-text);
+    font-size: 0.9375rem;
+    line-height: 1.2;
+    color: var(--color-ink);
+    white-space: nowrap;
   }
 
   .gear-menu-foot {
@@ -248,7 +299,7 @@ const isCurrent = (href: string) => (href.replace(/\/+$/, '') || '/') === curren
     flex-wrap: wrap;
     justify-content: space-between;
     gap: 0.5rem 2rem;
-    margin-top: clamp(2rem, 8vh, 4rem);
+    margin-top: clamp(1.5rem, 6vh, 3.5rem);
     padding-top: 1rem;
     border-top: 1px solid var(--color-line);
     color: var(--color-muted);
@@ -280,6 +331,8 @@ const isCurrent = (href: string) => (href.replace(/\/+$/, '') || '/') === curren
     const srLabel = toggle?.querySelector<HTMLElement>('.sr-only');
     if (!toggle || !menu) return;
 
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+
     const focusables = () => [
       ...menu.querySelectorAll<HTMLElement>('a[href]'),
       toggle,
@@ -298,10 +351,54 @@ const isCurrent = (href: string) => (href.replace(/\/+$/, '') || '/') === curren
       }
     };
 
+    // Trailing slashes differ between dev, build and the base path.
+    const samePath = (a: string, b: string) =>
+      (a.replace(/\/+$/, '') || '/') === (b.replace(/\/+$/, '') || '/');
+
+    // Travel inside the page: Lenis when the motion engine is up, native
+    // smooth scrolling when it is not, a hash jump as the floor.
+    const glideTo = (hash: string) => {
+      const lenis = (window as any).__motion?.lenis;
+      const behavior: ScrollBehavior = reduced.matches ? 'auto' : 'smooth';
+
+      if (!hash) {
+        if (lenis?.scrollTo) lenis.scrollTo(0, { offset: 0 });
+        else window.scrollTo({ top: 0, behavior });
+        return;
+      }
+
+      const target = document.querySelector(hash);
+      if (!target) {
+        location.hash = hash;
+        return;
+      }
+      if (lenis?.scrollTo) lenis.scrollTo(hash, { offset: 0 });
+      else target.scrollIntoView({ behavior });
+
+      // Keyboard users land on the section instead of back at the top of
+      // the DOM, since the menu they were in just went inert.
+      if (target instanceof HTMLElement) {
+        if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
+        target.focus({ preventScroll: true });
+      }
+    };
+
     toggle.addEventListener('click', () => setOpen(nav.dataset.open !== 'true'));
+
     menu.addEventListener('click', (e) => {
-      if ((e.target as HTMLElement).closest('a')) setOpen(false);
+      const link = (e.target as HTMLElement).closest<HTMLAnchorElement>('a[href]');
+      if (!link) return;
+      // Cmd/ctrl/shift-click belongs to the browser: leave the menu up.
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+
+      const url = new URL(link.href, location.href);
+      const here = samePath(url.pathname, location.pathname);
+      if (here) e.preventDefault(); // a section on this page: never reload
+      setOpen(false);
+      // A frame for the overflow lock to lift before anything measures.
+      if (here) requestAnimationFrame(() => glideTo(url.hash));
     });
+
     document.addEventListener('keydown', (e) => {
       if (nav.dataset.open !== 'true') return;
       if (e.key === 'Escape') {
@@ -325,7 +422,6 @@ const isCurrent = (href: string) => (href.replace(/\/+$/, '') || '/') === curren
     });
 
     // Gear rotates with scroll — transform only, applied inside rAF.
-    const reduced = matchMedia('(prefers-reduced-motion: reduce)');
     if (gearSvg && !reduced.matches) {
       let queued = false;
       const spin = () => {

@@ -1,14 +1,19 @@
 ---
 /**
  * Footer — plain-text navigation (the no-JS fallback for the gear menu)
- * plus team identity and contact lines.
+ * plus team identity and contact lines. The home page ends in its own
+ * contact section, so this ships on blog posts and the lab page: the
+ * links point back at the sections of the one page.
  */
 const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
 const links = [
   { href: `${base}/`, label: 'Home' },
-  { href: `${base}/season/`, label: 'Season' },
-  { href: `${base}/outreach/`, label: 'Outreach' },
-  { href: `${base}/contact/`, label: 'Contact' },
+  { href: `${base}/#lineage`, label: 'Lineage' },
+  { href: `${base}/#team`, label: 'Team' },
+  { href: `${base}/#season`, label: 'Season' },
+  { href: `${base}/#outreach`, label: 'Outreach' },
+  { href: `${base}/#sponsors`, label: 'Sponsors' },
+  { href: `${base}/#contact`, label: 'Contact' },
 ];
 ---
 
@@ -24,7 +29,7 @@ const links = [
       </div>
 
       <nav aria-label="Footer">
-        <p class="type-label text-muted">Pages</p>
+        <p class="type-label text-muted">Sections</p>
         <ul class="mt-4 space-y-2">
           {
             links.map((link) => (
