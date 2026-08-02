@@ -1,6 +1,6 @@
 ---
 /**
- * Team — seven names on black, wiping in from alternating sides.
+ * Team — ten names on black, wiping in from alternating sides.
  *
  * Hovering a row rides a cursor card carrying that member's previous GNCE
  * teams (motion.ts `initCursorCards`, pointer-fine only). The same lineage
@@ -11,21 +11,28 @@
 import Reveal from '../Reveal.astro';
 
 // Previous GNCE team numbers only; the Lineage section carries the record.
+// Ordered by what those teams won, best team first, ties broken by the second
+// team: 22489 (state champion, Worlds awards), then 26112 (Worlds qualifier,
+// states finalist alliance), then 26413 (states qualifier), then 26111, then
+// the rookies.
 const roster: { name: string; teams: string[] }[] = [
+  { name: 'Elisa Peng', teams: ['26413', '22489'] },
+  { name: 'Arnie Sreeram', teams: ['26413', '22489'] },
   { name: 'Ethan Zhang', teams: ['22489', '26111'] },
-  { name: 'Ethan Zhuang', teams: ['26112', '26111'] },
   { name: 'Anson Su', teams: ['22489', '26111'] },
   { name: 'Adrian Chang', teams: ['22489', '26111'] },
-  { name: 'Leo Li', teams: ['26111'] },
   { name: 'Nicholas Colli', teams: ['26413', '26112'] },
+  { name: 'Ethan Zhuang', teams: ['26112', '26111'] },
+  { name: 'Leo Li', teams: ['26111'] },
   { name: 'Raymond Liu', teams: [] },
+  { name: 'Vera Su', teams: [] },
 ];
 
 const slug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 ---
 
 <section id="team">
-  <div class="mx-auto max-w-5xl px-5 py-24 sm:px-8 sm:py-32">
+  <div class="mx-auto max-w-[88rem] px-5 py-24 sm:px-8 sm:py-32">
     <span class="mark" aria-hidden="true"></span>
     <h2 class="type-display text-[clamp(1.75rem,4vw,3rem)]" data-split>Our team</h2>
 
@@ -97,7 +104,7 @@ const slug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     transition: width 300ms var(--ease-out-strong);
   }
 
-  /* Body serif, not the distressed display face: seven names read cleanly. */
+  /* Body serif, not the distressed display face: ten names read cleanly. */
   .roster-name {
     font-family: var(--font-text);
     font-weight: 700;

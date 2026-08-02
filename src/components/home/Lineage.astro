@@ -4,11 +4,13 @@
  *
  * Paper band, second on the page. Team numbers count up from zero; each
  * award is one line in a ledger (name left, year right), wiping in as a
- * single staggered wave per team. Nothing rules the rows apart: the space
- * between them and the year column holding the right edge do that work,
- * and the only lines left are the ones that open a team. 22489 and 26112
- * carry the long lists, so they take the wide top row; 26413 and 26111 sit
- * in a shorter register beneath with the right third left open.
+ * single staggered wave per team. An award a team took in more than one
+ * season stays one line and lists both years in the year cell, so the
+ * ledger never prints the same name twice. Nothing rules the rows apart:
+ * the space between them and the year column holding the right edge do
+ * that work, and the only lines left are the ones that open a team. 22489
+ * and 26112 carry the long lists, so they take the wide top row; 26413 and
+ * 26111 sit in a shorter register beneath with the right third left open.
  */
 import Reveal from '../Reveal.astro';
 
@@ -29,23 +31,23 @@ const featured = [
   {
     num: '26112',
     awards: [
+      { name: 'Finalist Alliance, State Championship', year: '2025 · 2026' },
       { name: 'World Championship qualifier', year: '2026' },
       { name: '3rd Place, Worlds Jackson Division', year: '2026' },
-      { name: 'Finalist Alliance, State Championship', year: '2026' },
     ],
   },
 ];
 
 const compact = [
-  { num: '26413', awards: [{ name: 'State Championship qualifier', year: '' }] },
+  { num: '26413', awards: [{ name: 'State Championship qualifier', year: '2025 · 2026' }] },
   { num: '26111', awards: [] },
 ];
 ---
 
 <section id="lineage" class="band-light">
-  <div class="mx-auto max-w-5xl px-5 pb-28 pt-24 sm:px-8 sm:pb-36 sm:pt-32">
+  <div class="mx-auto max-w-[88rem] px-5 pb-28 pt-24 sm:px-8 sm:pb-36 sm:pt-32">
     <h2 class="lineage-title type-display" data-split>
-      Six of our seven came up through these four GNCE teams.
+      Eight of our ten came up through these four GNCE teams.
     </h2>
 
     <div class="lineage-grid mt-14 sm:mt-16">
@@ -194,5 +196,8 @@ const compact = [
     letter-spacing: 0.08em;
     color: var(--color-muted);
     font-variant-numeric: tabular-nums lining-nums;
+    /* Two-season cells ("2025 · 2026") are the widest thing in the column;
+       breaking one across lines would cost the ledger its right edge. */
+    white-space: nowrap;
   }
 </style>
