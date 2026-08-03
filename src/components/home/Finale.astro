@@ -324,13 +324,17 @@ import Placeholder from '../Placeholder.astro';
    *   FULL  — the curtain off, the sponsors on screen, the end of the page.
    *
    * Between them there is nothing to read, so the page never rests there.
-   * Arriving momentum is caught and set down on REACH. From REACH the trip to
-   * FULL costs two deliberate scrolls: the first is answered with a short tug
-   * that springs back, the second lifts the curtain in one animated move with
-   * the input locked. From FULL any scroll up plays that move in reverse.
-   * Scrolling up from REACH is left completely alone: leaving is never a
-   * negotiation, and the lock simply re-arms the next time the reader comes
-   * back down.
+   * Arriving momentum is caught and set down on REACH. From REACH the first
+   * push is answered with a short tug that springs back; a second push, or
+   * the same push simply kept up (trackpads pour one gesture out as a long
+   * decaying stream, so enough swallowed travel counts as insistence), lifts
+   * the curtain in one animated move with the input locked. Touch pays once:
+   * a single swipe from REACH opens. From FULL a deliberate pull up plays
+   * the move in reverse; the stray counter-deltas inside a momentum tail do
+   * not, which is what kept yanking the page around. Scrolling up from REACH
+   * is left free after at most a few swallowed pixels of noise, and if the
+   * page is ever caught raw-scrolling between the levels under a live
+   * gesture, the trip is finished toward whichever level it was headed for.
    *
    * Wheel and touch only. Keyboard scrolling stays native and unlocked, and a
    * page held still by the nav drawer or a post popup (both take Lenis down
@@ -367,13 +371,17 @@ import Placeholder from '../Placeholder.astro';
 
     // The curtain is a plain block at the top of the document, so its bottom
     // edge in document space is exactly the offset at which it has finished
-    // lifting. Clamped to the real end of the document: on a phone the svh
-    // spacer and innerHeight disagree while the URL bar moves, and a FULL the
-    // page cannot reach would strand the lock one pixel short.
+    // lifting. Clamped to the real end of the document AND to how far the
+    // engine believes the page goes: on a phone the svh spacer and
+    // innerHeight disagree while the URL bar moves, and Lenis caps its own
+    // trips at its measured limit, so a FULL past either would end a lift
+    // short of the level and strand the lock in the no-man's-land.
     const measure = () => {
       const gap = inset();
       contact.style.setProperty('--finale-reach', `${Math.round(gap)}px`);
-      const end = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+      let end = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+      const limit = engine()?.lenis?.limit;
+      if (typeof limit === 'number' && limit > 0) end = Math.min(end, limit);
       full = Math.min(curtain.getBoundingClientRect().bottom + window.scrollY, end);
       reach = Math.max(0, full - gap);
       travel = full - reach;
@@ -445,12 +453,25 @@ import Placeholder from '../Placeholder.astro';
     type Level = 'free' | 'locked' | 'moving' | 'full';
 
     // A new gesture is wheel or touch activity separated from the last by a
-    // quiet gap, or a reversal: trackpad momentum keeps firing for a second
-    // after the hand has left, and that is still one push.
-    const GAP = 380;
+    // quiet gap, a real reversal, or a spike: trackpad momentum keeps firing
+    // for a second after the hand has left, decaying as it goes, so a hand
+    // coming back mid-tail shows up as a delta bigger than anything the
+    // decay could produce. The envelope below is that decaying memory.
+    const GAP = 340;
     const MIN_TRAVEL = 80;
     const EPS = 2;
     const MIN_DELTA = 2;
+    // A reversal smaller than this is trackpad wobble, not a hand: real
+    // momentum tails carry stray 2-8px counter-deltas, and honouring them
+    // used to drop the whole lock mid-gesture.
+    const REV_MIN = 15;
+    // Push one is answered with the tug; a push that keeps coming after it
+    // has accumulated this much swallowed travel is not asking twice
+    // politely, and the curtain opens without a second gesture.
+    const OPEN_ACC = 320;
+    // Deliberate leave/return thresholds, in accumulated pixels: about a
+    // finger's twitch on a trackpad, well under one wheel notch.
+    const UP_RELEASE = 26;
 
     // Matches --ease-out-strong closely enough for a move this long: all the
     // speed at the front, the last few pixels laid down rather than stopped.
@@ -460,6 +481,13 @@ import Placeholder from '../Placeholder.astro';
     let pushes = 0;
     let lastAt = 0;
     let lastDown: boolean | null = null;
+    let env = 0; // decaying envelope of recent wheel delta sizes
+    let envAt = 0; // when the envelope was last fed
+    let lastMag = 0; // the previous wheel delta's size, for the notch test
+    let wheelSpike = false; // current wheel event clears the envelope: a hand
+    let wheelNotch = false; // current wheel event repeats a notch: a mouse
+    let downAcc = 0; // swallowed down-travel since the last fresh push
+    let upAcc = 0; // swallowed up-travel since the last down delta
     let lastY = window.scrollY;
     let mine = false; // a scroll this file is driving
     let token = 0; // which programmatic move is the current one
@@ -490,10 +518,31 @@ import Placeholder from '../Placeholder.astro';
     // always on, blocks nothing and cancels nothing (passive, so the browser
     // never waits on it), and it is also where a drag's direction is read,
     // one step at a time, whether or not the lock is listening.
+    //
+    // The stream statistics live HERE, not in the gate, and that placement is
+    // the fix for the worst of the old flicker: the gate only hears events
+    // while a level holds the page, so an envelope kept by the gate went
+    // stale during free flight, and the first tail event after every catch
+    // towered over it and read as a brand-new push. This tracker hears every
+    // event, so the envelope is already warm when the gate starts asking.
+    // (It runs before the gate on the same events: both are capture-phase
+    // window listeners and this one is registered first.)
     const noteInput = (e: Event) => {
       touchedAt = now();
       byTouch = e.type !== 'wheel';
-      if (e.type === 'wheel') return;
+      if (e.type === 'wheel') {
+        const t = touchedAt;
+        const mag = Math.abs((e as WheelEvent).deltaY);
+        if (mag < MIN_DELTA) return;
+        env *= Math.pow(0.5, (t - envAt) / 220);
+        wheelSpike = mag >= Math.max(26, env * 1.7);
+        wheelNotch =
+          mag >= 80 && t - envAt >= 80 && Math.abs(mag - lastMag) <= Math.max(12, mag * 0.15);
+        envAt = t;
+        lastMag = mag;
+        env = Math.max(env, mag);
+        return;
+      }
       const touches = (e as TouchEvent).touches;
       const finger = touches?.[0];
       if (e.type === 'touchstart') {
@@ -563,6 +612,8 @@ import Placeholder from '../Placeholder.astro';
     // its clock starts at zero and the very next gesture is push one.
     const hold = (next: Level, spent: boolean | null) => {
       pushes = 0;
+      downAcc = 0;
+      upAcc = 0;
       lastAt = spent === null ? 0 : now();
       lastDown = spent;
       enter(next);
@@ -610,10 +661,12 @@ import Placeholder from '../Placeholder.astro';
     };
 
     // The trip between the levels: one move, input locked, no way to end up
-    // between the two.
+    // between the two. Lenis re-measures first: its cached limit can lag the
+    // page by a beat, and a lift asked past it would end short of the level.
     const run = (to: 'full' | 'reach') => {
-      measure();
       const lenis = engine()?.lenis;
+      lenis?.resize?.();
+      measure();
       const target = to === 'full' ? full : reach;
       const next: Level = to === 'full' ? 'full' : 'locked';
       const spent = to === 'full'; // the push that asked for this move
@@ -664,12 +717,29 @@ import Placeholder from '../Placeholder.astro';
 
     /* ---- gestures --------------------------------------------------- */
 
-    const gate = (e: Event, down: boolean) => {
+    const gate = (e: Event, delta: number, touch: boolean) => {
       landing = false; // the reader is driving now
       const t = now();
-      const fresh = t - lastAt > GAP || (lastDown !== null && down !== lastDown);
+      const idle = t - lastAt;
+      const mag = Math.abs(delta);
+      const down = delta > 0;
+      // What counts as a new ask. The envelope (kept warm by the tracker
+      // above, across catches and releases alike) decays with a ~220ms
+      // half-life, the same order momentum itself decays at: a delta that
+      // clears what is left of it by a wide margin is a hand, whatever the
+      // clock says. A big delta repeating at ITS OWN size after real air is
+      // a wheel notch (mice quantize, so notch two is the size of notch
+      // one), and every notch is its own ask; the size check matters,
+      // because a momentum tail delivered on janky frames also spaces big
+      // deltas out, but decaying, never equal.
+      const turned = lastDown !== null && down !== lastDown && mag >= REV_MIN;
+      const fresh = idle > GAP || turned || (!touch && (wheelSpike || wheelNotch));
       lastAt = t;
-      lastDown = down;
+      if (mag >= REV_MIN) lastDown = down;
+      if (idle > GAP) {
+        downAcc = 0;
+        upAcc = 0;
+      }
 
       if (state === 'moving') {
         swallow(e);
@@ -678,31 +748,62 @@ import Placeholder from '../Placeholder.astro';
 
       if (state === 'full') {
         swallow(e); // the end of the document: down has nowhere to go
-        if (!down && fresh) run('reach');
+        if (down) {
+          upAcc = 0;
+          return;
+        }
+        // The way back down the page. A hand asks for it; the stray
+        // counter-deltas inside a momentum tail do not.
+        upAcc += mag;
+        if ((touch && fresh) || upAcc >= UP_RELEASE + 4 || (fresh && mag >= 30)) {
+          run('reach');
+        }
         return;
       }
 
       // Only REACH is left, and the listeners are not even attached anywhere
       // else: a reader in free flight is never touched.
       if (!down) {
-        // The tail of the gesture that landed here is not a request to leave.
-        if (!fresh) {
-          swallow(e);
+        // Leaving upward is never negotiated, but a 3px wobble inside a
+        // downward momentum tail is not leaving: honouring those used to
+        // drop the lock mid-gesture and let the curtain scroll raw, which
+        // was the flicker. Enough up-travel, or one deliberate up-gesture,
+        // and the page is the reader's again, unswallowed from this event on.
+        upAcc += mag;
+        if ((fresh && mag >= REV_MIN) || upAcc >= UP_RELEASE) {
+          pushes = 0;
+          enter('free');
           return;
         }
-        pushes = 0;
-        enter('free'); // leaving upward: hands off, entirely
+        swallow(e);
         return;
       }
 
       swallow(e);
-      if (!fresh) return;
-      pushes += 1;
-      if (pushes >= 2) {
-        pushes = 0;
-        run('full');
-      } else {
-        tug();
+      upAcc = 0;
+      if (fresh) {
+        pushes += 1;
+        downAcc = 0;
+        // Touch pays once: the catch already interrupted the swipe that
+        // carried the reader here, and a two-swipe toll on a phone reads as
+        // a broken page rather than a heavy curtain.
+        if (touch || pushes >= 2) {
+          pushes = 0;
+          run('full');
+        } else {
+          tug();
+        }
+        return;
+      }
+      // The rest of the same push, still arriving while the tug answers it.
+      // A firm push does not stop to ask twice: enough swallowed travel and
+      // the curtain gives way mid-tug, which reads as resistance overcome.
+      if (pushes >= 1) {
+        downAcc += mag;
+        if (downAcc >= OPEN_ACC) {
+          pushes = 0;
+          run('full');
+        }
       }
     };
 
@@ -716,7 +817,7 @@ import Placeholder from '../Placeholder.astro';
         swallow(e);
         return;
       }
-      gate(e, e.deltaY > 0);
+      gate(e, e.deltaY, false);
     }
 
     function onTouchMove(e: TouchEvent) {
@@ -732,7 +833,7 @@ import Placeholder from '../Placeholder.astro';
         lastAt = 0;
         lastDown = null;
       }
-      gate(e, fingerMove > 0);
+      gate(e, fingerMove, true);
     }
 
     // Nested scrollers and anything a dialog owns keep their own gestures.
@@ -817,7 +918,20 @@ import Placeholder from '../Placeholder.astro';
 
       // Free, and crossing the level on the way down: this is the magnet.
       if (prev < reach - 0.5 && y >= reach - 0.5) grab();
-      else if (Math.abs(y - reach) <= EPS) resting = window.setTimeout(onRest, 140);
+      else if (
+        y > reach + 4 &&
+        y < full - EPS &&
+        Math.abs(y - prev) > 1 &&
+        now() - touchedAt < 260
+      ) {
+        // A pointer gesture is raw-scrolling the no-man's-land between the
+        // levels. However it got here (a lift that fell short, a release the
+        // noise talked the lock into), nothing rests between the levels:
+        // finish the trip in whichever direction the reader is going.
+        // Keyboard scrolling never lands in this branch: it stamps no
+        // touchedAt, and stays native the whole way.
+        run(y > prev ? 'full' : 'reach');
+      } else if (Math.abs(y - reach) <= EPS) resting = window.setTimeout(onRest, 140);
     };
 
     // Lenis emits inside its own rAF, right after it has written the scroll

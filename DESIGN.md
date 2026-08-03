@@ -158,10 +158,17 @@ trick per section:
   levels. Everything above it scrolls up like a sheet lifted off a static
   first viewport; arriving momentum is set down on REACH (curtain parked
   just above "Get in touch"; published as `--finale-reach`, every anchor
-  lands there). From REACH the first further push is answered with a short
-  tug that springs back, the second runs one input-locked lift to FULL
-  (sponsors on screen); any pull back from FULL runs the same move in
-  reverse. Leaving upward is plain scrolling; keyboards are never trapped;
+  lands there). From REACH the first push is answered with a short tug; a
+  second push, or the first one simply kept up (accumulated swallowed
+  travel counts as insistence, so a firm trackpad push opens through the
+  tug), runs one input-locked lift to FULL (sponsors on screen). Touch
+  pays once: a single swipe opens. A deliberate pull back from FULL runs
+  the move in reverse; trackpad wobble never does. Gesture segmentation is
+  envelope-based (a decaying memory of delta sizes, kept warm by an
+  always-on passive tracker) so momentum tails, wheel notches, and noise
+  reversals are told apart, and a page caught raw-scrolling between the
+  levels under a live gesture is finished toward the level it was headed
+  for. Leaving upward is plain scrolling; keyboards are never trapped;
   reduced motion gets no lock. Content: the shirt-back "Sponsored by"
   lockup (lead name across the top, the rest sharing a tightened centered
   line beneath, no boxes or rules, placeholder names until real sponsors
