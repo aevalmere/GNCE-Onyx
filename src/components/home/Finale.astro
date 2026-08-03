@@ -3,27 +3,28 @@
  * Finale — the last frame, on paper. index.astro pins this section and
  * scrolls the rest of the page off it like a curtain, so it has to read as
  * one still picture instead of a sequence: no reveals, no split headline,
- * nothing that arrives. The sponsor table holds the top edge, "Get in touch"
+ * nothing that arrives. The sponsor lockup holds the top edge, "Get in touch"
  * owns the lower half with the two contact keys and the form button, and the
  * shared small print closes the bottom. Sized to one viewport, so what the
  * curtain uncovers is the whole thing.
  *
- * The page rests one block short of a full lift. The curtain's bottom edge
- * parks just above "Get in touch", which is what the reader came down here
- * for; the sponsor table above it is optional and costs one more deliberate
- * scroll. The script at the foot of this file measures that level, publishes
- * it as `--finale-reach` (index.astro folds it into the section's
- * scroll-margin, so every anchor lands there) and eases a gesture that ends
- * near it the rest of the way. Pull past it and you get the full lift and
- * stay there: the bias is a magnet, not a gate.
+ * Two levels, not a range. The page rests at REACH: the curtain's bottom edge
+ * parked just above "Get in touch", which is what the reader came down here
+ * for. FULL is the curtain lifted the whole way, which is what puts the
+ * sponsors on screen. The script at the foot of this file measures both,
+ * publishes the distance as `--finale-reach` (index.astro folds it into the
+ * section's scroll-margin, so every anchor lands on REACH) and holds the page
+ * on one level or the other: arriving momentum is set down on REACH, and the
+ * trip between the two levels is a single animated move that the reader asks
+ * for twice. Nothing rests in between.
  *
  * No transforms or positioning on the root: the sticky comes from
  * index.astro and anything here would fight it.
  *
  * The small print is the same <Footer /> the blog pages render, imported
- * rather than retyped so the two can never drift. Its top hairline stays and
- * it is the only rule in the frame besides the table's. It separates the
- * colophon from the page proper, which is a real content break.
+ * rather than retyped so the two can never drift. Its top hairline is the
+ * only rule in the frame. It separates the colophon from the page proper,
+ * which is a real content break.
  */
 import Footer from '../Footer.astro';
 import Placeholder from '../Placeholder.astro';
@@ -31,14 +32,17 @@ import Placeholder from '../Placeholder.astro';
 
 <section id="contact" class="finale band-light">
   <div class="finale-frame mx-auto w-full max-w-[88rem] px-5 sm:px-8">
+    <!-- The shirt back: the names printed between the shoulders, biggest
+         backer on top, the rest sharing the line under it. One list, one
+         axis, no boxes. -->
     <div class="wall">
       <h2 class="wall-head type-display">Sponsored by</h2>
 
       <Placeholder name="finale-sponsors">
-        <ul class="wall-grid">
-          <li class="wall-cell"><span class="wall-name type-display">Sponsor 1</span></li>
-          <li class="wall-cell"><span class="wall-name type-display">Sponsor 2</span></li>
-          <li class="wall-cell"><span class="wall-name type-display">Sponsor 3</span></li>
+        <ul class="wall-list">
+          <li class="wall-name wall-lead type-display">Sponsor 1</li>
+          <li class="wall-name type-display">Sponsor 2</li>
+          <li class="wall-name type-display">Sponsor 3</li>
         </ul>
       </Placeholder>
     </div>
@@ -108,8 +112,8 @@ import Placeholder from '../Placeholder.astro';
      indigo ink come from .band-light.
 
      --foot-measure hands the shared Footer this frame's measure, so the
-     colophon's two ends line up with the sponsor table's outer rules
-     instead of sitting on a narrower column of their own. */
+     colophon's two ends land on the same margins as everything above it
+     instead of sitting on a narrower column of its own. */
   .finale {
     --foot-measure: 88rem;
 
@@ -125,47 +129,62 @@ import Placeholder from '../Placeholder.astro';
     padding-block: clamp(3.5rem, 8svh, 6rem) clamp(1.75rem, 4svh, 2.75rem);
   }
 
-  /* ---- Sponsor table ----------------------------------------------- */
-  /* Names used to float on bare paper, which read as three words that had
-     lost their table. This is the table: hairlines on all four sides and
-     between every cell, radius 0, no fill, the same rules the rest of the
-     site draws with. The cells are flex items that grow, so a short last
-     row still reaches the right edge and the ruling stays square whether
-     there are two sponsors up there or nine. */
-  .wall-head {
-    font-size: clamp(1.5rem, 2.8vw, 2rem);
+  /* ---- Sponsor wall ------------------------------------------------ */
+  /* Printed, not tabulated. A ruled grid of cells made three names look
+     like a spreadsheet of them; the back of a team shirt is the real
+     reference, and it has no boxes at all: one centre line, the biggest
+     backer across the top, everyone else sharing the line beneath, leading
+     pulled tight enough that the whole set reads as a single block of ink.
+     Bare paper behind it, and nothing but type in it. */
+  .wall {
+    text-align: center;
   }
 
-  /* Top and right come from the container, bottom and left from each cell:
-     between them every edge is drawn exactly once, at any wrap. */
-  .wall-grid {
+  /* The caption over the print, not the loudest thing in it: small, and a
+     step down the ink ramp so the names hold the ink. */
+  .wall-head {
+    font-size: clamp(1.0625rem, 1.9vw, 1.4rem);
+    color: var(--color-muted);
+  }
+
+  /* One flex line per tier. The lead takes a full basis so it owns the top
+     line; every other name wraps under it and centres on the same axis,
+     which is what keeps the lockup composed at two names or at nine. The
+     measure is deliberately narrower than the frame: a name set loose across
+     88rem is a floating word, inside 54rem it is part of a block. */
+  .wall-list {
     display: flex;
     flex-wrap: wrap;
-    margin-top: clamp(1.25rem, 3svh, 1.75rem);
-    border-top: 1px solid var(--color-line);
-    border-right: 1px solid var(--color-line);
+    align-items: baseline;
+    justify-content: center;
+    max-width: 54rem;
+    margin: clamp(0.5rem, 1.3svh, 0.9rem) auto 0;
+    column-gap: clamp(1.5rem, 4vw, 3.25rem);
+    row-gap: clamp(0.3rem, 0.9svh, 0.6rem);
     list-style: none;
   }
 
-  .wall-cell {
-    display: flex;
-    flex: 1 1 15rem;
-    align-items: center;
-    min-width: 0;
-    min-height: clamp(4.5rem, 9svh, 6rem);
-    padding: 0.85rem 1.25rem;
-    border-bottom: 1px solid var(--color-line);
-    border-left: 1px solid var(--color-line);
+  /* The lower tier. Uncial gets a little tracking as it comes down in size,
+     the way small print on a shirt is spaced out to stay legible. Capped
+     against viewport height as well as width, so a short landscape screen
+     keeps the whole frame in one viewport. */
+  .wall-name {
+    font-size: clamp(1.3rem, min(3.8vw, 4svh), 2.5rem);
+    line-height: 1.06;
+    letter-spacing: 0.03em;
   }
 
-  /* Still the loudest type in the block: the names are the content, the
-     heading over them is a caption. */
-  .wall-name {
-    font-size: clamp(1.5rem, 2.6vw, 2.5rem);
+  /* The top tier, and the only reason the two rules are ordered this way:
+     .wall-lead carries both classes, so it has to come second to win. */
+  .wall-lead {
+    flex-basis: 100%;
+    font-size: clamp(2.5rem, min(8.5vw, 9svh), 5.5rem);
+    line-height: 1;
+    letter-spacing: 0.005em;
   }
 
   /* ---- Get in touch ------------------------------------------------ */
-  /* Pushed into the lower half: the table holds the top edge, this holds the
+  /* Pushed into the lower half: the print holds the top edge, this holds the
      bottom, and the air between them is the composition (and the part the
      curtain keeps covered at rest). The padding is the floor for that gap on
      a short screen, where the auto margin goes to nothing. */
@@ -292,28 +311,33 @@ import Placeholder from '../Placeholder.astro';
 
 <script>
   /**
-   * Where the page comes to rest.
+   * Where the page comes to rest, and how it moves between the two places it
+   * is allowed to rest.
    *
    * The finale is revealed by the curtain above it sliding off (geometry in
-   * index.astro). Lifting it the whole way puts the sponsor table on screen,
-   * but the thing the reader scrolled this far for is "Get in touch", one
-   * block lower. So the page rests at REACH: the curtain's bottom edge
-   * parked just above the headline, the keys, the form button and the small
-   * print all uncovered under it. FULL, the old end of the page, is still
-   * there for anyone who keeps pulling.
+   * index.astro). That travel has two ends worth stopping on:
    *
-   * Two jobs:
-   *   1. publish the distance between the two as --finale-reach, which
-   *      index.astro folds into the section's scroll-margin so every anchor
-   *      path (Lenis, native, the /contact/ redirect) lands at REACH;
-   *   2. finish the move for a gesture that stops near it.
+   *   REACH — the curtain parked just above "Get in touch", which is what the
+   *           reader scrolled this far for. Every anchor lands here: the
+   *           distance is published as --finale-reach and index.astro folds
+   *           it into the section's scroll-margin.
+   *   FULL  — the curtain off, the sponsors on screen, the end of the page.
    *
-   * The bias never reverses a gesture that is heading out of the finale, and
-   * a scroll that carries past the overshoot band is left alone: it is a
-   * magnet on one level, not a snap between two. Reduced motion keeps the
-   * anchor landing and drops the easing.
+   * Between them there is nothing to read, so the page never rests there.
+   * Arriving momentum is caught and set down on REACH. From REACH the trip to
+   * FULL costs two deliberate scrolls: the first is answered with a short tug
+   * that springs back, the second lifts the curtain in one animated move with
+   * the input locked. From FULL any scroll up plays that move in reverse.
+   * Scrolling up from REACH is left completely alone: leaving is never a
+   * negotiation, and the lock simply re-arms the next time the reader comes
+   * back down.
+   *
+   * Wheel and touch only. Keyboard scrolling stays native and unlocked, and a
+   * page held still by the nav drawer or a post popup (both take Lenis down
+   * with `overflow: hidden`) is left to them. Reduced motion gets none of it:
+   * plain scrolling, plus the anchor landing.
    */
-  function initFinaleRest() {
+  function initFinaleLock() {
     const contact = document.getElementById('contact');
     const curtain = document.querySelector<HTMLElement>('.curtain');
     const head = contact?.querySelector<HTMLElement>('.reach-head');
@@ -321,59 +345,88 @@ import Placeholder from '../Placeholder.astro';
 
     const reduced = matchMedia('(prefers-reduced-motion: reduce)');
     const engine = () => (window as any).__motion;
+    const now = () => performance.now();
+
+    /* ---- the two levels ------------------------------------------- */
 
     // Bare paper left between the curtain's edge and the headline, so the
     // black band does not sit on the type it uncovers.
     const edge = () => Math.min(56, window.innerHeight * 0.06);
 
-    // How far short of a full lift the page rests, measured inside the
-    // pinned section so it is independent of where the page is scrolled.
+    // How far short of a full lift REACH sits, measured inside the pinned
+    // section so it is independent of where the page is scrolled.
     const inset = () =>
       Math.max(
         0,
         head.getBoundingClientRect().top - contact.getBoundingClientRect().top - edge()
       );
 
-    const publish = () => contact.style.setProperty('--finale-reach', `${Math.round(inset())}px`);
+    let reach = 0;
+    let full = 0;
+    let travel = 0;
 
     // The curtain is a plain block at the top of the document, so its bottom
-    // edge in document space is exactly the scroll offset at which it has
-    // finished lifting. Everything else is measured off that.
-    const levels = () => {
-      const full = curtain.getBoundingClientRect().bottom + window.scrollY;
-      return { full, reach: Math.max(0, full - inset()) };
+    // edge in document space is exactly the offset at which it has finished
+    // lifting. Clamped to the real end of the document: on a phone the svh
+    // spacer and innerHeight disagree while the URL bar moves, and a FULL the
+    // page cannot reach would strand the lock one pixel short.
+    const measure = () => {
+      const gap = inset();
+      contact.style.setProperty('--finale-reach', `${Math.round(gap)}px`);
+      const end = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+      full = Math.min(curtain.getBoundingClientRect().bottom + window.scrollY, end);
+      reach = Math.max(0, full - gap);
+      travel = full - reach;
     };
 
-    (window as any).__finale = { reachLevel: () => levels().reach };
+    // GearNav's #contact branch reads this for its anchor trips. Measured on
+    // the spot: it is called once per trip, never per frame.
+    (window as any).__finale = {
+      reachLevel: () => {
+        measure();
+        return reach;
+      },
+    };
 
-    // Fonts, a resize and anything that changes the frame's own height move
-    // the level; the observer catches all three and fires once on attach.
+    // Fonts, a resize and anything that changes either block's height move
+    // the levels; the observer catches all of it and fires once on attach.
+    // A level that moves under a page already parked on it has to take the
+    // page with it, or the curtain's edge drifts off the headline it was set
+    // against: `moved` is where the lock below hears about that.
+    let moved: (was: number) => void = () => {};
     let queued = 0;
     const remeasure = () => {
       if (queued) return;
       queued = requestAnimationFrame(() => {
         queued = 0;
-        publish();
+        const was = reach;
+        measure();
+        if (Math.abs(was - reach) >= 1) moved(was);
       });
     };
-    publish();
-    new ResizeObserver(remeasure).observe(contact);
+    measure();
+    const sizes = new ResizeObserver(remeasure);
+    sizes.observe(contact);
+    sizes.observe(curtain);
     addEventListener('resize', remeasure, { passive: true });
     (document as any).fonts?.ready?.then?.(remeasure, () => {});
+
+    /* ---- deep link ------------------------------------------------ */
 
     // A page opened straight at #contact (the /contact/ redirect, a shared
     // link) is scrolled by the browser while this module is still deferred,
     // so it lands on the full lift with the scroll-margin's own fallback.
-    // Put it on the level instead: once now, once after load in case the
-    // browser had a second go at the fragment. Any input calls it off, so a
-    // reader who started scrolling is never yanked.
+    // Put it on REACH instead: once now, once after load in case the browser
+    // had a second go at the fragment. Any input calls it off, so a reader
+    // who started scrolling is never yanked. The landing itself arms the
+    // lock, because it crosses the level like any other arrival.
     let landing = location.hash === '#contact';
     const land = () => {
       if (!landing) return;
       const lenis = engine()?.lenis;
-      const { reach } = levels();
+      measure();
       if (lenis?.scrollTo) lenis.scrollTo(reach, { immediate: true });
-      else window.scrollTo(0, reach);
+      else window.scrollTo({ top: reach, behavior: 'instant' as ScrollBehavior });
     };
     if (landing) {
       const stop = () => (landing = false);
@@ -387,72 +440,415 @@ import Placeholder from '../Placeholder.astro';
 
     if (reduced.matches) return;
 
-    let dir = 0;
-    let last = window.scrollY;
-    let easing = false;
-    let idle: number | undefined;
+    /* ---- the lock -------------------------------------------------- */
+
+    type Level = 'free' | 'locked' | 'moving' | 'full';
+
+    // A new gesture is wheel or touch activity separated from the last by a
+    // quiet gap, or a reversal: trackpad momentum keeps firing for a second
+    // after the hand has left, and that is still one push.
+    const GAP = 380;
+    const MIN_TRAVEL = 80;
+    const EPS = 2;
+    const MIN_DELTA = 2;
+
+    // Matches --ease-out-strong closely enough for a move this long: all the
+    // speed at the front, the last few pixels laid down rather than stopped.
+    const outStrong = (t: number) => 1 - Math.pow(1 - t, 4);
+
+    let state: Level = 'free';
+    let pushes = 0;
+    let lastAt = 0;
+    let lastDown: boolean | null = null;
+    let lastY = window.scrollY;
+    let mine = false; // a scroll this file is driving
+    let token = 0; // which programmatic move is the current one
     let guard: number | undefined;
 
-    const settle = () => {
+    // What the hand is doing, kept by the always-on tracker below.
+    let touchedAt = 0;
+    let byTouch = false;
+    let fingerDown = false;
+    let fingerY = 0;
+    let fingerMove = 0; // last drag step, positive when the page goes down
+    let fingerAt = 0; // when the current drag started
+    let crossedAt = 0; // when a reader's own gesture last landed on REACH
+
+    // The drawer and the post popups hold the page themselves (their
+    // holdPage takes Lenis down and puts `overflow: hidden` on the root).
+    // Whatever they are doing outranks this.
+    const held = () => {
       const lenis = engine()?.lenis;
-      if (easing || lenis?.isStopped || lenis?.isTouching) return;
+      return !!lenis?.isStopped || document.documentElement.style.overflow === 'hidden';
+    };
 
-      const y = window.scrollY;
-      const { full, reach } = levels();
-      const travel = full - reach;
-      if (travel < 80) return; // nothing worth biasing toward
+    const live = () => travel >= MIN_TRAVEL && !held();
 
-      // Ahead of the level: most of the remaining lift, capped so the magnet
-      // never reaches back into the section above. Past it: a flick's worth,
-      // short enough that one deliberate wheel click escapes for good.
-      const lower = reach - Math.min(travel * 0.6, window.innerHeight * 0.28);
-      const upper = reach + Math.min(travel * 0.12, window.innerHeight * 0.06);
-      if (y <= lower || y >= upper || Math.abs(y - reach) < 4) return;
-      // Someone scrolling back up out of the finale is leaving. Never pull
-      // them down into it.
-      if (dir < 0 && reach > y) return;
+    // What the hand is doing, watched from outside the lock. The gesture
+    // listeners below come and go with the lock, so they cannot say whether a
+    // reader was already pushing when the page arrived somewhere; this one is
+    // always on, blocks nothing and cancels nothing (passive, so the browser
+    // never waits on it), and it is also where a drag's direction is read,
+    // one step at a time, whether or not the lock is listening.
+    const noteInput = (e: Event) => {
+      touchedAt = now();
+      byTouch = e.type !== 'wheel';
+      if (e.type === 'wheel') return;
+      const touches = (e as TouchEvent).touches;
+      const finger = touches?.[0];
+      if (e.type === 'touchstart') {
+        fingerDown = true;
+        fingerAt = touchedAt;
+        fingerMove = 0;
+        fingerY = finger?.clientY ?? 0;
+      } else if (finger && touches.length === 1) {
+        fingerMove = fingerY - finger.clientY;
+        if (Math.abs(fingerMove) >= 3) fingerY = finger.clientY;
+      }
+    };
+    const noteLift = () => {
+      fingerDown = false;
+      touchedAt = now();
+    };
+    addEventListener('wheel', noteInput, { passive: true, capture: true });
+    addEventListener('touchstart', noteInput, { passive: true, capture: true });
+    addEventListener('touchmove', noteInput, { passive: true, capture: true });
+    addEventListener('touchend', noteLift, { passive: true, capture: true });
+    addEventListener('touchcancel', noteLift, { passive: true, capture: true });
 
-      easing = true;
-      clearTimeout(guard);
-      guard = window.setTimeout(() => (easing = false), 900);
+    const swallow = (e: Event) => {
+      if (e.cancelable) e.preventDefault();
+      // Lenis listens on window in the bubble phase; this runs in the
+      // capture phase, so stopping here is what keeps it from scrolling.
+      e.stopPropagation();
+    };
 
-      const done = () => {
-        easing = false;
-      };
-      if (lenis?.scrollTo) {
-        lenis.scrollTo(reach, {
-          duration: 0.5,
-          easing: (t: number) => 1 - Math.pow(1 - t, 3),
-          userData: { finaleRest: true },
-          onComplete: done,
-        });
+    /* Gesture listeners are only attached while a level actually holds the
+       page. A permanent non-passive wheel/touchmove listener would take the
+       whole document off the browser's fast scrolling path for the sake of
+       the last screen, so the lock brings them with it and takes them away
+       again on the way out. */
+    const opts: AddEventListenerOptions = { capture: true, passive: false };
+    let listening = false;
+    const listen = (on: boolean) => {
+      if (on === listening) return;
+      listening = on;
+      if (on) {
+        window.addEventListener('wheel', onWheel, opts);
+        window.addEventListener('touchmove', onTouchMove, opts);
       } else {
-        window.scrollTo({ top: reach, behavior: 'smooth' });
+        window.removeEventListener('wheel', onWheel, opts);
+        window.removeEventListener('touchmove', onTouchMove, opts);
       }
     };
 
-    // The end of a gesture is the end of its momentum: Lenis stops emitting
-    // when it settles, so the last scroll event plus a beat is the signal.
-    const arm = (wait: number) => {
-      clearTimeout(idle);
-      idle = window.setTimeout(settle, wait);
+    const enter = (next: Level) => {
+      state = next;
+      listen(next !== 'free');
     };
 
-    addEventListener(
-      'scroll',
-      () => {
-        const y = window.scrollY;
-        if (y !== last) dir = y > last ? 1 : -1;
-        last = y;
-        arm(140);
-      },
-      { passive: true }
-    );
+    /* ---- programmatic moves ---------------------------------------- */
 
-    // A finger held still on the glass stops the scroll without ending the
-    // gesture, so the lift is what re-arms it.
-    addEventListener('touchend', () => arm(160), { passive: true });
+    const begin = () => {
+      mine = true;
+      clearTimeout(guard);
+      return ++token;
+    };
+
+    // Taking hold of a level. `spent` is the direction of the gesture that
+    // brought the page here, or null when it arrived under its own steam:
+    // whatever is left of that gesture is its own tail, not a new request, so
+    // the tail gets swallowed and only a genuine reversal or a quiet gap
+    // counts as the next push. A level arrived at from rest owes nothing, so
+    // its clock starts at zero and the very next gesture is push one.
+    const hold = (next: Level, spent: boolean | null) => {
+      pushes = 0;
+      lastAt = spent === null ? 0 : now();
+      lastDown = spent;
+      enter(next);
+    };
+
+    const settle = (id: number, next?: Level, spent: boolean | null = null) => {
+      if (id !== token) return;
+      clearTimeout(guard);
+      const lenis = engine()?.lenis;
+      // A move that got interrupted before Lenis reset itself would leave the
+      // whole page locked, so the flag is cleared by hand as well.
+      if (lenis?.isLocked) lenis.isLocked = false;
+      mine = false;
+      lastY = window.scrollY;
+      if (next) hold(next, spent);
+    };
+
+    // Set the page down on REACH. Momentum that carried past the level is
+    // taken off it in the same frame Lenis wrote it, so nothing is painted
+    // out of place.
+    const grab = () => {
+      const lenis = engine()?.lenis;
+      const id = begin();
+      // With no hand on the page, nothing arrived here under its own power:
+      // a drawer trip, a deep link, a level that moved. There is no tail to
+      // swallow, so the reader's next push is push one.
+      const spent = now() - touchedAt > GAP ? null : true;
+      if (spent && byTouch) crossedAt = now();
+      if (lenis?.scrollTo) lenis.scrollTo(reach, { immediate: true, force: true });
+      else window.scrollTo({ top: reach, behavior: 'instant' as ScrollBehavior });
+      lastY = reach;
+      hold('locked', spent);
+      requestAnimationFrame(() => {
+        if (id === token) mine = false;
+      });
+    };
+
+    // The level moved (a font landed, the window changed shape) while the
+    // page was sitting exactly on the old one: bring the page along, keep the
+    // lock, say nothing. Only ever from a standstill, and never mid-gesture.
+    moved = (was: number) => {
+      if (mine || state === 'moving') return;
+      if (Math.abs(window.scrollY - was) > EPS || now() - touchedAt < 500) return;
+      grab();
+    };
+
+    // The trip between the levels: one move, input locked, no way to end up
+    // between the two.
+    const run = (to: 'full' | 'reach') => {
+      measure();
+      const lenis = engine()?.lenis;
+      const target = to === 'full' ? full : reach;
+      const next: Level = to === 'full' ? 'full' : 'locked';
+      const spent = to === 'full'; // the push that asked for this move
+      enter('moving');
+      const id = begin();
+      // The move's own end, or a backstop if it never reports one: either way
+      // the state is handed on exactly once.
+      guard = window.setTimeout(() => settle(id, next, spent), lenis?.scrollTo ? 1500 : 900);
+      if (lenis?.scrollTo) {
+        lenis.scrollTo(target, {
+          duration: 0.95,
+          easing: outStrong,
+          lock: true,
+          force: true,
+          userData: { finaleRun: true },
+          onComplete: () => settle(id, next, spent),
+        });
+      } else {
+        window.scrollTo({ top: target, behavior: 'smooth' });
+      }
+    };
+
+    // The answer to the first push: the curtain gives a few pixels and takes
+    // them back. It is the same mechanism the real lift uses, at a hundredth
+    // of the distance, which is what makes it read as resistance rather than
+    // as a bug. Out fast, back slower.
+    const tug = () => {
+      const lenis = engine()?.lenis;
+      const give = Math.min(14, travel * 0.06);
+      if (!lenis?.scrollTo || give < 5) return; // too small to be anything but noise
+      const id = begin();
+      guard = window.setTimeout(() => settle(id), 900);
+      lenis.scrollTo(reach + give, {
+        duration: 0.13,
+        easing: (t: number) => 1 - Math.pow(1 - t, 2),
+        force: true,
+        onComplete: () => {
+          if (id !== token) return;
+          lenis.scrollTo(reach, {
+            duration: 0.32,
+            easing: outStrong,
+            force: true,
+            onComplete: () => settle(id),
+          });
+        },
+      });
+    };
+
+    /* ---- gestures --------------------------------------------------- */
+
+    const gate = (e: Event, down: boolean) => {
+      landing = false; // the reader is driving now
+      const t = now();
+      const fresh = t - lastAt > GAP || (lastDown !== null && down !== lastDown);
+      lastAt = t;
+      lastDown = down;
+
+      if (state === 'moving') {
+        swallow(e);
+        return;
+      }
+
+      if (state === 'full') {
+        swallow(e); // the end of the document: down has nowhere to go
+        if (!down && fresh) run('reach');
+        return;
+      }
+
+      // Only REACH is left, and the listeners are not even attached anywhere
+      // else: a reader in free flight is never touched.
+      if (!down) {
+        // The tail of the gesture that landed here is not a request to leave.
+        if (!fresh) {
+          swallow(e);
+          return;
+        }
+        pushes = 0;
+        enter('free'); // leaving upward: hands off, entirely
+        return;
+      }
+
+      swallow(e);
+      if (!fresh) return;
+      pushes += 1;
+      if (pushes >= 2) {
+        pushes = 0;
+        run('full');
+      } else {
+        tug();
+      }
+    };
+
+    function onWheel(e: WheelEvent) {
+      if (state === 'free' || e.ctrlKey) return; // pinch zoom is never ours
+      if (!live() || optedOut(e.target)) return;
+      if (Math.abs(e.deltaY) < MIN_DELTA) {
+        // Momentum dust: it keeps the current gesture alive, it does not
+        // start a new one, and it must not scroll the page either.
+        lastAt = now();
+        swallow(e);
+        return;
+      }
+      gate(e, e.deltaY > 0);
+    }
+
+    function onTouchMove(e: TouchEvent) {
+      if (state === 'free' || e.touches.length > 1) return; // pinch zoom
+      if (!live() || optedOut(e.target)) return;
+      if (Math.abs(fingerMove) < 3) return; // the tracker has not read a step yet
+      // A finger put back on the glass starts a new gesture whatever the
+      // clock says. A drag the lock only started watching partway through
+      // (it took hold of the level mid-swipe) is not one: the level's own
+      // arrival stamped the clock after this drag began, and the rest of the
+      // swipe is that same gesture's tail.
+      if (fingerAt > lastAt) {
+        lastAt = 0;
+        lastDown = null;
+      }
+      gate(e, fingerMove > 0);
+    }
+
+    // Nested scrollers and anything a dialog owns keep their own gestures.
+    const optedOut = (t: EventTarget | null) =>
+      t instanceof Element &&
+      !!t.closest('[data-lenis-prevent], [data-lenis-prevent-wheel], dialog[open]');
+
+    /* ---- watching the level ----------------------------------------- */
+
+    // Coming to rest ON the level without being caught (the drawer's #contact
+    // trip arriving from below, a native anchor landing) still arms the lock.
+    // It waits for the page to actually stop: taking hold of a reader who is
+    // only passing back up through the level would put a wall in front of
+    // someone on their way out.
+    let resting: number | undefined;
+    const onRest = () => {
+      resting = undefined;
+      if (state === 'free' && live() && Math.abs(window.scrollY - reach) <= EPS) {
+        hold('locked', null);
+      }
+    };
+
+    // Undo an overrun a drag could not be stopped from making. Never while
+    // the finger is still down: a programmatic scroll cannot win against a
+    // touch the browser is already scrolling with, so it waits for the lift.
+    const recover = () => {
+      crossedAt = 0;
+      if (!fingerDown) {
+        run('reach');
+        return;
+      }
+      addEventListener('touchend', () => state === 'full' && run('reach'), {
+        once: true,
+        passive: true,
+      });
+    };
+
+    const onScroll = () => {
+      const y = window.scrollY;
+      const prev = lastY;
+      lastY = y;
+      clearTimeout(resting);
+      if (mine || state === 'moving' || !live()) return;
+
+      // Nothing gives up a level on a stale measurement. Content settling
+      // above the fold (a font landing, an image) moves the level and the
+      // page together, and the browser's scroll anchoring writes the new
+      // position a frame before the observer says the level changed: without
+      // the re-read, that arrives here looking exactly like a reader who left.
+      //
+      // The end of the document, however it was reached (the lift itself, or
+      // a keyboard, which is never locked out of anything).
+      if (state === 'full') {
+        if (y >= full - EPS) return;
+        measure();
+        if (y >= full - EPS) return;
+        enter('free');
+      } else if (y >= full - EPS) {
+        measure();
+        if (y >= full - EPS) {
+          hold('full', null);
+          // A touch drag cannot be called off once the browser has started
+          // scrolling with it, so a long swipe can carry the page straight
+          // through REACH to the end of the document. The magnet still holds:
+          // once the finger is off the glass, the page goes back.
+          if (now() - crossedAt < 900) recover();
+          return;
+        }
+      }
+
+      if (state === 'locked') {
+        if (Math.abs(y - reach) > EPS) measure();
+        if (Math.abs(y - reach) <= EPS) return;
+        // Touch momentum runs on after the finger is gone and no gesture can
+        // be prevented: catch it again. Anything moving the page a beat after
+        // the last gesture is somebody else (a keyboard, a find-in-page jump)
+        // and gets the level back.
+        if (y > reach + EPS && now() - touchedAt < 800) grab();
+        else enter('free');
+        return;
+      }
+
+      // Free, and crossing the level on the way down: this is the magnet.
+      if (prev < reach - 0.5 && y >= reach - 0.5) grab();
+      else if (Math.abs(y - reach) <= EPS) resting = window.setTimeout(onRest, 140);
+    };
+
+    // Lenis emits inside its own rAF, right after it has written the scroll
+    // position and before the frame is painted, which is what lets the catch
+    // land without a visible overshoot. The native event is the fallback for
+    // a page where the motion engine never booted; both are idempotent.
+    const bindEngine = (tries: number) => {
+      const lenis = engine()?.lenis;
+      if (lenis?.on) {
+        lenis.on('scroll', onScroll);
+        return;
+      }
+      if (tries > 90) return;
+      requestAnimationFrame(() => bindEngine(tries + 1));
+    };
+    bindEngine(0);
+    addEventListener('scroll', onScroll, { passive: true });
+
+    // A page that opens already on the level (the #contact deep link above,
+    // which can land there without moving anything, so without a single
+    // scroll event to notice) starts locked rather than waiting for one.
+    resting = window.setTimeout(onRest, 220);
+    addEventListener(
+      'load',
+      () => {
+        clearTimeout(resting);
+        resting = window.setTimeout(onRest, 260);
+      },
+      { once: true }
+    );
   }
 
-  initFinaleRest();
+  initFinaleLock();
 </script>
