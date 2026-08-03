@@ -3,33 +3,42 @@
  * Finale — the last frame, on paper. index.astro pins this section and
  * scrolls the rest of the page off it like a curtain, so it has to read as
  * one still picture instead of a sequence: no reveals, no split headline,
- * nothing that arrives. The sponsor wall holds the top edge, "Get in touch"
+ * nothing that arrives. The sponsor table holds the top edge, "Get in touch"
  * owns the lower half with the two contact keys and the form button, and the
  * shared small print closes the bottom. Sized to one viewport, so what the
  * curtain uncovers is the whole thing.
+ *
+ * The page rests one block short of a full lift. The curtain's bottom edge
+ * parks just above "Get in touch", which is what the reader came down here
+ * for; the sponsor table above it is optional and costs one more deliberate
+ * scroll. The script at the foot of this file measures that level, publishes
+ * it as `--finale-reach` (index.astro folds it into the section's
+ * scroll-margin, so every anchor lands there) and eases a gesture that ends
+ * near it the rest of the way. Pull past it and you get the full lift and
+ * stay there: the bias is a magnet, not a gate.
  *
  * No transforms or positioning on the root: the sticky comes from
  * index.astro and anything here would fight it.
  *
  * The small print is the same <Footer /> the blog pages render, imported
  * rather than retyped so the two can never drift. Its top hairline stays and
- * it is the only rule in the frame: it separates the colophon from the page
- * proper, which is the one job hairlines still have.
+ * it is the only rule in the frame besides the table's. It separates the
+ * colophon from the page proper, which is a real content break.
  */
 import Footer from '../Footer.astro';
 import Placeholder from '../Placeholder.astro';
 ---
 
 <section id="contact" class="finale band-light">
-  <div class="finale-frame mx-auto w-full max-w-5xl px-5 sm:px-8">
+  <div class="finale-frame mx-auto w-full max-w-[88rem] px-5 sm:px-8">
     <div class="wall">
-      <h2 class="wall-head type-display">Backed by</h2>
+      <h2 class="wall-head type-display">Sponsored by</h2>
 
       <Placeholder name="finale-sponsors">
-        <ul class="wall-list">
-          <li class="wall-name type-display">Sponsor 1</li>
-          <li class="wall-name type-display">Sponsor 2</li>
-          <li class="wall-name type-display">Sponsor 3</li>
+        <ul class="wall-grid">
+          <li class="wall-cell"><span class="wall-name type-display">Sponsor 1</span></li>
+          <li class="wall-cell"><span class="wall-name type-display">Sponsor 2</span></li>
+          <li class="wall-cell"><span class="wall-name type-display">Sponsor 3</span></li>
         </ul>
       </Placeholder>
     </div>
@@ -96,8 +105,14 @@ import Placeholder from '../Placeholder.astro';
 <style>
   /* One viewport tall, flex column: the frame takes what it needs and the
      small print holds the bottom edge whatever the height. Paper fill and
-     indigo ink come from .band-light. */
+     indigo ink come from .band-light.
+
+     --foot-measure hands the shared Footer this frame's measure, so the
+     colophon's two ends line up with the sponsor table's outer rules
+     instead of sitting on a narrower column of their own. */
   .finale {
+    --foot-measure: 88rem;
+
     display: flex;
     flex-direction: column;
     min-height: 100svh;
@@ -110,39 +125,53 @@ import Placeholder from '../Placeholder.astro';
     padding-block: clamp(3.5rem, 8svh, 6rem) clamp(1.75rem, 4svh, 2.75rem);
   }
 
-  /* ---- Sponsor wall ------------------------------------------------ */
-  /* Names are the content here, so they run larger than the heading over
-     them. No plates, no boxes: three names on bare paper, spread across the
-     measure, waiting to be swapped for real ones. */
+  /* ---- Sponsor table ----------------------------------------------- */
+  /* Names used to float on bare paper, which read as three words that had
+     lost their table. This is the table: hairlines on all four sides and
+     between every cell, radius 0, no fill, the same rules the rest of the
+     site draws with. The cells are flex items that grow, so a short last
+     row still reaches the right edge and the ruling stays square whether
+     there are two sponsors up there or nine. */
   .wall-head {
     font-size: clamp(1.5rem, 2.8vw, 2rem);
   }
 
-  .wall-list {
+  /* Top and right come from the container, bottom and left from each cell:
+     between them every edge is drawn exactly once, at any wrap. */
+  .wall-grid {
     display: flex;
     flex-wrap: wrap;
-    gap: clamp(0.75rem, 2svh, 1.5rem) clamp(1.75rem, 5vw, 4.5rem);
-    margin-top: clamp(1.25rem, 3svh, 2rem);
+    margin-top: clamp(1.25rem, 3svh, 1.75rem);
+    border-top: 1px solid var(--color-line);
+    border-right: 1px solid var(--color-line);
+    list-style: none;
   }
 
+  .wall-cell {
+    display: flex;
+    flex: 1 1 15rem;
+    align-items: center;
+    min-width: 0;
+    min-height: clamp(4.5rem, 9svh, 6rem);
+    padding: 0.85rem 1.25rem;
+    border-bottom: 1px solid var(--color-line);
+    border-left: 1px solid var(--color-line);
+  }
+
+  /* Still the loudest type in the block: the names are the content, the
+     heading over them is a caption. */
   .wall-name {
-    font-size: clamp(1.75rem, 4.2vw, 3.25rem);
-  }
-
-  @media (min-width: 640px) {
-    .wall-list {
-      justify-content: space-between;
-    }
+    font-size: clamp(1.5rem, 2.6vw, 2.5rem);
   }
 
   /* ---- Get in touch ------------------------------------------------ */
-  /* Pushed into the lower half: the wall holds the top edge, this holds the
-     bottom, and the air between them is the composition. The padding is the
-     floor for that gap on a short screen, where the auto margin goes to
-     nothing. */
+  /* Pushed into the lower half: the table holds the top edge, this holds the
+     bottom, and the air between them is the composition (and the part the
+     curtain keeps covered at rest). The padding is the floor for that gap on
+     a short screen, where the auto margin goes to nothing. */
   .reach {
     margin-top: auto;
-    padding-top: clamp(2.5rem, 8svh, 6rem);
+    padding-top: clamp(2rem, 6svh, 4.5rem);
   }
 
   /* The site's last headline, so it takes the field. Capped against viewport
@@ -152,20 +181,26 @@ import Placeholder from '../Placeholder.astro';
     font-size: clamp(2.75rem, min(10vw, 16svh), 8rem);
   }
 
+  /* One family, one margin, one gap. The keys used to sit at the left and
+     the form button was pushed to the far edge, so three controls read as
+     two groups with a hole between them and no two of them stood the same
+     height. They share --key-h now and the same 14px on every side. */
   .reach-row {
+    --key-h: 3.375rem;
+
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 1.25rem 0.75rem;
-    margin-top: clamp(1.75rem, 4svh, 2.75rem);
+    gap: 0.875rem;
+    margin-top: clamp(1.5rem, 3.5svh, 2.25rem);
   }
 
   /* Machined keys: a solid indigo block with the glyph centred in it, no
-     outline and no label. 54px square at rest, which is the hit area too. */
+     outline and no label. Square at rest, which is the hit area too. */
   .pin {
     display: inline-flex;
     align-items: center;
-    height: 3.375rem;
+    height: var(--key-h);
     padding-inline: 1rem;
     background: var(--color-surface);
     color: var(--color-paper);
@@ -174,6 +209,13 @@ import Placeholder from '../Placeholder.astro';
 
   .pin:active {
     transform: scale(0.97);
+  }
+
+  /* The grape block runs the same height as the keys instead of the .btn
+     padding's own, so the row has one silhouette. */
+  .cta {
+    height: var(--key-h);
+    padding-block: 0;
   }
 
   .pin-glyph {
@@ -246,13 +288,171 @@ import Placeholder from '../Placeholder.astro';
       transition: none;
     }
   }
-
-  /* The one grape mark on the frame, parked on the far side of the keys so it
-     balances the headline instead of stacking under it. Under 640 it wraps to
-     its own line and sits on the left margin with everything else. */
-  @media (min-width: 640px) {
-    .cta {
-      margin-left: auto;
-    }
-  }
 </style>
+
+<script>
+  /**
+   * Where the page comes to rest.
+   *
+   * The finale is revealed by the curtain above it sliding off (geometry in
+   * index.astro). Lifting it the whole way puts the sponsor table on screen,
+   * but the thing the reader scrolled this far for is "Get in touch", one
+   * block lower. So the page rests at REACH: the curtain's bottom edge
+   * parked just above the headline, the keys, the form button and the small
+   * print all uncovered under it. FULL, the old end of the page, is still
+   * there for anyone who keeps pulling.
+   *
+   * Two jobs:
+   *   1. publish the distance between the two as --finale-reach, which
+   *      index.astro folds into the section's scroll-margin so every anchor
+   *      path (Lenis, native, the /contact/ redirect) lands at REACH;
+   *   2. finish the move for a gesture that stops near it.
+   *
+   * The bias never reverses a gesture that is heading out of the finale, and
+   * a scroll that carries past the overshoot band is left alone: it is a
+   * magnet on one level, not a snap between two. Reduced motion keeps the
+   * anchor landing and drops the easing.
+   */
+  function initFinaleRest() {
+    const contact = document.getElementById('contact');
+    const curtain = document.querySelector<HTMLElement>('.curtain');
+    const head = contact?.querySelector<HTMLElement>('.reach-head');
+    if (!contact || !curtain || !head) return;
+
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+    const engine = () => (window as any).__motion;
+
+    // Bare paper left between the curtain's edge and the headline, so the
+    // black band does not sit on the type it uncovers.
+    const edge = () => Math.min(56, window.innerHeight * 0.06);
+
+    // How far short of a full lift the page rests, measured inside the
+    // pinned section so it is independent of where the page is scrolled.
+    const inset = () =>
+      Math.max(
+        0,
+        head.getBoundingClientRect().top - contact.getBoundingClientRect().top - edge()
+      );
+
+    const publish = () => contact.style.setProperty('--finale-reach', `${Math.round(inset())}px`);
+
+    // The curtain is a plain block at the top of the document, so its bottom
+    // edge in document space is exactly the scroll offset at which it has
+    // finished lifting. Everything else is measured off that.
+    const levels = () => {
+      const full = curtain.getBoundingClientRect().bottom + window.scrollY;
+      return { full, reach: Math.max(0, full - inset()) };
+    };
+
+    (window as any).__finale = { reachLevel: () => levels().reach };
+
+    // Fonts, a resize and anything that changes the frame's own height move
+    // the level; the observer catches all three and fires once on attach.
+    let queued = 0;
+    const remeasure = () => {
+      if (queued) return;
+      queued = requestAnimationFrame(() => {
+        queued = 0;
+        publish();
+      });
+    };
+    publish();
+    new ResizeObserver(remeasure).observe(contact);
+    addEventListener('resize', remeasure, { passive: true });
+    (document as any).fonts?.ready?.then?.(remeasure, () => {});
+
+    // A page opened straight at #contact (the /contact/ redirect, a shared
+    // link) is scrolled by the browser while this module is still deferred,
+    // so it lands on the full lift with the scroll-margin's own fallback.
+    // Put it on the level instead: once now, once after load in case the
+    // browser had a second go at the fragment. Any input calls it off, so a
+    // reader who started scrolling is never yanked.
+    let landing = location.hash === '#contact';
+    const land = () => {
+      if (!landing) return;
+      const lenis = engine()?.lenis;
+      const { reach } = levels();
+      if (lenis?.scrollTo) lenis.scrollTo(reach, { immediate: true });
+      else window.scrollTo(0, reach);
+    };
+    if (landing) {
+      const stop = () => (landing = false);
+      requestAnimationFrame(land);
+      addEventListener('load', land, { once: true });
+      addEventListener('wheel', stop, { passive: true, once: true });
+      addEventListener('touchstart', stop, { passive: true, once: true });
+      addEventListener('keydown', stop, { once: true });
+      setTimeout(stop, 1400);
+    }
+
+    if (reduced.matches) return;
+
+    let dir = 0;
+    let last = window.scrollY;
+    let easing = false;
+    let idle: number | undefined;
+    let guard: number | undefined;
+
+    const settle = () => {
+      const lenis = engine()?.lenis;
+      if (easing || lenis?.isStopped || lenis?.isTouching) return;
+
+      const y = window.scrollY;
+      const { full, reach } = levels();
+      const travel = full - reach;
+      if (travel < 80) return; // nothing worth biasing toward
+
+      // Ahead of the level: most of the remaining lift, capped so the magnet
+      // never reaches back into the section above. Past it: a flick's worth,
+      // short enough that one deliberate wheel click escapes for good.
+      const lower = reach - Math.min(travel * 0.6, window.innerHeight * 0.28);
+      const upper = reach + Math.min(travel * 0.12, window.innerHeight * 0.06);
+      if (y <= lower || y >= upper || Math.abs(y - reach) < 4) return;
+      // Someone scrolling back up out of the finale is leaving. Never pull
+      // them down into it.
+      if (dir < 0 && reach > y) return;
+
+      easing = true;
+      clearTimeout(guard);
+      guard = window.setTimeout(() => (easing = false), 900);
+
+      const done = () => {
+        easing = false;
+      };
+      if (lenis?.scrollTo) {
+        lenis.scrollTo(reach, {
+          duration: 0.5,
+          easing: (t: number) => 1 - Math.pow(1 - t, 3),
+          userData: { finaleRest: true },
+          onComplete: done,
+        });
+      } else {
+        window.scrollTo({ top: reach, behavior: 'smooth' });
+      }
+    };
+
+    // The end of a gesture is the end of its momentum: Lenis stops emitting
+    // when it settles, so the last scroll event plus a beat is the signal.
+    const arm = (wait: number) => {
+      clearTimeout(idle);
+      idle = window.setTimeout(settle, wait);
+    };
+
+    addEventListener(
+      'scroll',
+      () => {
+        const y = window.scrollY;
+        if (y !== last) dir = y > last ? 1 : -1;
+        last = y;
+        arm(140);
+      },
+      { passive: true }
+    );
+
+    // A finger held still on the glass stops the scroll without ending the
+    // gesture, so the lift is what re-arms it.
+    addEventListener('touchend', () => arm(160), { passive: true });
+  }
+
+  initFinaleRest();
+</script>

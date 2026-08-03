@@ -38,7 +38,7 @@ const links: NavLink[] = [
     card: 'nav-card-lineage',
     note: 'The teams we came from',
   },
-  { href: `${base}/#team`, label: 'Team', card: 'nav-card-team', note: 'Seven students' },
+  { href: `${base}/#team`, label: 'Team', card: 'nav-card-team', note: 'Ten students' },
   {
     href: `${base}/#season`,
     label: 'Season',
@@ -493,6 +493,14 @@ const links: NavLink[] = [
         // always ends exactly one viewport down; land there.
         if (lenis?.scrollTo) lenis.scrollTo(window.innerHeight, { immediate: reduced.matches });
         else window.scrollTo({ top: window.innerHeight, behavior });
+      } else if (hash === '#contact' && (window as any).__finale?.reachLevel) {
+        // The finale is the same case at the other end of the page: it sits
+        // pinned under the curtain, and it rests one block short of a full
+        // lift so the trip ends on "Get in touch" rather than on the sponsor
+        // table above it. The section measures that level itself.
+        const rest = (window as any).__finale.reachLevel();
+        if (lenis?.scrollTo) lenis.scrollTo(rest, { immediate: reduced.matches });
+        else window.scrollTo({ top: rest, behavior });
       } else if (lenis?.scrollTo) {
         lenis.scrollTo(target, { immediate: reduced.matches });
       } else {

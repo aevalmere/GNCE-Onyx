@@ -114,9 +114,13 @@ import Finale from '../components/home/Finale.astro';
   .finale-wrap > :global(#contact) {
     position: sticky;
     top: 0;
-    /* Anchor jumps must land where the curtain has fully lifted, one
-       viewport past the finale's flow position. */
-    scroll-margin-top: -100svh;
+    /* Anchor jumps land at the finale's resting level: one viewport past its
+       flow position (the curtain fully lifted), less the block the section
+       measures back off itself. Finale.astro publishes that block as
+       --finale-reach, which parks the curtain's edge just above "Get in
+       touch" and leaves the sponsor table above it as the optional part.
+       Without the script the fallback is 0, which is the full lift. */
+    scroll-margin-top: calc(-100svh + var(--finale-reach, 0px));
   }
 
   .finale-wrap::after {

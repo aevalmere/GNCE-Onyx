@@ -7,13 +7,16 @@
  *
  * The top hairline is the one rule left on it: it seats the colophon under
  * the page proper, which is a real content break rather than decoration.
+ *
+ * Plain body type, not the spaced small caps the rest of the site's metadata
+ * wears: this is a sentence about who made the page, and it should read like
+ * one. --foot-measure lets the frame around it set the column, so the two
+ * ends land on the same margins as whatever is above them.
  */
 ---
 
 <footer class="hairline border-t">
-  <p
-    class="foot-print type-label mx-auto flex max-w-5xl flex-wrap justify-between gap-x-8 gap-y-1 px-5 py-6 text-muted sm:px-8"
-  >
+  <p class="foot-print mx-auto flex flex-wrap justify-between gap-x-8 gap-y-1 px-5 py-6 text-muted sm:px-8">
     <span>© 2026 GNCE Onyx</span>
     <span>
       Weston High School · Team&nbsp;<span class="stub" title="Team number pending">#XXXXX</span>
@@ -22,6 +25,17 @@
 </footer>
 
 <style>
+  /* Cardo at reading weight, normal case, no tracking. The default is the
+     old content column; the Finale hands it a wider one. */
+  p.foot-print {
+    max-width: var(--foot-measure, 64rem);
+    font-family: var(--font-text);
+    font-size: 0.875rem;
+    line-height: 1.5;
+    letter-spacing: normal;
+    text-transform: none;
+  }
+
   /* The nav toggle parks over the bottom right corner of every page, and this
      print is the last thing under it. On narrow screens, where the toggle
      tucks in to 1rem, the wrapped lines have to clear its 56px square. Typed
