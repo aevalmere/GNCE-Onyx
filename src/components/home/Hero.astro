@@ -1,17 +1,56 @@
 ---
 /**
- * Hero — the full-viewport opener on black. Script line, then the headline
- * cascading per character as the intro cover lifts, then the two CTAs. Both
- * CTAs are in-page anchors: Lenis smooth-scrolls them.
+ * Hero — the opening viewport on black, and the sheet that wipes off it.
+ *
+ * Three registers inside one viewport instead of one centred stack: a
+ * masthead (the script name at the left, the team's particulars at the
+ * right, both hung off a single hairline), the headline cascading per
+ * character as the intro cover lifts, and the two CTAs on the bottom edge.
+ * The bottom right corner stays empty on purpose: the nav toggle lives
+ * there.
+ *
+ * Behind the headline the wordmark is set at viewport scale in shadow grey
+ * and cut by the frame, so the line lands on stone rather than on empty
+ * black. It carries [data-cover-deep], which is the one trick in the
+ * section: index.astro pins the hero and motion.ts slides it off to the
+ * left, and the wordmark travels only part of that distance, so the sheet's
+ * own trailing edge crops it on the way out.
+ *
+ * The three entrances hang off one `data-reveal-group` rather than three
+ * hand-set delays. That is not only tidier: a standalone reveal waits for
+ * its own top to climb past 86% of the viewport, and the CTA row sits below
+ * that line on a tall screen, so on its own it would sit clipped and never
+ * open. The group fires off the group's box, which starts at the top of the
+ * page, and staggers the three in DOM order.
+ *
+ * Both CTAs are in-page anchors: Lenis smooth-scrolls them.
  */
 import Reveal from '../Reveal.astro';
 ---
 
 <section class="hero" aria-label="GNCE Onyx">
-  <div class="mx-auto w-full max-w-[88rem] px-5 sm:px-8">
-    <Reveal variant="up" delay={70}><p class="hero-script type-script">GNCE Onyx</p></Reveal>
-    <h1 class="hero-title type-display mt-4" data-split="intro">A rookie team of championship veterans.</h1>
-    <Reveal variant="up" delay={110} class="mt-12 sm:mt-14">
+  <div class="hero-inner mx-auto w-full max-w-[88rem] px-5 sm:px-8" data-reveal-group>
+    <div class="hero-mast">
+      <Reveal variant="up"><p class="hero-script type-script">GNCE Onyx</p></Reveal>
+      <Reveal variant="up">
+        <ul class="hero-facts type-label">
+          <li>FIRST Tech Challenge</li>
+          <li>Weston High School</li>
+          <li>2026-2027 BIOBUZZ</li>
+        </ul>
+      </Reveal>
+    </div>
+
+    <div class="hero-stage">
+      <div class="hero-deep" data-cover-deep aria-hidden="true">
+        <span class="hero-deep-word">ONYX</span>
+      </div>
+      <h1 class="hero-title type-display" data-split="intro">
+        A rookie team of championship veterans.
+      </h1>
+    </div>
+
+    <Reveal variant="up">
       <p class="hero-cta">
         <a href="#sponsors" class="btn btn-solid" data-magnetic="0.4">Sponsor the team</a>
         <a href="#season" class="hero-link">Our first season</a>
@@ -22,23 +61,105 @@ import Reveal from '../Reveal.astro';
 
 <style>
   .hero {
-    display: flex;
-    align-items: center;
+    position: relative;
+    display: grid;
     min-height: 100svh;
-    padding: 6rem 0 4rem;
+    padding: clamp(3.5rem, 10svh, 6rem) 0 clamp(2.5rem, 6svh, 4rem);
+    /* The wordmark runs wider than the frame by design, so the section is
+       the aperture that cuts it. Under the wipe this is also what keeps the
+       word from ever printing over the paper band beneath. */
+    overflow: clip;
+  }
+
+  .hero-inner {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    row-gap: clamp(2rem, 5svh, 3.5rem);
+  }
+
+  /* Name on one end, particulars on the other, one rule under both: the
+     masthead reads as a plate rather than as a label stack over a heading.
+     Below 48rem it folds into a single left-hung column. */
+  .hero-mast {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1.25rem 2.5rem;
+    padding-bottom: 1.35rem;
+    border-bottom: 1px solid var(--color-line);
   }
 
   .hero-script {
     font-size: clamp(2.5rem, 6vw, 4rem);
     color: var(--color-accent);
     line-height: 0.9;
+    /* Grey Qo hangs its tails a long way under the box. The pad puts the box
+       edge back on the ink, so the particulars bottom out level with the end
+       of the signature instead of level with nothing. */
+    padding-bottom: 0.18em;
   }
 
-  /* The headline owns the wide measure: it scales until it breaks into two
-     long lines across the 88rem column, so a 1920 viewport gets a headline
-     and not a headline with a field of black beside it. The ch cap is what
-     forces that second line; without it the sentence would run on. */
+  .hero-facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 1.75rem;
+    color: var(--color-muted);
+  }
+
+  @media (min-width: 48rem) {
+    .hero-facts {
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.1rem;
+      text-align: right;
+    }
+  }
+
+  /* The middle band: the headline and the word it sits on share one box, so
+     the two stay centred on each other at every viewport height instead of
+     drifting apart as the masthead above them grows a line. */
+  .hero-stage {
+    position: relative;
+    display: grid;
+    align-content: center;
+  }
+
+  .hero-deep {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+
+  .hero-deep-word {
+    font-family: var(--font-display);
+    /* ONYX sets 3.17em wide in this face, so 34vw overruns the frame by
+       about a fifth and the O and the X are cut by it. The svh cap is for
+       short landscape viewports, where a word sized off width alone would
+       swallow the headline whole. */
+    font-size: min(34vw, 60svh);
+    line-height: 0.72;
+    letter-spacing: 0.06em;
+    /* Letter-spacing prints after the last letter too, which would shove the
+       word off centre by that much. */
+    margin-right: -0.06em;
+    white-space: nowrap;
+    color: var(--color-steel);
+  }
+
+  /* An absolutely positioned sibling paints over a static block whatever the
+     source order says, so the headline has to be positioned to stay on top
+     of the word. */
   .hero-title {
+    position: relative;
+    z-index: 1;
+    /* The headline owns the wide measure: it scales until it breaks into two
+       long lines across the 88rem column, so a 1920 viewport gets a headline
+       and not a headline with a field of black beside it. The ch cap is what
+       forces that second line; without it the sentence would run on. */
     font-size: clamp(2.25rem, 6.2vw, 6rem);
     line-height: 1.03;
     max-width: 25ch;

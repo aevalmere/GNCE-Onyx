@@ -56,7 +56,16 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
       // take the restore away and pin the window at the top. This runs in
       // <head>, ahead of both the browser's restore and the first paint.
       // A real deep link (/#season) keeps its fragment and lands there.
+      //
+      // A reload is the one case where the fragment is not a deep link: the
+      // drawer writes #section into the address bar as you read, so the URL
+      // you refresh is wherever you happened to stop. Refresh means start
+      // over, so the hash goes before the browser can act on it.
       try {
+        var nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
+        if (location.hash && nav && nav.type === 'reload') {
+          history.replaceState(null, '', location.pathname + location.search);
+        }
         if (!location.hash) {
           if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
           window.scrollTo(0, 0);

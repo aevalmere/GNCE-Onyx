@@ -828,9 +828,13 @@ function initCoverWipe() {
   const wrap = document.querySelector<HTMLElement>('[data-cover-wipe]');
   const cover = wrap?.firstElementChild as HTMLElement | null;
   if (!wrap || !cover) return;
-  gsap.to(cover, {
-    xPercent: -100,
-    ease: 'none',
+  // [data-cover-deep] is the cover's far plane (the hero's cut wordmark). It
+  // travels a fraction of the sheet's distance, so the sheet's own trailing
+  // edge crops it on the way out and the exit has depth instead of being one
+  // flat slab. Both planes ride ONE timeline: on separate triggers a stray
+  // refresh could leave them scrubbing against slightly different offsets.
+  const deep = cover.querySelector<HTMLElement>('[data-cover-deep]');
+  const tl = gsap.timeline({
     scrollTrigger: {
       trigger: wrap,
       start: 'top top',
@@ -839,6 +843,8 @@ function initCoverWipe() {
       invalidateOnRefresh: true,
     },
   });
+  tl.to(cover, { xPercent: -100, ease: 'none' }, 0);
+  if (deep) tl.to(deep, { xPercent: 18, ease: 'none' }, 0);
 }
 
 /* ================================================================== */

@@ -61,6 +61,13 @@ import Finale from '../components/home/Finale.astro';
   :global(html.gsap) .cover-wrap {
     position: relative;
     z-index: 2;
+    /* The wrapper is a two-viewport transparent box sitting on z-index 2,
+       directly over the pinned Lineage on z-index 1. Left alive it swallows
+       every hover and every text selection over the award ledger for the
+       whole of that range, so the pointer goes through it and only the hero
+       inside it answers. The hero's hit box travels with its own transform,
+       so it stops taking events the moment it has wiped off screen. */
+    pointer-events: none;
   }
 
   :global(html.gsap) .cover-wrap > :global(.hero) {
@@ -68,6 +75,7 @@ import Finale from '../components/home/Finale.astro';
     top: 0;
     background: var(--color-bg);
     will-change: transform;
+    pointer-events: auto;
   }
 
   /* One viewport of sticky travel: the wipe's scroll distance. */
