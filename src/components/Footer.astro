@@ -36,13 +36,26 @@
     text-transform: none;
   }
 
-  /* The nav toggle parks over the bottom right corner of every page, and this
-     print is the last thing under it. On narrow screens, where the toggle
-     tucks in to 1rem, the wrapped lines have to clear its 56px square. Typed
-     with the element to outrank the padding utilities either way. */
-  @media (max-width: 640px) {
+  /* The nav toggle parks over the bottom right corner of every page, and
+     this print is the last thing under it. The right end has to clear the
+     toggle's square plus its inset (4.5rem at the 1rem mobile inset, 6rem
+     at the 1.5rem one), and the centering margin only helps once the
+     viewport outgrows the measure: the padding picks up whatever the
+     margin does not cover, then falls back to the column's own padding on
+     wide screens. Typed with the element to outrank the utilities. */
+  p.foot-print {
+    padding-inline-end: max(
+      1.25rem,
+      calc(4.5rem - (100vw - min(100vw, var(--foot-measure, 64rem))) / 2)
+    );
+  }
+
+  @media (min-width: 640px) {
     p.foot-print {
-      padding-inline-end: 4.5rem;
+      padding-inline-end: max(
+        2rem,
+        calc(6rem - (100vw - min(100vw, var(--foot-measure, 64rem))) / 2)
+      );
     }
   }
 </style>

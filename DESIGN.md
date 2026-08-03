@@ -97,7 +97,10 @@ Under reduced motion the module bows out and static CSS stands in.
   is parked, fully working, on the unlinked page `/lab/onyx/`
   (`src/pages/lab/onyx.astro`). Home no longer uses it; keep it building,
   don't link it.
-- `[data-hero]` — hero wordmark assembles, then tips into depth.
+- `[data-cover-wipe]` — the hero cover: the whole opening viewport slides
+  off to the left over one viewport of scroll (geometry in index.astro),
+  with `[data-cover-deep]` inside it travelling a fraction of the distance
+  on the same timeline so the sheet's trailing edge crops it.
 - `[data-stack]` / `[data-stack-card]` — pinned card stack (lineage).
 - `[data-hscroll]` / `[data-hscroll-track]` — diagonal scroll-hijack
   (season build log): the track pans sideways while climbing, panels
@@ -129,11 +132,15 @@ is revealed by the page's last scroll (mechanics in `index.astro`). Blog
 posts keep their own pages; `/lab/onyx/` stays parked and unlinked. One
 trick per section:
 
-- **Hero**: split intro headline · script accent · magnetic CTA.
+- **Hero**: masthead plate (script name left, three particulars right, one
+  hairline) · the split intro headline on an oversized steel ONYX the frame
+  crops · magnetic CTAs on the bottom edge. The wordmark is the cover
+  wipe's far plane (`[data-cover-deep]`): it lags the sheet on the same
+  scrub, so the exit has depth.
 - **Lineage** (`#lineage`): count-up team numbers · staggered award ledger.
-- **Team** (`#team`): ten rows wiping in from alternating sides, ordered by
-  their previous teams' records · cursor cards with each member's previous
-  team numbers (static fallback on touch).
+- **Team** (`#team`): ten rows wiping in from alternating sides, in the
+  team's own order · cursor cards with each member's previous team numbers
+  (static fallback on touch).
 - **Build** (`#build`): one short blurb, a connective beat.
 - **Season** (`#season`): collapsible event rows (Qualifier 1 / Qualifier 2
   / States / More to come), exclusive: opening one sweeps the other shut.
@@ -147,19 +154,21 @@ trick per section:
   Accordion logic lives in the component's own script.
 - **Outreach** (`#outreach`): velocity ticker · post rows · invite-us CTA.
 - **Sponsors** (`#sponsors`): scrubbed recognition ladder, no amounts.
-- **Finale** (`#contact`): the curtain reveal. Everything above it scrolls
-  up like a sheet being lifted off a static first viewport, so the section
-  arrives already assembled: no stagger, no reveal wrappers, no split type.
-  The page RESTS one block short of the full lift: the curtain's edge parks
-  just above "Get in touch" (the finale publishes that level as
-  `--finale-reach`; anchors land on it, and a gesture ending near it is
-  eased the rest of the way). The "Sponsored by" table above is the
-  optional part, one deliberate pull further. Content: the hairline-ruled
-  "Sponsored by" table (placeholder names until real sponsors land; cells
-  grow so the ruling stays square from two names to nine), the big "Get in
-  touch" headline, two machined icon keys that expand horizontally to
-  reveal the email and Instagram values, the form button at the same
-  height, and the shared `<Footer />` small print in plain body type.
+- **Finale** (`#contact`): the curtain reveal, with exactly two resting
+  levels. Everything above it scrolls up like a sheet lifted off a static
+  first viewport; arriving momentum is set down on REACH (curtain parked
+  just above "Get in touch"; published as `--finale-reach`, every anchor
+  lands there). From REACH the first further push is answered with a short
+  tug that springs back, the second runs one input-locked lift to FULL
+  (sponsors on screen); any pull back from FULL runs the same move in
+  reverse. Leaving upward is plain scrolling; keyboards are never trapped;
+  reduced motion gets no lock. Content: the shirt-back "Sponsored by"
+  lockup (lead name across the top, the rest sharing a tightened centered
+  line beneath, no boxes or rules, placeholder names until real sponsors
+  land), the big "Get in touch" headline, two machined icon keys that
+  expand horizontally to reveal the email and Instagram values, the form
+  button at the same height, and the shared `<Footer />` small print in
+  plain body type.
 - **Blog post**: reading-progress bar · masked title.
 
 Old page URLs (`/season/`, `/contact/`, `/outreach/`) redirect to their
