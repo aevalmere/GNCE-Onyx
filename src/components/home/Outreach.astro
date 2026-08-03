@@ -293,11 +293,17 @@ const longDate = (d: Date) =>
 
      Both children are placed by this rule alone. The reveal wrapper comes
      out of Reveal.astro, so it never carries this component's scope and
-     cannot be selected by class from here; flex defaults do the rest. */
+     cannot be selected by class from here; flex defaults do the rest.
+
+     Centred, not baselined: on the text's own baseline the button's box
+     hung below the sentence, and a control that sags off the line it
+     finishes reads as misaligned. Centring sets the block on the line's
+     own band instead. (No transform nudges here: the button is magnetic,
+     and GSAP owns its transform.) */
   .ask {
     display: flex;
     flex-wrap: wrap;
-    align-items: baseline;
+    align-items: center;
     column-gap: clamp(1.5rem, 3vw, 2.75rem);
     row-gap: 2.5rem;
   }
@@ -357,7 +363,11 @@ const longDate = (d: Date) =>
      1.5rem up, which is a clip wipe, not a fade: nothing here crosses
      through opacity.
 
-     The width runs to 64rem, and the three-term min is what keeps a margin
+     The height is fixed, not fitted: every post opens the same sheet,
+     nearly the full viewport tall, so a short post gets the same slab of
+     paper a long one does and the sheet reads as a place rather than a
+     box shrunk around its contents. Against the 68rem width that lands
+     close to square on a laptop screen. The three-term min keeps a margin
      around it at every size: 3vw of paper either side once the screen is
      wide enough to spare it, and below that the dialog's own 1.25rem of
      padding, which is the click-out zone. */
@@ -365,8 +375,8 @@ const longDate = (d: Date) =>
     position: relative;
     display: flex;
     flex-direction: column;
-    width: min(64rem, 94vw, 100%);
-    max-height: min(84svh, 100%);
+    width: min(68rem, 94vw, 100%);
+    height: min(92svh, 100%);
     background: var(--color-paper);
     clip-path: inset(0 0 100% 0);
     transform: translateY(1.5rem);
@@ -457,7 +467,7 @@ const longDate = (d: Date) =>
   /* Top padding clears the close button, and the margins grow with the
      sheet so the wider paper reads as paper and not as a filled box. */
   .pop-col {
-    padding: clamp(3.25rem, 4vw, 4.5rem) clamp(1.5rem, 4vw, 4rem) clamp(3rem, 4vw, 4.5rem);
+    padding: clamp(3.25rem, 4.5vw, 5rem) clamp(1.5rem, 4.5vw, 4.5rem) clamp(3rem, 4.5vw, 5rem);
   }
 
   /* Same size as the title on the post's own page, on purpose: the two
@@ -469,13 +479,16 @@ const longDate = (d: Date) =>
     font-size: clamp(2rem, 5vw, 3.75rem);
   }
 
-  /* The header takes the sheet's full measure; the post does not. Cardo at
-     this size crosses into an unreadable line somewhere past 70 characters,
-     so the body keeps its own column under the wide title and the paper to
-     its right is left as paper. */
+  /* The header takes the sheet's full measure; the post does not. The body
+     runs a step up from the post page's own size (the sheet is a reading
+     surface, and it has the room), and Cardo at this size crosses into an
+     unreadable line somewhere past the high sixties, so the column caps
+     there and the paper to its right is left as paper. */
   .pop-body {
     margin-top: 2rem;
-    max-width: 70ch;
+    font-size: 1.25rem;
+    line-height: 1.72;
+    max-width: 66ch;
   }
 
   /* Reduced motion: the sheet is simply there, and gone. The press keeps

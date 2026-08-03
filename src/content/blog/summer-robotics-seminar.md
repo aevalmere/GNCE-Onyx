@@ -1,11 +1,11 @@
 ---
-title: Summer Robotics Seminar
+title: Summer robotics seminar
 date: 2026-08-02
 description: A free afternoon at the Weston Public Library built around ninety minutes of hands-on CAD, with no robotics experience needed.
 author: GNCE Onyx
 ---
 
-Our Summer Robotics Seminar is Saturday, August 15, from noon to 3 PM at the Weston Public Library. Free, and no robotics experience needed.
+Our summer robotics seminar is Saturday, August 15, from noon to 3 PM at the Weston Public Library. Free, and no robotics experience needed.
 
 We open with what FTC actually is and how a season runs. Then we put the engineering design process on a paper tower challenge: build the tallest one you can, watch it fall over, fix it.
 
