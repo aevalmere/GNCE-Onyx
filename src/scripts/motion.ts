@@ -167,10 +167,15 @@ let refreshQueued: number | undefined;
 
 /** Coalesce refresh requests: they arrive in bursts (a transition running,
  *  font faces landing one after another) and a refresh is worth doing once
- *  at the end of one, not on every frame of it. Published on `__motion`. */
+ *  at the end of one, not on every frame of it. Published on `__motion`.
+ *  Lenis re-measures in the same beat: its cached limit lags layout growth
+ *  otherwise, and a stale limit clamps every trip it drives. */
 function scheduleRefresh() {
   clearTimeout(refreshQueued);
-  refreshQueued = window.setTimeout(() => ScrollTrigger.refresh(), 180);
+  refreshQueued = window.setTimeout(() => {
+    (window as any).__motion?.lenis?.resize?.();
+    ScrollTrigger.refresh();
+  }, 180);
 }
 
 function watchLayout() {

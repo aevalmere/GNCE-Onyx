@@ -138,8 +138,12 @@ trick per section:
   wipe's far plane (`[data-cover-deep]`): it lags the sheet on the same
   scrub, so the exit has depth.
 - **Lineage** (`#lineage`): count-up team numbers · staggered award ledger.
-  Hovering a ledger line inks the entry grape and sweeps a rule under the
-  name (pointer-fine; colour only under reduced motion).
+  Hovering a ledger line sweeps a pale grape wash behind the name and
+  brings the year to full ink: a highlight, deliberately not link
+  dressing (no underline, no colour flip). Hovering a team number spins
+  its digits through noise and resolves them left to right (tabular
+  figures, so nothing shifts). Both pointer-fine; reduced motion gets the
+  wash without the sweep and no scramble.
 - **Team** (`#team`): ten rows wiping in from alternating sides, in the
   team's own order · cursor cards with each member's previous team numbers
   (static fallback on touch).
@@ -175,17 +179,24 @@ trick per section:
   lockup (lead name across the top, the rest sharing a tightened centered
   line beneath, no boxes or rules, placeholder names until real sponsors
   land) and, on the bottom edge, one centered contact line: the "Get in
-  touch" headline with the two machined keys (values standing open) and
-  the form button beside it. No footer on the home page; that line is the
-  sign-off. The REACH strip is only that line, so the whole Sponsors
-  section shares the screen above it, one composed frame.
+  touch" headline with the two machined keys and the form button standing
+  offset to their right. On fine pointers the keys collapse to their
+  glyphs and are magnetic; hover or focus draws the value out as a drawer
+  OVER the line (absolute, clip wipe), never in flow, because a centered
+  group that grew would slide out from under the pointer. Touch keeps the
+  values standing open. No footer on the home page; that line is the
+  sign-off. The REACH strip is only that line, and the Sponsors frame
+  above overfills the remaining viewport (min-height with svh-aware
+  rhythm, content centered), so the resting frame is the whole pitch over
+  the contact line and nothing else.
 - **Blog post**: reading-progress bar · masked title.
 
 Old page URLs (`/season/`, `/contact/`, `/outreach/`) redirect to their
 section anchors via `astro.config.mjs` redirects.
 
 **Navigation** (`components/GearNav.astro`, the site's only persistent
-chrome). A small indigo square sits in the bottom-right corner with two
+chrome). A small indigo square sits flush in the bottom-right corner (no
+inset; machined into the page edge) with two
 rules stacked inside it; pressing it crosses them into a close mark and
 slides a paper drawer in from the right edge over a black scrim, roughly
 24rem wide and full height. The links are bare display type, one per

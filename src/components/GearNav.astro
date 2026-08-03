@@ -122,18 +122,13 @@ const links: NavLink[] = [
      --nav-lock is the scrollbar width the page gives up while the drawer
      holds it still (see the script). Carrying it here keeps the corner from
      jumping right at the moment the scrollbar goes. */
+  /* Flush in the corner: the square sits hard against the page's own edge,
+     machined into it, not floating near it. */
   .nav-root {
     position: fixed;
-    right: calc(1.5rem + var(--nav-lock, 0px));
-    bottom: 1.5rem;
+    right: var(--nav-lock, 0px);
+    bottom: 0;
     z-index: 95;
-  }
-
-  @media (max-width: 640px) {
-    .nav-root {
-      right: calc(1rem + var(--nav-lock, 0px));
-      bottom: 1rem;
-    }
   }
 
   /* Without JS the button opens nothing, so it does not sit there pretending

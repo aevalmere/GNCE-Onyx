@@ -53,7 +53,7 @@ import Placeholder from '../Placeholder.astro';
         <!-- Two keys, values in the open: glyph then address, one block.
              Envelope and Instagram are drawn here rather than pulled from a
              set, on the same 24 grid at the same stroke weight. -->
-        <a class="pin" href="#" title="Email pending">
+        <a class="pin" href="#" title="Email pending" data-magnetic="0.3">
           <span class="sr-only">Email</span>
           <svg
             class="pin-glyph"
@@ -73,7 +73,7 @@ import Placeholder from '../Placeholder.astro';
           </span>
         </a>
 
-        <a class="pin" href="#" title="Handle pending">
+        <a class="pin" href="#" title="Handle pending" data-magnetic="0.3">
           <span class="sr-only">Instagram</span>
           <svg
             class="pin-glyph"
@@ -212,8 +212,10 @@ import Placeholder from '../Placeholder.astro';
   }
 
   /* Machined keys: a solid indigo block with the glyph centred in it, no
-     outline and no label. Square at rest, which is the hit area too. */
+     outline and no label. Square at rest, which is the hit area too, and
+     magnetic like every other control on the line. */
   .pin {
+    position: relative;
     display: inline-flex;
     align-items: center;
     height: var(--key-h);
@@ -228,7 +230,9 @@ import Placeholder from '../Placeholder.astro';
   }
 
   /* The grape block runs the same height as the keys instead of the .btn
-     padding's own, so the row has one silhouette. */
+     padding's own, so the row has one silhouette. It stands offset to the
+     right of the keys, still on the line: the air marks it as the other
+     kind of ask, and it is also the room the email drawer opens into. */
   .cta {
     height: var(--key-h);
     padding-block: 0;
@@ -240,11 +244,9 @@ import Placeholder from '../Placeholder.astro';
     height: 1.375rem;
   }
 
-  /* The expansion: a grid track running 0fr to 1fr, so the block itself gets
-     wider and the address is uncovered by the moving edge. Width is the point
-     of the gesture, which makes this the one place on the site that animates
-     a layout property instead of a transform. The glyph is outside the track,
-     so it neither moves nor scales while the block opens. */
+  /* The value block. In flow and standing open by default, which is what
+     touch and keyboardless machines get: visible addresses, no gesture
+     nobody was told about. */
   .pin-slot {
     display: grid;
     grid-template-columns: 1fr;
@@ -258,8 +260,6 @@ import Placeholder from '../Placeholder.astro';
   }
 
   .pin-value {
-    /* Never squeezed by the closing track: it holds its width and gets
-       clipped instead, so the letters do not reflow mid-open. */
     flex: none;
     padding-left: 0.85rem;
     font-size: 0.9375rem;
@@ -271,11 +271,64 @@ import Placeholder from '../Placeholder.astro';
     cursor: inherit;
   }
 
-  /* Both keys stand open for everyone: this line is the page's sign-off,
-     and a centred group cannot afford a control that grows on hover (the
-     whole line would re-centre and slide out from under the pointer). The
-     0fr-to-1fr machinery above stays for the day a closed state is wanted
-     somewhere it can anchor left. */
+  /* Where there is a pointer, the keys collapse to their glyphs and the
+     value becomes a drawer: parked out of the layout entirely (absolute,
+     off the key's right edge) and drawn OVER the line on hover or focus as
+     a clip wipe. Over, not into: this group is centred, and a control that
+     grew in flow would re-centre the whole line and slide out from under
+     the pointer that opened it. The drawer stays hoverable, so a hand
+     drifting onto the address keeps it open and the whole key stays one
+     click target; the raised z-index carries it over the neighbouring key
+     and the form button for as long as it is out. */
+  @media (hover: hover) and (pointer: fine) {
+    .pin-slot {
+      position: absolute;
+      left: 100%;
+      top: 0;
+      bottom: 0;
+      display: flex;
+      align-items: center;
+      padding-right: 1rem;
+      background: var(--color-surface);
+      clip-path: inset(0 100% 0 0);
+      transition: clip-path 360ms var(--ease-out-strong);
+    }
+
+    .pin:hover,
+    .pin:focus-visible {
+      z-index: 2;
+    }
+
+    .pin-value {
+      transform: translateX(-0.4rem);
+      transition: transform 360ms var(--ease-out-strong);
+    }
+
+    .pin:hover .pin-slot,
+    .pin:focus-visible .pin-slot {
+      clip-path: inset(0 0 0 0);
+    }
+
+    .pin:hover .pin-value,
+    .pin:focus-visible .pin-value {
+      transform: none;
+    }
+
+    /* The offset that separates the grape ask from the keys, and doubles as
+       the drawer's runway. Only where the drawer exists: the touch line
+       stays evenly gapped. */
+    .cta {
+      margin-left: clamp(1.25rem, 3vw, 2.75rem);
+    }
+  }
+
+  /* Reduced motion: the drawer is simply out, and back. */
+  @media (prefers-reduced-motion: reduce) {
+    .pin-slot,
+    .pin-value {
+      transition: none;
+    }
+  }
 </style>
 
 <script>
@@ -340,17 +393,17 @@ import Placeholder from '../Placeholder.astro';
 
     // The curtain is a plain block at the top of the document, so its bottom
     // edge in document space is exactly the offset at which it has finished
-    // lifting. Clamped to the real end of the document AND to how far the
-    // engine believes the page goes: on a phone the svh spacer and
-    // innerHeight disagree while the URL bar moves, and Lenis caps its own
-    // trips at its measured limit, so a FULL past either would end a lift
-    // short of the level and strand the lock in the no-man's-land.
+    // lifting. Clamped to the real end of the document: on a phone the svh
+    // spacer and innerHeight disagree while the URL bar moves, and a FULL
+    // the page cannot reach would strand the lock one pixel short. Never
+    // clamped by Lenis's own cached limit: that number lags layout growth,
+    // and a level computed from a stale limit once held the page "at FULL"
+    // in the middle of the no-man's-land. The limit only ever bounds trip
+    // TARGETS, in run(), after a fresh lenis.resize().
     const measure = () => {
       const gap = inset();
       contact.style.setProperty('--finale-reach', `${Math.round(gap)}px`);
-      let end = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
-      const limit = engine()?.lenis?.limit;
-      if (typeof limit === 'number' && limit > 0) end = Math.min(end, limit);
+      const end = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
       full = Math.min(curtain.getBoundingClientRect().bottom + window.scrollY, end);
       reach = Math.max(0, full - gap);
       travel = full - reach;
@@ -605,6 +658,10 @@ import Placeholder from '../Placeholder.astro';
     // out of place.
     const grab = () => {
       const lenis = engine()?.lenis;
+      // A catch through a stale Lenis would clamp short of the level and
+      // turn the set-down into a fight; re-measuring first is cheap, and a
+      // catch happens once per approach.
+      lenis?.resize?.();
       const id = begin();
       // With no hand on the page, nothing arrived here under its own power:
       // a drawer trip, a deep link, a level that moved. There is no tail to
@@ -636,7 +693,12 @@ import Placeholder from '../Placeholder.astro';
       const lenis = engine()?.lenis;
       lenis?.resize?.();
       measure();
-      const target = to === 'full' ? full : reach;
+      let target = to === 'full' ? full : reach;
+      // Freshly resized, Lenis's limit is the truth about how far it will
+      // actually drive; asking past it would end the move short of where
+      // the state says the page is.
+      const limit = lenis?.limit;
+      if (typeof limit === 'number' && limit > 0) target = Math.min(target, limit);
       const next: Level = to === 'full' ? 'full' : 'locked';
       const spent = to === 'full'; // the push that asked for this move
       enter('moving');

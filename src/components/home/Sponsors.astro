@@ -19,12 +19,15 @@ const rungs = [
 ---
 
 <!-- The last section under the curtain, so its tail is the black field the
-     page rests on at the finale's REACH level: the whole pitch has to stand
-     inside one viewport less the contact line below it, which is why the
-     rhythm here runs tighter than the sections above. -->
+     page rests on at the finale's REACH level. The frame is sized to OWN
+     that field: min-height is one viewport less a reservation smaller than
+     the contact strip ever runs, so the section always overfills the black
+     (the section above can never peek into the resting frame) and the
+     overshoot is swallowed by the top padding while the pitch itself sits
+     centred in the room it has. -->
 <section id="sponsors">
   <div
-    class="mx-auto max-w-[88rem] px-5 pt-[clamp(2.5rem,7svh,6rem)] pb-[clamp(2rem,5svh,4rem)] sm:px-8"
+    class="mx-auto flex min-h-[calc(100svh-9rem)] max-w-[88rem] flex-col justify-center px-5 pt-[clamp(3rem,9svh,8rem)] pb-[clamp(2.5rem,7svh,6rem)] sm:px-8"
   >
     <span class="mark" aria-hidden="true"></span>
     <h2 class="type-display text-[clamp(2.25rem,min(7vw,9svh),5.5rem)]" data-split>

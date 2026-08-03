@@ -187,16 +187,18 @@ const compact = [
     text-wrap: pretty;
   }
 
-  /* The highlighter: a grape rule parked under each entry, drawn only on
-     intent. Scale, not width, so the paint never leaves the compositor. */
-  .award-name::after {
+  /* The highlighter: a pale grape wash parked behind each entry, swept
+     across on intent, the way a marker runs over a line in a results
+     sheet. Behind the letters (negative z-index), a hair of bleed past the
+     text box, and scale rather than width so the paint never leaves the
+     compositor. Deliberately not an underline and not a colour flip:
+     nothing here is a link, and it must not dress like one. */
+  .award-name::before {
     content: '';
     position: absolute;
-    left: 0;
-    bottom: -0.2em;
-    width: 100%;
-    height: 2px;
-    background: var(--color-accent);
+    inset: -0.1em -0.3em -0.14em;
+    z-index: -1;
+    background: color-mix(in srgb, var(--color-accent) 18%, transparent);
     transform: scaleX(0);
     transform-origin: 0 50%;
   }
@@ -215,32 +217,87 @@ const compact = [
        breaking one across lines would cost the ledger its right edge. */
     white-space: nowrap;
   }
+</style>
 
-  /* Running a finger down the ledger: the entry under the pointer gets the
-     grape rule swept beneath its name and its year comes up to full ink, on
-     every row of every team. The row's whole line is the hover surface (the
-     flex runs name to year), nothing moves or reflows, and the sweep is the
-     same left-to-right draw the section's reveals use. Colour changes on
-     any machine; the sweep only where a fine pointer and motion allow it. */
+<script>
+  /**
+   * The team numbers decode on hover: the digits spin through noise and
+   * resolve left to right back into the number, the same face a scoreboard
+   * pulls when a match posts. Tabular figures, so nothing shifts a pixel.
+   * Pointer-fine only, once per visit (re-armed when the pointer leaves),
+   * never while the scroll-in count-up is still writing, and reduced
+   * motion never sees it. The digits are aria-hidden for the burst so a
+   * screen reader is not read a stream of noise.
+   */
+  function initNumScramble() {
+    if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    document.querySelectorAll<HTMLElement>('.team-num').forEach((el) => {
+      const target = el.dataset.count || (el.textContent ?? '').trim();
+      if (!target) return;
+      const label = `Team ${target}`;
+      let timer = 0;
+      let armed = true;
+
+      const settle = () => {
+        clearInterval(timer);
+        timer = 0;
+        el.textContent = target;
+        el.removeAttribute('aria-hidden');
+      };
+
+      el.addEventListener('pointerleave', () => (armed = true));
+      el.addEventListener('pointerenter', () => {
+        if (!armed || timer) return;
+        // The scroll-in counter owns the text until it has landed.
+        if ((el.textContent ?? '').trim() !== target) return;
+        armed = false;
+        el.setAttribute('aria-label', label);
+        el.setAttribute('aria-hidden', 'true');
+        const digits = target.split('');
+        let lock = 0;
+        let tick = 0;
+        timer = window.setInterval(() => {
+          tick += 1;
+          if (tick % 2 === 0) lock += 1;
+          if (lock >= digits.length) return settle();
+          el.textContent = digits
+            .map((d, i) => (i < lock ? d : String(Math.floor(Math.random() * 10))))
+            .join('');
+        }, 44);
+      });
+    });
+  }
+
+  initNumScramble();
+</script>
+
+<style>
+
+  /* Running a marker down the ledger: the entry under the pointer gets the
+     wash swept behind its name and its year comes up to full ink, on every
+     row of every team. The row's whole line is the hover surface (the flex
+     runs name to year), nothing moves, reflows, changes colour to grape or
+     grows an underline: the achievement is highlighted, not linked. The
+     wash appears without the sweep under reduced motion. */
   @media (hover: hover) and (pointer: fine) {
-    .award-name,
     .award-year {
       transition: color 200ms ease;
     }
 
-    .award:hover .award-name,
+    .award:hover .award-name::before {
+      transform: scaleX(1);
+    }
+
     .award:hover .award-year {
-      color: var(--color-accent);
+      color: var(--color-ink);
     }
   }
 
   @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-    .award-name::after {
-      transition: transform 320ms var(--ease-out-strong);
-    }
-
-    .award:hover .award-name::after {
-      transform: scaleX(1);
+    .award-name::before {
+      transition: transform 340ms var(--ease-out-strong);
     }
   }
 </style>
