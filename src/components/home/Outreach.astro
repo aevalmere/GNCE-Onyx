@@ -479,16 +479,16 @@ const longDate = (d: Date) =>
     font-size: clamp(2rem, 5vw, 3.75rem);
   }
 
-  /* The header takes the sheet's full measure; the post does not. The body
-     runs a step up from the post page's own size (the sheet is a reading
-     surface, and it has the room), and Cardo at this size crosses into an
-     unreadable line somewhere past the high sixties, so the column caps
-     there and the paper to its right is left as paper. */
+  /* The body takes the same measure the title does: one column, edge to
+     edge, so the sheet reads as a printed page instead of a wide header
+     over a narrow strip with bare paper down its right side. The size
+     steps up with the width (Cardo needs the extra weight to hold a line
+     this long) and the leading opens with it. */
   .pop-body {
     margin-top: 2rem;
-    font-size: 1.25rem;
-    line-height: 1.72;
-    max-width: 66ch;
+    font-size: clamp(1.1875rem, 1.05vw + 0.9rem, 1.375rem);
+    line-height: 1.78;
+    text-wrap: pretty;
   }
 
   /* Reduced motion: the sheet is simply there, and gone. The press keeps
