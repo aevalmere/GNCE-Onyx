@@ -85,6 +85,12 @@ Under reduced motion the module bows out and static CSS stands in.
   the same info accessibly (sr-only text plus a static line on coarse
   pointers / reduced motion). Every card is a paper tag (see Bands). Used by
   the roster, the season rows, and the nav drawer's link descriptors.
+- Hover on display type (automatic, no attribute): a `[data-split]` heading
+  answers the pointer by dipping the character it crosses back under the
+  split mask and rippling the dip outward, once per visit, only after its
+  entrance has finished; headings inside links/buttons are skipped. The
+  `.type-script` flourish lifts and leans in CSS. Both transform-only,
+  pointer-fine, off under reduced motion.
 
 **Scenes** (named, run only when their element exists):
 - The WebGL ONYX journey (`src/scripts/onyx3d.ts` + `src/data/onyx-glyphs.ts`)
@@ -125,8 +131,9 @@ trick per section:
 
 - **Hero**: split intro headline · script accent · magnetic CTA.
 - **Lineage** (`#lineage`): count-up team numbers · staggered award ledger.
-- **Team** (`#team`): rows wiping in from alternating sides · cursor cards
-  with each member's previous teams (static fallback on touch).
+- **Team** (`#team`): ten rows wiping in from alternating sides, ordered by
+  their previous teams' records · cursor cards with each member's previous
+  team numbers (static fallback on touch).
 - **Build** (`#build`): one short blurb, a connective beat.
 - **Season** (`#season`): collapsible event rows (Qualifier 1 / Qualifier 2
   / States / More to come), exclusive: opening one sweeps the other shut.
@@ -134,18 +141,25 @@ trick per section:
   background (no waiting plate; keyboard and touch wipe the poster itself
   in), then a cross-drift gallery. Poster and seat share one aspect ratio
   and one tween, so it reads as the same object growing; an open row raises
-  no hover poster until it closes. Accordion logic lives in the component's
-  own script.
+  no hover poster until it closes. The clicked row holds its place on
+  screen: when a row above sweeps shut, the scroll pays the leaving height
+  back frame by frame, so the header the reader clicked never rides up.
+  Accordion logic lives in the component's own script.
 - **Outreach** (`#outreach`): velocity ticker · post rows · invite-us CTA.
 - **Sponsors** (`#sponsors`): scrubbed recognition ladder, no amounts.
 - **Finale** (`#contact`): the curtain reveal. Everything above it scrolls
   up like a sheet being lifted off a static first viewport, so the section
   arrives already assembled: no stagger, no reveal wrappers, no split type.
-  Its remainder scrolls normally once the curtain clears. Content: the
-  "Backed by" sponsor wall (placeholder names until real sponsors land),
-  the big "Get in touch" headline, two machined icon keys that expand
-  horizontally to reveal the email and Instagram values, the form button,
-  and the shared `<Footer />` small print.
+  The page RESTS one block short of the full lift: the curtain's edge parks
+  just above "Get in touch" (the finale publishes that level as
+  `--finale-reach`; anchors land on it, and a gesture ending near it is
+  eased the rest of the way). The "Sponsored by" table above is the
+  optional part, one deliberate pull further. Content: the hairline-ruled
+  "Sponsored by" table (placeholder names until real sponsors land; cells
+  grow so the ruling stays square from two names to nine), the big "Get in
+  touch" headline, two machined icon keys that expand horizontally to
+  reveal the email and Instagram values, the form button at the same
+  height, and the shared `<Footer />` small print in plain body type.
 - **Blog post**: reading-progress bar · masked title.
 
 Old page URLs (`/season/`, `/contact/`, `/outreach/`) redirect to their
@@ -189,7 +203,10 @@ BaseLayout).
 
 ## Conventions
 
-- Content column: `mx-auto max-w-5xl px-5 sm:px-8` (blog body `max-w-3xl`).
+- Content column: `mx-auto max-w-[88rem] px-5 sm:px-8` on the one-page
+  sections; body copy caps its own measure (`ch`-based) inside the wide
+  column. Blog body stays `max-w-3xl`; the shared Footer defaults to 64rem
+  and takes the finale's measure via `--foot-measure`.
 - Section rhythm varies on purpose; don't metronome identical sections.
 - No eyebrows: sections open with a display headline, plus the `.mark`
   grape bar on black bands. `.type-label` is for metadata only.
