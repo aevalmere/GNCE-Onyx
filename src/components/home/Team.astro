@@ -11,16 +11,16 @@
 import Reveal from '../Reveal.astro';
 
 // Previous GNCE team numbers only; the Lineage section carries the record.
-// Ordered by what those teams won, best team first, ties broken by the second
-// team: 22489 (state champion, Worlds awards), then 26112 (Worlds qualifier,
-// states finalist alliance), then 26413 (states qualifier), then 26111, then
-// the rookies.
+// Both orders below are the team's own and neither is a ranking: the roster
+// runs in the order the team set, and each member's numbers run the way that
+// member lists them. Editing this array is the whole job; the rows, the
+// cursor cards and the static fallback lines all read from it.
 const roster: { name: string; teams: string[] }[] = [
-  { name: 'Elisa Peng', teams: ['26413', '22489'] },
-  { name: 'Arnie Sreeram', teams: ['26413', '22489'] },
   { name: 'Ethan Zhang', teams: ['22489', '26111'] },
   { name: 'Anson Su', teams: ['22489', '26111'] },
   { name: 'Adrian Chang', teams: ['22489', '26111'] },
+  { name: 'Elisa Peng', teams: ['22489', '26413'] },
+  { name: 'Arnie Sreeram', teams: ['22489', '26413'] },
   { name: 'Nicholas Colli', teams: ['26413', '26112'] },
   { name: 'Ethan Zhuang', teams: ['26112', '26111'] },
   { name: 'Leo Li', teams: ['26111'] },

@@ -79,14 +79,18 @@ const longDate = (d: Date) =>
     {posts.length === 0 && <p class="text-muted">No posts yet.</p>}
   </div>
 
-  <!-- THE ASK: we want to be at their event, not the other way round -->
+  <!-- THE ASK: we want to be at their event, not the other way round. The
+       button finishes the sentence rather than sitting under it, so the two
+       share one baseline and one line (see .ask). -->
   <div class="mx-auto max-w-[88rem] px-5 pb-24 sm:px-8 sm:pb-32">
-    <h3 class="type-display text-[clamp(2rem,5vw,5rem)]" data-split>
-      Got an event? We want in.
-    </h3>
-    <Reveal variant="up" delay={90} class="mt-10">
-      <a href="#contact" class="btn btn-solid" data-magnetic="0.4">Invite us</a>
-    </Reveal>
+    <div class="ask">
+      <h3 class="type-display text-[clamp(2rem,4.5vw,4.5rem)]" data-split>
+        Got an event? We want in.
+      </h3>
+      <Reveal variant="up" delay={90}>
+        <a href="#contact" class="btn btn-solid" data-magnetic="0.4">Invite us</a>
+      </Reveal>
+    </div>
   </div>
 
   <!-- POPUPS: one per post, parked at the end of the band. Plain markup on
@@ -276,6 +280,28 @@ const longDate = (d: Date) =>
     }
   }
 
+  /* ---- The ask ---------------------------------------------------- */
+  /* The button finishes the headline instead of sitting under it: one row,
+     one baseline, the control trailing the last word with a gap that opens
+     as the type grows. Where the line cannot hold both, the button takes the
+     next line at the same left margin and the row gap stands in for the
+     margin it used to carry.
+
+     The headline caps at 4.5rem rather than the 5rem it ran at alone, which
+     is what leaves room for the button on a laptop line; it still wraps and
+     balances on its own below that.
+
+     Both children are placed by this rule alone. The reveal wrapper comes
+     out of Reveal.astro, so it never carries this component's scope and
+     cannot be selected by class from here; flex defaults do the rest. */
+  .ask {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: clamp(1.5rem, 3vw, 2.75rem);
+    row-gap: 2.5rem;
+  }
+
   /* ---- Post popup ------------------------------------------------- */
   /* A paper sheet in the top layer. The light ramp is declared here rather
      than inherited: a modal renders outside its band, and this one has to
@@ -329,12 +355,17 @@ const longDate = (d: Date) =>
      is the exit: dismissal snaps, opening takes its time (below). The
      sheet unrolls downward off its top edge while it settles the last
      1.5rem up, which is a clip wipe, not a fade: nothing here crosses
-     through opacity. */
+     through opacity.
+
+     The width runs to 64rem, and the three-term min is what keeps a margin
+     around it at every size: 3vw of paper either side once the screen is
+     wide enough to spare it, and below that the dialog's own 1.25rem of
+     padding, which is the click-out zone. */
   .pop-panel {
     position: relative;
     display: flex;
     flex-direction: column;
-    width: min(42rem, 100%);
+    width: min(64rem, 94vw, 100%);
     max-height: min(84svh, 100%);
     background: var(--color-paper);
     clip-path: inset(0 0 100% 0);
@@ -423,19 +454,28 @@ const longDate = (d: Date) =>
     outline-offset: -3px;
   }
 
-  /* Top padding clears the close button; the measure lands near 64
-     characters at the sheet's full width. */
+  /* Top padding clears the close button, and the margins grow with the
+     sheet so the wider paper reads as paper and not as a filled box. */
   .pop-col {
-    padding: 3.25rem clamp(1.5rem, 5vw, 3rem) 3rem;
+    padding: clamp(3.25rem, 4vw, 4.5rem) clamp(1.5rem, 4vw, 4rem) clamp(3rem, 4vw, 4.5rem);
   }
 
+  /* Same size as the title on the post's own page, on purpose: the two
+     headers have to look like the same post. What the wide sheet buys the
+     title is measure, not scale, so it now runs across the paper instead of
+     breaking into a stack. */
   .pop-title {
     margin-top: 1rem;
     font-size: clamp(2rem, 5vw, 3.75rem);
   }
 
+  /* The header takes the sheet's full measure; the post does not. Cardo at
+     this size crosses into an unreadable line somewhere past 70 characters,
+     so the body keeps its own column under the wide title and the paper to
+     its right is left as paper. */
   .pop-body {
     margin-top: 2rem;
+    max-width: 70ch;
   }
 
   /* Reduced motion: the sheet is simply there, and gone. The press keeps
