@@ -3,10 +3,17 @@
  * Finale — the last frame, on paper. index.astro pins this section and
  * scrolls the rest of the page off it like a curtain, so it has to read as
  * one still picture instead of a sequence: no reveals, no split headline,
- * nothing that arrives. The sponsor lockup holds the top edge, "Get in touch"
- * owns the lower half with the two contact keys and the form button, and the
- * shared small print closes the bottom. Sized to one viewport, so what the
+ * nothing that arrives. The sponsor lockup holds the top edge and one
+ * centred line closes the bottom: the "Get in touch" headline with the two
+ * contact keys and the form button beside it. No footer and no small print;
+ * the contact line IS the sign-off (the blog pages keep the shared Footer,
+ * where it does navigation work). Sized to one viewport, so what the
  * curtain uncovers is the whole thing.
+ *
+ * At REACH only that contact line shows under the curtain, which is what
+ * leaves the rest of the viewport to the sponsor pitch above it: the strip
+ * is sized so the whole "Back the build." section stands in the black with
+ * the paper line beneath it, one composed screen.
  *
  * Two levels, not a range. The page rests at REACH: the curtain's bottom edge
  * parked just above "Get in touch", which is what the reader came down here
@@ -14,19 +21,11 @@
  * sponsors on screen. The script at the foot of this file measures both,
  * publishes the distance as `--finale-reach` (index.astro folds it into the
  * section's scroll-margin, so every anchor lands on REACH) and holds the page
- * on one level or the other: arriving momentum is set down on REACH, and the
- * trip between the two levels is a single animated move that the reader asks
- * for twice. Nothing rests in between.
+ * on one level or the other. Nothing rests in between.
  *
  * No transforms or positioning on the root: the sticky comes from
  * index.astro and anything here would fight it.
- *
- * The small print is the same <Footer /> the blog pages render, imported
- * rather than retyped so the two can never drift. Its top hairline is the
- * only rule in the frame. It separates the colophon from the page proper,
- * which is a real content break.
  */
-import Footer from '../Footer.astro';
 import Placeholder from '../Placeholder.astro';
 ---
 
@@ -51,10 +50,9 @@ import Placeholder from '../Placeholder.astro';
       <h2 class="reach-head type-display">Get in touch</h2>
 
       <div class="reach-row">
-        <!-- Two keys, no labels: the glyph is the whole control until a
-             pointer or the keyboard opens it. Envelope and Instagram are
-             drawn here rather than pulled from a set, on the same 24 grid at
-             the same stroke weight. -->
+        <!-- Two keys, values in the open: glyph then address, one block.
+             Envelope and Instagram are drawn here rather than pulled from a
+             set, on the same 24 grid at the same stroke weight. -->
         <a class="pin" href="#" title="Email pending">
           <span class="sr-only">Email</span>
           <svg
@@ -102,21 +100,13 @@ import Placeholder from '../Placeholder.astro';
       </div>
     </div>
   </div>
-
-  <Footer />
 </section>
 
 <style>
   /* One viewport tall, flex column: the frame takes what it needs and the
-     small print holds the bottom edge whatever the height. Paper fill and
-     indigo ink come from .band-light.
-
-     --foot-measure hands the shared Footer this frame's measure, so the
-     colophon's two ends land on the same margins as everything above it
-     instead of sitting on a narrower column of its own. */
+     contact line holds the bottom edge whatever the height. Paper fill and
+     indigo ink come from .band-light. */
   .finale {
-    --foot-measure: 88rem;
-
     display: flex;
     flex-direction: column;
     min-height: 100svh;
@@ -126,7 +116,7 @@ import Placeholder from '../Placeholder.astro';
     display: flex;
     flex: 1;
     flex-direction: column;
-    padding-block: clamp(3.5rem, 8svh, 6rem) clamp(1.75rem, 4svh, 2.75rem);
+    padding-block: clamp(3.5rem, 8svh, 6rem) clamp(2.25rem, 5svh, 3.5rem);
   }
 
   /* ---- Sponsor wall ------------------------------------------------ */
@@ -184,34 +174,41 @@ import Placeholder from '../Placeholder.astro';
   }
 
   /* ---- Get in touch ------------------------------------------------ */
-  /* Pushed into the lower half: the print holds the top edge, this holds the
-     bottom, and the air between them is the composition (and the part the
-     curtain keeps covered at rest). The padding is the floor for that gap on
-     a short screen, where the auto margin goes to nothing. */
+  /* One centred line at the bottom edge: the headline with the two keys and
+     the form button riding beside it, the whole group on the frame's centre
+     axis. This line is everything the curtain leaves uncovered at REACH, so
+     the shorter it stands, the more of the sponsor pitch shares the screen
+     above it; it is also the page's sign-off, footer and all. Wraps into a
+     centred stack where one line cannot hold it. */
   .reach {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    column-gap: clamp(1.75rem, 3vw, 3.25rem);
+    row-gap: 1.5rem;
     margin-top: auto;
     padding-top: clamp(2rem, 6svh, 4.5rem);
+    text-align: center;
   }
 
-  /* The site's last headline, so it takes the field. Capped against viewport
-     height as well: on a short landscape screen a 10vw headline would push
-     the controls out of the frame. */
+  /* The site's last headline, sized to share its line with the controls:
+     the two together have to clear the 88rem frame with air to spare, and
+     the svh cap keeps a short landscape screen from stacking them. */
   .reach-head {
-    font-size: clamp(2.75rem, min(10vw, 16svh), 8rem);
+    font-size: clamp(2.25rem, min(5.2vw, 9svh), 4.75rem);
   }
 
-  /* One family, one margin, one gap. The keys used to sit at the left and
-     the form button was pushed to the far edge, so three controls read as
-     two groups with a hole between them and no two of them stood the same
-     height. They share --key-h now and the same 14px on every side. */
+  /* One family, one gap. The keys and the form button share --key-h and the
+     same 14px on every side, so the row reads as one machined strip. */
   .reach-row {
     --key-h: 3.375rem;
 
     display: flex;
     flex-wrap: wrap;
     align-items: center;
+    justify-content: center;
     gap: 0.875rem;
-    margin-top: clamp(1.5rem, 3.5svh, 2.25rem);
   }
 
   /* Machined keys: a solid indigo block with the glyph centred in it, no
@@ -274,39 +271,11 @@ import Placeholder from '../Placeholder.astro';
     cursor: inherit;
   }
 
-  /* Closed at rest only where there is a pointer to open it with. Touch gets
-     both keys standing open, which is the honest state for a device that
-     cannot hover and beats a two-tap rule nobody is told about. */
-  @media (hover: hover) and (pointer: fine) {
-    .pin-slot {
-      grid-template-columns: 0fr;
-      transition: grid-template-columns 400ms var(--ease-out-strong);
-    }
-
-    .pin-value {
-      transform: translateX(-0.4rem);
-      transition: transform 400ms var(--ease-out-strong);
-    }
-
-    .pin:hover .pin-slot,
-    .pin:focus-visible .pin-slot {
-      grid-template-columns: 1fr;
-    }
-
-    .pin:hover .pin-value,
-    .pin:focus-visible .pin-value {
-      transform: none;
-    }
-  }
-
-  /* Reduced motion: the block opens and the address lands, both at once and
-     both instantly. The press feedback stays, same as every other button. */
-  @media (prefers-reduced-motion: reduce) {
-    .pin-slot,
-    .pin-value {
-      transition: none;
-    }
-  }
+  /* Both keys stand open for everyone: this line is the page's sign-off,
+     and a centred group cannot afford a control that grows on hover (the
+     whole line would re-centre and slide out from under the pointer). The
+     0fr-to-1fr machinery above stays for the day a closed state is wanted
+     somewhere it can anchor left. */
 </style>
 
 <script>

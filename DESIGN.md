@@ -138,6 +138,8 @@ trick per section:
   wipe's far plane (`[data-cover-deep]`): it lags the sheet on the same
   scrub, so the exit has depth.
 - **Lineage** (`#lineage`): count-up team numbers · staggered award ledger.
+  Hovering a ledger line inks the entry grape and sweeps a rule under the
+  name (pointer-fine; colour only under reduced motion).
 - **Team** (`#team`): ten rows wiping in from alternating sides, in the
   team's own order · cursor cards with each member's previous team numbers
   (static fallback on touch).
@@ -172,10 +174,11 @@ trick per section:
   reduced motion gets no lock. Content: the shirt-back "Sponsored by"
   lockup (lead name across the top, the rest sharing a tightened centered
   line beneath, no boxes or rules, placeholder names until real sponsors
-  land), the big "Get in touch" headline, two machined icon keys that
-  expand horizontally to reveal the email and Instagram values, the form
-  button at the same height, and the shared `<Footer />` small print in
-  plain body type.
+  land) and, on the bottom edge, one centered contact line: the "Get in
+  touch" headline with the two machined keys (values standing open) and
+  the form button beside it. No footer on the home page; that line is the
+  sign-off. The REACH strip is only that line, so the whole Sponsors
+  section shares the screen above it, one composed frame.
 - **Blog post**: reading-progress bar · masked title.
 
 Old page URLs (`/season/`, `/contact/`, `/outreach/`) redirect to their
@@ -215,7 +218,7 @@ BaseLayout).
 | `components/home/*.astro` | The eight one-page sections, composed by `pages/index.astro`. |
 | `components/Reveal.astro` | `[data-reveal]` wrapper. |
 | `components/GearNav.astro` | Corner toggle (two rules that cross) + right-side drawer: paper panel, bare display-type links that zoom in, cursor-card descriptors, Lenis smooth anchors. Old filename, no gear. |
-| `components/Placeholder.astro` / `SectionLabel.astro` / `Footer.astro` | Invisible slot markers / label / the shared small print (blog + lab pages, and inside the Finale). |
+| `components/Placeholder.astro` / `SectionLabel.astro` / `Footer.astro` | Invisible slot markers / label / the shared small print (blog + lab pages only; home ends on the finale's contact line). |
 
 ## Conventions
 

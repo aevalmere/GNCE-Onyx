@@ -363,20 +363,19 @@ const longDate = (d: Date) =>
      1.5rem up, which is a clip wipe, not a fade: nothing here crosses
      through opacity.
 
-     The height is fixed, not fitted: every post opens the same sheet,
-     nearly the full viewport tall, so a short post gets the same slab of
-     paper a long one does and the sheet reads as a place rather than a
-     box shrunk around its contents. Against the 68rem width that lands
-     close to square on a laptop screen. The three-term min keeps a margin
-     around it at every size: 3vw of paper either side once the screen is
-     wide enough to spare it, and below that the dialog's own 1.25rem of
-     padding, which is the click-out zone. */
+     The sheet is a container around the post, exactly: it grows with the
+     content until it meets the viewport cap, so a short post gets a sheet
+     that ends where the post ends (no slab of empty paper under it) and a
+     long one fills the screen and scrolls inside. The three-term min keeps
+     a margin around it at every size: 3vw of paper either side once the
+     screen is wide enough to spare it, and below that the dialog's own
+     1.25rem of padding, which is the click-out zone. */
   .pop-panel {
     position: relative;
     display: flex;
     flex-direction: column;
     width: min(68rem, 94vw, 100%);
-    height: min(92svh, 100%);
+    max-height: min(92svh, 100%);
     background: var(--color-paper);
     clip-path: inset(0 0 100% 0);
     transform: translateY(1.5rem);

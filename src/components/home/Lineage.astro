@@ -180,10 +180,25 @@ const compact = [
   }
 
   .award-name {
+    position: relative;
     font-size: 0.9375rem;
     line-height: 1.45;
     color: var(--color-ink);
     text-wrap: pretty;
+  }
+
+  /* The highlighter: a grape rule parked under each entry, drawn only on
+     intent. Scale, not width, so the paint never leaves the compositor. */
+  .award-name::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -0.2em;
+    width: 100%;
+    height: 2px;
+    background: var(--color-accent);
+    transform: scaleX(0);
+    transform-origin: 0 50%;
   }
 
   /* The right edge of the ledger is now the only vertical the eye can hang
@@ -199,5 +214,33 @@ const compact = [
     /* Two-season cells ("2025 · 2026") are the widest thing in the column;
        breaking one across lines would cost the ledger its right edge. */
     white-space: nowrap;
+  }
+
+  /* Running a finger down the ledger: the entry under the pointer gets the
+     grape rule swept beneath its name and its year comes up to full ink, on
+     every row of every team. The row's whole line is the hover surface (the
+     flex runs name to year), nothing moves or reflows, and the sweep is the
+     same left-to-right draw the section's reveals use. Colour changes on
+     any machine; the sweep only where a fine pointer and motion allow it. */
+  @media (hover: hover) and (pointer: fine) {
+    .award-name,
+    .award-year {
+      transition: color 200ms ease;
+    }
+
+    .award:hover .award-name,
+    .award:hover .award-year {
+      color: var(--color-accent);
+    }
+  }
+
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    .award-name::after {
+      transition: transform 320ms var(--ease-out-strong);
+    }
+
+    .award:hover .award-name::after {
+      transform: scaleX(1);
+    }
   }
 </style>
