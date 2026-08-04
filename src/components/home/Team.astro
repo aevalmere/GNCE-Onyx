@@ -96,28 +96,30 @@ const slug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     gap: clamp(1.25rem, 3svh, 2.5rem) var(--grid-gap);
   }
 
-  /* Fixed plate height, full cell width: every portrait in a row is the same
-     depth, so the names below them sit on one line across the whole grid. A
-     photo dropped in here covers the plate. The height is set against the
-     viewport rather than the cell so the whole grid never overruns the
-     screens it has; on a phone the page scrolls straight, so five rows are
-     allowed to run past one viewport. */
+  /* Square, always: one ratio for every portrait means a row of faces is a
+     row of faces, and a photo dropped in crops to the same shape for
+     everyone. The cell width sets the size, so the names below sit on one
+     line across the whole grid. */
   .member-plate {
     position: relative;
     width: 100%;
-    height: clamp(5.5rem, 12svh, 8.5rem);
+    aspect-ratio: 1 / 1;
     background: var(--color-slot);
-    border: 1px solid var(--color-line);
+    border: 1px solid var(--color-slot-edge);
   }
 
   @media (min-width: 40rem) {
     .roster {
-      grid-template-columns: repeat(5, minmax(0, 1fr));
+      /* Squares cannot be told to fit a short screen by trimming their
+         height, so the CELL is what gets capped: the smaller of the column
+         width and the height two rows may have, with the grid centring
+         itself whenever the height is what binds. The 28rem reserve is this
+         section's other furniture (both paddings, the title, the two name
+         blocks, the row gap) measured at its largest. */
+      --cell: min((100% - 4 * var(--grid-gap)) / 5, (100svh - 28rem) / 2);
+      grid-template-columns: repeat(5, var(--cell));
+      justify-content: center;
       gap: clamp(1.75rem, 4svh, 3rem) var(--grid-gap);
-    }
-
-    .member-plate {
-      height: clamp(7rem, 19svh, 13rem);
     }
   }
 

@@ -213,18 +213,20 @@ import Placeholder from '../Placeholder.astro';
   }
 
   /* The armed state, set by the script and only when it has PROVED the
-     geometry: a fine pointer, everything on one line, and room to the right
-     for the widest drawer to open fully. Armed, the line is pinned by its
-     left edge exactly where centring had put it and forbidden to wrap, so a
-     key exploding can only push rightward: the headline holds still, the
-     keys to the right get shoved, and the line can never wrap under and
-     snap back (which is what used to make the explosion flicker). Anywhere
-     the proof fails (touch, a narrow window, no JS) the class never lands:
-     the line centres, wraps calmly, and the values simply stand open. */
+     geometry: a fine pointer, everything on one line, and room for the
+     widest drawer to open with the whole line still centred. Armed, the
+     line may not wrap, which is what killed the flicker: the old bug was
+     the grown row dropping under the headline and snapping back the moment
+     the pointer lost the key.
+
+     Wrapping is the only thing the armed state forbids. The line stays
+     centred, so an opening drawer spends half its width each way: the keys
+     step right, the headline steps left by the same amount, and the group
+     reads as evenly spaced at rest AND open. Anywhere the proof fails
+     (touch, a narrow window, no JS) the class never lands: the line wraps
+     calmly and the values simply stand open. */
   .reach-live {
     flex-wrap: nowrap;
-    justify-content: flex-start;
-    padding-left: var(--reach-pin, 0px);
   }
 
   .reach-live .reach-row {
@@ -396,49 +398,39 @@ import Placeholder from '../Placeholder.astro';
 
     /* ---- arming the contact line ----------------------------------- */
 
-    // The key drawers must explode rightward only, and must never wrap: a
-    // centred flex line re-centres around a growing key (the headline
-    // walked left), and a line that wraps under the grown key and snaps
-    // back the moment the pointer loses it is a flicker loop. So the
-    // drawers only exist at all when the whole gesture is provable by
-    // arithmetic: fine pointer, the headline and the collapsed key row fit
-    // one line, and the right-hand air holds the WIDEST drawer fully open.
-    // Then the line is pinned by its left edge at exactly the offset
-    // centring gave it, wrapping is forbidden, and the explosion has
-    // nowhere to go but right. Anywhere the proof fails, the class stays
-    // off and the values simply stand open in the centred, wrappable line.
+    // The key drawers must never wrap: a line that drops under the headline
+    // when a key grows and snaps back the moment the pointer loses it is a
+    // flicker loop. So the drawers only exist at all when the whole gesture
+    // is provable by arithmetic: fine pointer, and the headline plus the
+    // key row plus the WIDEST drawer fully open still fit one line. Then
+    // wrapping is forbidden and the line, still centred, simply grows about
+    // its middle: half the drawer's width to each side, so the group is
+    // evenly spaced closed and open alike. Anywhere the proof fails, the
+    // class stays off and the values stand open in a wrappable line.
     const reachLine = contact.querySelector<HTMLElement>('.reach');
     const row = contact.querySelector<HTMLElement>('.reach-row');
-    const pinLine = () => {
+    const armLine = () => {
       if (!reachLine || !row) return;
-      // Never re-measure against an open drawer; the resting pin stays.
+      // Never re-measure against an open drawer.
       if (reachLine.querySelector('.pin:hover, .pin:focus-visible')) return;
       if (!fine.matches) {
         reachLine.classList.remove('reach-live');
-        reachLine.style.removeProperty('--reach-pin');
         return;
       }
-      // Measure the armed geometry itself: drawers collapsed, pin cleared,
-      // so the widths read are the widths the pin will govern.
+      // Measure the armed geometry itself, drawers collapsed.
       reachLine.classList.add('reach-live');
-      reachLine.style.removeProperty('--reach-pin');
       const width = reachLine.clientWidth;
       const gap = parseFloat(getComputedStyle(reachLine).columnGap) || 0;
-      const rest =
-        head.getBoundingClientRect().width + gap + row.getBoundingClientRect().width;
+      const rest = head.getBoundingClientRect().width + gap + row.getBoundingClientRect().width;
       // The widest value, padding included, plus a hair of margin: what one
       // open drawer adds to the line.
       let drawer = 0;
       row.querySelectorAll<HTMLElement>('.pin-value').forEach((v) => {
         drawer = Math.max(drawer, v.offsetWidth);
       });
-      if (rest + drawer + 12 > width) {
-        reachLine.classList.remove('reach-live');
-        return;
-      }
-      reachLine.style.setProperty('--reach-pin', `${Math.round((width - rest) / 2)}px`);
+      if (rest + drawer + 12 > width) reachLine.classList.remove('reach-live');
     };
-    fine.addEventListener?.('change', () => pinLine());
+    fine.addEventListener?.('change', () => armLine());
 
     /* ---- the two levels ------------------------------------------- */
 
@@ -498,12 +490,12 @@ import Placeholder from '../Placeholder.astro';
         queued = 0;
         const was = reach;
         measure();
-        pinLine();
+        armLine();
         if (Math.abs(was - reach) >= 1) moved(was);
       });
     };
     measure();
-    pinLine();
+    armLine();
     const sizes = new ResizeObserver(remeasure);
     sizes.observe(contact);
     sizes.observe(curtain);

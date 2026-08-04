@@ -609,6 +609,11 @@ function initCursorCards() {
     card: HTMLElement;
     owner: HTMLElement | null; // which trigger currently holds the card
     shown: boolean;
+    /** `data-cursor-cut`: appear and vanish outright, never fade. A card
+     *  carrying a picture wants this. Fading one out while its neighbour
+     *  fades in leaves two half-transparent images crossing on the pointer,
+     *  which smears into each other when the hand moves down a list fast. */
+    cut: boolean;
     w: number;
     h: number;
     xTo?: (v: number) => void;
@@ -624,8 +629,11 @@ function initCursorCards() {
     // The card duplicates information the trigger already carries: it is
     // decoration to a screen reader.
     if (!card.hasAttribute('aria-hidden')) card.setAttribute('aria-hidden', 'true');
-    gsap.set(card, { autoAlpha: 0, scale: 0.92 }); // the resting state it returns to
-    const rig: Rig = { card, owner: null, shown: false, w: 0, h: 0 };
+    const cut = card.hasAttribute('data-cursor-cut');
+    // A cut card keeps its size: scaling it up from 0.92 on every appearance
+    // is the same smear by another route.
+    gsap.set(card, { autoAlpha: 0, scale: cut ? 1 : 0.92 }); // the resting state
+    const rig: Rig = { card, owner: null, shown: false, cut, w: 0, h: 0 };
     rigs.set(id, rig);
     return rig;
   };
@@ -674,13 +682,18 @@ function initCursorCards() {
         snap(rig, p.x, p.y);
       }
       rig.shown = true;
-      gsap.to(rig.card, {
-        autoAlpha: 1,
-        scale: 1,
-        duration: 0.3,
-        ease: 'power3.out',
-        overwrite: 'auto',
-      });
+      if (rig.cut) {
+        gsap.killTweensOf(rig.card, 'autoAlpha,opacity,visibility,scale');
+        gsap.set(rig.card, { autoAlpha: 1, scale: 1 });
+      } else {
+        gsap.to(rig.card, {
+          autoAlpha: 1,
+          scale: 1,
+          duration: 0.3,
+          ease: 'power3.out',
+          overwrite: 'auto',
+        });
+      }
     });
 
     // One follow per frame: pointermove fires far faster than we can paint.
@@ -700,6 +713,12 @@ function initCursorCards() {
     trigger.addEventListener('pointerleave', () => {
       if (rig.owner !== trigger) return; // a sibling already took the card over
       rig.owner = null;
+      if (rig.cut) {
+        gsap.killTweensOf(rig.card, 'autoAlpha,opacity,visibility,scale');
+        gsap.set(rig.card, { autoAlpha: 0 });
+        rig.shown = false; // gone this frame: the next hover snaps
+        return;
+      }
       gsap.to(rig.card, {
         autoAlpha: 0,
         scale: 0.92,

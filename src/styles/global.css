@@ -58,6 +58,11 @@
      plate on either band. Shadow grey belonged to the black site and lands
      on a light page as a hole in it. */
   --color-slot: color-mix(in srgb, #10254f 20%, #c9cfdd);
+  /* The plate's own edge. A band hairline (18% of the ink, as alpha) is all
+     but invisible against a 20% fill, so the frame gets its own value: one
+     clear step deeper than the plate, solid rather than alpha, which reads
+     as a printed edge without becoming a box around the picture. */
+  --color-slot-edge: color-mix(in srgb, #10254f 34%, #c9cfdd);
 }
 
 html {
@@ -175,14 +180,16 @@ body {
 }
 
 /* Empty media frame awaiting real content (photos, video). An indigo wash
-   with the band's own hairline around it: the fill says a picture belongs
-   here, and the edge is what keeps a grid of them reading as a grid. */
+   inside a hairline one step deeper than itself: the fill says a picture
+   belongs here, and the edge is what keeps a grid of them reading as a
+   grid. A photo dropped in keeps the same edge, so the frame survives the
+   content landing. */
 .slot {
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--color-slot);
-  border: 1px solid var(--color-line);
+  border: 1px solid var(--color-slot-edge);
 }
 
 .hairline {
