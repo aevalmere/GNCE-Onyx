@@ -3,16 +3,16 @@
  * Outreach — deep band, one screen. Headline, the blog posts as a ruled
  * index, and a closing ask to be invited somewhere.
  *
- * A row opens its post as a paper popup over the band. The whole post is
- * already in the page (Astro renders the markdown at build time), so there
- * is nothing to load, nothing to navigate to, and the band keeps its
- * scroll position underneath. The rows stay real links to /outreach/<id>/,
- * which is where a modified click, a crawler and a visitor without JS go.
+ * Every row is a plain link to the post's own page (`/outreach/<id>/`),
+ * where the post gets a real reading column, and the shared view
+ * transition carries the reader over. The in-place popup this section used
+ * to run is gone: a modal that had to be a whole page was a page, and the
+ * page does it properly for crawlers, no-JS visitors and share links too.
  *
  * The index is the only ruled thing in the band: a hairline over it, one
  * under each entry, and three columns that repeat exactly down the list.
  */
-import { getCollection, render } from 'astro:content';
+import { getCollection } from 'astro:content';
 import Reveal from '../Reveal.astro';
 
 const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
@@ -20,18 +20,8 @@ const posts = (await getCollection('blog')).sort(
   (a, b) => b.data.date.valueOf() - a.data.date.valueOf()
 );
 
-// One rendered body per post, built at build time. Every post in the
-// collection gets a row and a popup, so adding markdown is the whole job.
-const entries = await Promise.all(
-  posts.map(async (post) => ({ post, Content: (await render(post)).Content }))
-);
-
-// Short in the list where the date is a column, long in the popup where it
-// is the post's own dateline (the standalone page reads the same).
 const shortDate = (d: Date) =>
   d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-const longDate = (d: Date) =>
-  d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 ---
 
 <section id="outreach" class="band-deep">
@@ -43,13 +33,9 @@ const longDate = (d: Date) =>
          with ten. -->
     <div class="posts" data-reveal-group>
       {
-        entries.map(({ post }) => (
+        posts.map((post) => (
           <Reveal variant="up">
-            <a
-              class="post-row"
-              href={`${base}/outreach/${post.id}/`}
-              data-post-open={`pop-${post.id}`}
-            >
+            <a class="post-row" href={`${base}/outreach/${post.id}/`}>
               <span class="post-date type-label">{shortDate(post.data.date)}</span>
               <span class="post-title type-display">{post.data.title}</span>
               <span class="post-desc">{post.data.description}</span>
@@ -72,39 +58,6 @@ const longDate = (d: Date) =>
       </Reveal>
     </div>
   </div>
-
-  <!-- POPUPS: one per post, parked at the end of the band. Plain markup on
-       purpose: no reveal wrappers, no split type, nothing gated behind the
-       motion engine, so a post still reads if GSAP never boots. The header
-       is the standalone page's header (long date, then the title at the
-       same size), so arriving either way looks like the same post. -->
-  {
-    entries.map(({ post, Content }) => (
-      <dialog class="post-pop" id={`pop-${post.id}`} aria-labelledby={`pop-${post.id}-title`}>
-        <article class="pop-panel">
-          <button class="pop-close" type="button" data-pop-close>
-            <span class="pop-x" aria-hidden="true">
-              <span />
-              <span />
-            </span>
-            <span class="sr-only">Close post</span>
-          </button>
-
-          <div class="pop-scroll" data-pop-scroll data-lenis-prevent tabindex="-1">
-            <div class="pop-col">
-              <p class="type-label text-muted">{longDate(post.data.date)}</p>
-              <h2 class="pop-title type-display" id={`pop-${post.id}-title`}>
-                {post.data.title}
-              </h2>
-              <div class="post-body pop-body">
-                <Content />
-              </div>
-            </div>
-          </div>
-        </article>
-      </dialog>
-    ))
-  }
 </section>
 
 <style>
@@ -227,369 +180,4 @@ const longDate = (d: Date) =>
     column-gap: clamp(1.5rem, 3vw, 2.75rem);
     row-gap: 2.5rem;
   }
-
-  /* ---- Post popup ------------------------------------------------- */
-  /* A paper sheet in the top layer. The light ramp is declared here rather
-     than inherited: a modal renders outside its band, and this one has to
-     read the same wherever it is opened from. Same numbers as .band-light,
-     so the rendered markdown resolves exactly as it does on the post's own
-     page. */
-  .post-pop {
-    --color-ink: var(--color-surface);
-    --color-muted: color-mix(in srgb, var(--color-surface) 70%, transparent);
-    --color-faint: color-mix(in srgb, var(--color-surface) 52%, transparent);
-    --color-line: color-mix(in srgb, var(--color-surface) 18%, transparent);
-
-    position: fixed;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    max-width: none;
-    max-height: none;
-    margin: 0;
-    /* The margin around the sheet, and the second way out: a click that
-       lands here is a click on the backdrop. */
-    padding: 1.25rem;
-    border: 0;
-    background: transparent;
-    color: var(--color-ink);
-    overflow: hidden;
-  }
-
-  .post-pop[open] {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  /* Heavier than the drawer's scrim (55%) because this one has to separate
-     paper from paper: the sheet opens over the band it belongs to. The
-     literal fallback covers engines where custom properties never reached
-     ::backdrop; --color-bg is black either way. */
-  .post-pop::backdrop {
-    background: color-mix(in srgb, var(--color-bg, #000000) 62%, transparent);
-    opacity: 0;
-    transition: opacity 180ms ease;
-  }
-
-  .post-pop[data-open='true']::backdrop {
-    opacity: 1;
-    transition: opacity 260ms ease;
-  }
-
-  /* The resting state is the closed one, so the transition declared here
-     is the exit: dismissal snaps, opening takes its time (below). The
-     sheet unrolls downward off its top edge while it settles the last
-     1.5rem up, which is a clip wipe, not a fade: nothing here crosses
-     through opacity.
-
-     The sheet is a container around the post, exactly: it grows with the
-     content until it meets the viewport cap, so a short post gets a sheet
-     that ends where the post ends (no slab of empty paper under it) and a
-     long one fills the screen and scrolls inside. The three-term min keeps
-     a margin around it at every size: 3vw of paper either side once the
-     screen is wide enough to spare it, and below that the dialog's own
-     1.25rem of padding, which is the click-out zone.
-
-     The width is set by the reading column inside it, not the other way
-     round: 58rem of sheet less its own margins leaves the body a measure of
-     about 72 characters, which is what a paragraph is supposed to run. */
-  .pop-panel {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    width: min(58rem, 94vw, 100%);
-    max-height: min(92svh, 100%);
-    background: var(--color-paper);
-    clip-path: inset(0 0 100% 0);
-    transform: translateY(1.5rem);
-    transition:
-      clip-path 240ms var(--ease-out-strong),
-      transform 240ms var(--ease-out-strong);
-  }
-
-  .post-pop[data-open='true'] .pop-panel {
-    clip-path: inset(0 0 0 0);
-    transform: none;
-    transition:
-      clip-path 420ms var(--ease-out-strong),
-      transform 420ms var(--ease-out-strong);
-  }
-
-  /* Machined square in the corner, the nav toggle's sibling: a solid fill
-     rather than an outlined box, and the post scrolls under it the same
-     way the page scrolls under the toggle. */
-  .pop-close {
-    position: absolute;
-    top: 0.75rem;
-    right: 0.75rem;
-    z-index: 2;
-    display: grid;
-    place-items: center;
-    width: 44px;
-    height: 44px;
-    border: 0;
-    background: var(--color-surface);
-    color: var(--color-paper);
-    cursor: pointer;
-    transition:
-      transform 160ms var(--ease-out-strong),
-      background-color 200ms ease;
-  }
-
-  .pop-close:active {
-    transform: scale(0.96);
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .pop-close:hover {
-      background: var(--color-accent);
-    }
-  }
-
-  .pop-x {
-    position: relative;
-    display: block;
-    width: 18px;
-    height: 18px;
-  }
-
-  .pop-x span {
-    position: absolute;
-    top: 50%;
-    left: 0;
-    width: 100%;
-    height: 2px;
-    background: currentColor;
-  }
-
-  .pop-x span:first-child {
-    transform: translateY(-50%) rotate(45deg);
-  }
-
-  .pop-x span:last-child {
-    transform: translateY(-50%) rotate(-45deg);
-  }
-
-  /* The post scrolls in here, and only here: the page behind is held still
-     while this is up (see the script). It takes focus on open so arrow
-     keys and space read the post straight away, and its ring turns inward
-     so the sheet's own edge does not clip it. Shift-tab from there is the
-     close button, which is the first thing in the sheet. */
-  .pop-scroll {
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-  }
-
-  .pop-scroll:focus-visible {
-    outline-offset: -3px;
-  }
-
-  /* Top padding clears the close button, and the side margins are wide
-     enough to be margins: they are what hold the body to its measure while
-     the sheet keeps its width. */
-  .pop-col {
-    padding: clamp(3.25rem, 4.5vw, 5rem) clamp(1.5rem, 5vw, 5.5rem) clamp(3rem, 4.5vw, 5rem);
-  }
-
-  /* Same size as the title on the post's own page, on purpose: the two
-     headers have to look like the same post. What the wide sheet buys the
-     title is measure, not scale, so it now runs across the paper instead of
-     breaking into a stack. */
-  .pop-title {
-    margin-top: 1rem;
-    font-size: clamp(2rem, 5vw, 3.75rem);
-  }
-
-  /* The body takes the same measure the title does: one column between the
-     sheet's own margins, so the post reads as a printed page instead of a
-     wide header over a narrow strip with bare paper down its right side.
-     Set large, with the leading opened to match, and the sheet sized around
-     it so the line still lands near 72 characters. */
-  .pop-body {
-    margin-top: 2rem;
-    font-size: clamp(1.125rem, 0.55vw + 0.95rem, 1.3125rem);
-    line-height: 1.76;
-    text-wrap: pretty;
-  }
-
-  /* Reduced motion: the sheet is simply there, and gone. The press keeps
-     its feedback in colour instead of a nudge. */
-  @media (prefers-reduced-motion: reduce) {
-    .pop-panel,
-    .post-pop[data-open='true'] .pop-panel {
-      clip-path: none;
-      transform: none;
-      transition: none;
-    }
-
-    .post-pop::backdrop,
-    .post-pop[data-open='true']::backdrop {
-      opacity: 1;
-      transition: none;
-    }
-
-    .pop-close {
-      transition: background-color 200ms ease;
-    }
-
-    .pop-close:active {
-      transform: none;
-    }
-  }
 </style>
-
-<script>
-  // Post popups. Every row is a real link to the post's own page; this
-  // takes over the plain left click only, so modified clicks, crawlers,
-  // a missing <dialog> and no JS at all still navigate. Nothing here
-  // touches GSAP: the popup is CSS transitions and one attribute flip, and
-  // it works whether or not the motion engine ever boots.
-  function initPostPopups() {
-    const section = document.getElementById('outreach');
-    if (!section) return;
-    const rows = [...section.querySelectorAll<HTMLAnchorElement>('[data-post-open]')];
-    if (!rows.length) return;
-    // Without showModal there is no top layer, no backdrop and no inert
-    // page, and half a modal is worse than none: leave the rows as links.
-    if (typeof HTMLDialogElement === 'undefined' || !('showModal' in HTMLDialogElement.prototype))
-      return;
-
-    const root = document.documentElement;
-    const reduced = matchMedia('(prefers-reduced-motion: reduce)');
-    const engine = () => (window as any).__motion;
-
-    // The sheet's exit transition, plus a frame. Keep in step with the
-    // 240ms on .pop-panel above.
-    const EXIT_MS = 260;
-
-    // The sheet on screen, whether it is arriving, sitting or leaving.
-    // Only one can exist: a modal makes the rest of the page inert, so a
-    // second row cannot be clicked while this one is up.
-    let live: HTMLDialogElement | null = null;
-    let leaving = false;
-    let opener: HTMLElement | null = null;
-    let exitTimer = 0;
-
-    // The same two locks the nav drawer takes (GearNav's holdPage): Lenis
-    // scrolls programmatically and `overflow: hidden` does not stop it, so
-    // it is told to stand down, and the overflow catches what Lenis never
-    // sees. Losing the scrollbar widens the viewport, so its width goes
-    // back on as page padding and as --nav-lock for the corner toggle:
-    // same frame, so nothing slides sideways. Only one of the drawer and
-    // a popup can be up at a time, so the two share the property without
-    // stepping on each other.
-    const holdPage = (hold: boolean) => {
-      const lenis = engine()?.lenis;
-      if (hold) {
-        const gutter = window.innerWidth - root.clientWidth;
-        root.style.setProperty('--nav-lock', `${gutter}px`);
-        if (gutter) root.style.paddingRight = `${gutter}px`;
-        root.style.overflow = 'hidden';
-        lenis?.stop?.();
-      } else {
-        root.style.overflow = '';
-        root.style.paddingRight = '';
-        root.style.removeProperty('--nav-lock');
-        lenis?.start?.();
-      }
-    };
-
-    const open = (pop: HTMLDialogElement, row: HTMLElement) => {
-      opener = row;
-      live = pop;
-      leaving = false;
-      if (!pop.open) pop.showModal();
-      holdPage(true);
-
-      // A post reopened from the row starts at the top, not where the last
-      // reader left it.
-      const scroller = pop.querySelector<HTMLElement>('[data-pop-scroll]');
-      if (scroller) scroller.scrollTop = 0;
-      // The sheet has to be measured closed before the open state can
-      // transition out of it; reading layout forces that to happen now.
-      void pop.offsetWidth;
-      pop.dataset.open = 'true';
-      // Focus goes to the post, not the close button, so arrow keys and
-      // space scroll it immediately.
-      scroller?.focus({ preventScroll: true });
-    };
-
-    const close = () => {
-      const pop = live;
-      if (!pop) return;
-      // Dismissed twice on the way out (escape held, a second click): the
-      // reader is done waiting, so drop the rest of the exit.
-      if (leaving) {
-        window.clearTimeout(exitTimer);
-        pop.close();
-        return;
-      }
-      leaving = true;
-      pop.dataset.open = 'false';
-      // Under reduced motion there is no exit to wait out.
-      if (reduced.matches) pop.close();
-      else exitTimer = window.setTimeout(() => pop.close(), EXIT_MS);
-    };
-
-    rows.forEach((row) => {
-      const pop = document.getElementById(row.dataset.postOpen ?? '');
-      // A row whose sheet is missing stays a plain link to the post page.
-      if (!(pop instanceof HTMLDialogElement)) return;
-      // Only true now that the popup is wired, which is why it is set here
-      // rather than in the markup.
-      row.setAttribute('aria-haspopup', 'dialog');
-      row.addEventListener('click', (e) => {
-        // Cmd/ctrl/shift-click belongs to the browser: let it have the page.
-        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
-        e.preventDefault();
-        open(pop, row);
-      });
-    });
-
-    section.querySelectorAll<HTMLDialogElement>('.post-pop').forEach((pop) => {
-      pop.querySelector<HTMLButtonElement>('[data-pop-close]')?.addEventListener('click', close);
-
-      // Backdrop click. The press and the release both have to land out
-      // there, or selecting text inside and letting go over the margin
-      // would throw the post away mid-sentence. (A click that starts on
-      // the backdrop and ends on the sheet reports the dialog as its
-      // target too, which is why the release is checked on its own.)
-      let fromBackdrop = false;
-      pop.addEventListener('pointerdown', (e) => {
-        fromBackdrop = e.target === pop;
-      });
-      pop.addEventListener('pointerup', (e) => {
-        if (e.target !== pop) fromBackdrop = false;
-      });
-      pop.addEventListener('click', (e) => {
-        if (fromBackdrop && e.target === pop) close();
-        fromBackdrop = false;
-      });
-
-      // Escape closes, but on our terms: the default would cut the sheet
-      // off mid-exit.
-      pop.addEventListener('cancel', (e) => {
-        e.preventDefault();
-        close();
-      });
-
-      // Whatever route it took out, this is where the page comes back and
-      // the row that opened it takes focus again. The page never moved
-      // while the sheet was up, so the row is still under the pointer.
-      pop.addEventListener('close', () => {
-        window.clearTimeout(exitTimer);
-        pop.removeAttribute('data-open');
-        live = null;
-        leaving = false;
-        holdPage(false);
-        opener?.focus({ preventScroll: true });
-        opener = null;
-      });
-    });
-  }
-
-  initPostPopups();
-</script>

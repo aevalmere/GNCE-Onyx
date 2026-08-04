@@ -490,13 +490,21 @@ const links: NavLink[] = [
         // measured rather than assumed: svh-authored CSS and innerHeight
         // disagree on phones. Gated on html.gsap, because without the
         // engine there is no pull and the roster sits in plain flow, where
-        // the generic branch below lands correctly.
+        // the generic branch below lands correctly. On touch the wipe's
+        // geometry is withheld entirely (index.astro media-gates it), the
+        // spacer measures zero, and the roster is likewise in plain flow:
+        // the generic trip is the right one there too.
         const cover = document.querySelector<HTMLElement>('[data-cover-wipe]');
         const heroEl = cover?.firstElementChild as HTMLElement | null;
-        const end =
-          cover && heroEl ? cover.offsetHeight - heroEl.offsetHeight : window.innerHeight * 1.6;
-        if (lenis?.scrollTo) lenis.scrollTo(end, { immediate: reduced.matches });
-        else window.scrollTo({ top: end, behavior });
+        const end = cover && heroEl ? cover.offsetHeight - heroEl.offsetHeight : 0;
+        if (end > 4) {
+          if (lenis?.scrollTo) lenis.scrollTo(end, { immediate: reduced.matches });
+          else window.scrollTo({ top: end, behavior });
+        } else if (lenis?.scrollTo) {
+          lenis.scrollTo(target, { immediate: reduced.matches });
+        } else {
+          target.scrollIntoView({ behavior });
+        }
       } else if (hash === '#contact' && (window as any).__finale?.reachLevel) {
         // The finale is the same case at the other end of the page: it sits
         // pinned under the curtain, and it rests one block short of a full

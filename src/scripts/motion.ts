@@ -711,14 +711,19 @@ function initCursorCards() {
 /* only; the sticky release does the rest.                              */
 /* ================================================================== */
 function initCoverWipe() {
+  // A desktop scene: on touch the page scrolls straight through instead.
+  // index.astro withholds the pin geometry behind the same media query, so
+  // the two can never disagree about whether the wipe exists.
+  if (!FINE) return;
   const wrap = document.querySelector<HTMLElement>('[data-cover-wipe]');
   const cover = wrap?.firstElementChild as HTMLElement | null;
   if (!wrap || !cover) return;
-  // [data-cover-deep] is the cover's far plane (the hero's cut wordmark). It
-  // travels a fraction of the sheet's distance, so the sheet's own trailing
-  // edge crops it on the way out and the exit has depth instead of being one
-  // flat slab. Both planes ride ONE timeline: on separate triggers a stray
-  // refresh could leave them scrubbing against slightly different offsets.
+  // [data-cover-deep] is the cover's far plane (the hero's wordmark). It
+  // travels well behind the sheet, so the sheet's own trailing edge crops it
+  // on the way out and the exit reads as two planes at two speeds instead of
+  // one flat slab. Both planes ride ONE timeline: on separate triggers a
+  // stray refresh could leave them scrubbing against slightly different
+  // offsets.
   const deep = cover.querySelector<HTMLElement>('[data-cover-deep]');
   // 1.6 viewports of scroll for one viewport of travel: the hero takes its
   // time leaving. The distance is measured off the wrapper's own spacer
@@ -735,7 +740,9 @@ function initCoverWipe() {
     },
   });
   tl.to(cover, { xPercent: -100, ease: 'none' }, 0);
-  if (deep) tl.to(deep, { xPercent: 18, ease: 'none' }, 0);
+  // 42, not a subtle lag: the word gives up almost half the sheet's travel,
+  // so the two planes visibly shear apart while the wipe runs.
+  if (deep) tl.to(deep, { xPercent: 42, ease: 'none' }, 0);
 
   // A /#team deep link was resolved by the browser before html.gsap pulled
   // the roster to the document top, which leaves the page parked mid-wipe.

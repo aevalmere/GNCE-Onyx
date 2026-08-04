@@ -13,11 +13,13 @@
  * bottom padding is what keeps the buttons clear of it at any width.
  *
  * Behind the headline the wordmark is set at viewport scale as an indigo
- * watermark and cut by the frame, so the line lands on something rather
- * than on empty paper. It carries [data-cover-deep], which is the one trick in the
- * section: index.astro pins the hero and motion.ts slides it off to the
- * left, and the wordmark travels only part of that distance, so the sheet's
- * own trailing edge crops it on the way out.
+ * watermark, the whole word inside the frame, so the line lands on
+ * something rather than on empty paper. It carries [data-cover-deep], which
+ * is the one trick in the section: index.astro pins the hero and motion.ts
+ * slides it off to the left, and the wordmark gives up almost half that
+ * travel, so the sheet's trailing edge crops it on the way out and the exit
+ * reads as two planes at two speeds. Desktop only; a phone scrolls straight
+ * past and gets its own centred composition (media query below).
  *
  * The entrances hang off one `data-reveal-group` rather than hand-set
  * delays. That is not only tidier: a standalone reveal waits for its own top
@@ -113,11 +115,12 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
 
   .hero-deep-word {
     font-family: var(--font-display);
-    /* ONYX sets 3.17em wide in this face, so 34vw overruns the frame by
-       about a fifth and the O and the X are cut by it. The svh cap is for
-       short landscape viewports, where a word sized off width alone would
-       swallow the headline whole. */
-    font-size: min(34vw, 60svh);
+    /* ONYX sets about 3.17em wide in this face, so 27vw keeps the whole
+       word inside the frame at every width: all four letters print. The rem
+       cap is the 88rem column doing the same job on wide screens, and the
+       svh cap is for short landscape viewports, where a word sized off
+       width alone would swallow the headline whole. */
+    font-size: min(27vw, 25rem, 58svh);
     line-height: 0.72;
     letter-spacing: 0.06em;
     /* Letter-spacing prints after the last letter too, which would shove the
@@ -199,5 +202,33 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     text-decoration: underline;
     text-underline-offset: 0.35em;
     text-decoration-color: var(--color-accent);
+  }
+
+  /* ---- The phone hero --------------------------------------------- */
+  /* A different composition, not a squeezed copy of the wide one: the
+     headline centres over the full word, and the foot becomes a centred
+     column with the mark above the two calls to action. Centred content
+     never meets the corner nav toggle, so the frame reads calm at 360px. */
+  @media (max-width: 40rem) {
+    .hero-stage {
+      justify-items: center;
+    }
+
+    .hero-title {
+      text-align: center;
+    }
+
+    .hero-foot {
+      flex-direction: column;
+      align-items: center;
+      gap: 1.75rem;
+    }
+
+    .hero-actions {
+      flex: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.1rem;
+    }
   }
 </style>

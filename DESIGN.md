@@ -14,9 +14,9 @@ touching UI.
    on; `#10254F` space indigo is the main color (all text, solid button
    fills, the nav toggle, the intro cover) plus its alphas for rules and
    muted copy, and a 9% wash of it into the paper makes `--color-deep`,
-   the alternate band. `#000000` black keeps only the veils (scrims, popup
-   backdrops). `#303D6A` twilight indigo (glass, raised surfaces) and
-   `#2B2C33` shadow grey (`--color-steel`: media slots, code frames) hold
+   the alternate band. `#000000` black keeps only the nav drawer's scrim.
+   `#303D6A` twilight indigo (glass, raised surfaces) and
+   `#2B2C33` shadow grey (`--color-steel`: code frames) hold
    their jobs. `#823A80` grape soda appears ONLY as a true highlight:
    selection, the heat rail, hover states, the section marks, the stub
    dashes.
@@ -50,7 +50,7 @@ touching UI.
 | `--font-display` | Uncial Antiqua | Headlines, the ONYX wordmark |
 | `--font-script` | Grey Qo | One script flourish per page |
 | `--font-text` | Ubuntu | Body, labels (`.type-label` = spaced caps) |
-| `--color-bg` | `#000000` | Black, veils only: scrims, popup backdrops |
+| `--color-bg` | `#000000` | Black, veils only: the nav drawer's scrim |
 | `--color-surface` | `#10254F` | Space indigo: text on the light bands, small solid fills (nav toggle). Not a background |
 | `--color-panel` | `#303D6A` | Twilight indigo: glass panels, raised surfaces, footer |
 | `--color-steel` | `#2B2C33` | Shadow grey: code frames and quiet dark surfaces |
@@ -107,9 +107,10 @@ Under reduced motion the module bows out and static CSS stands in.
 - `[data-cover-wipe]` — the hero cover: the whole opening viewport slides
   off to the left over 1.6 viewports of scroll (geometry in index.astro;
   the same 1.6 lives in motion.ts and GearNav's #team trip), uncovering
-  the Team roster pinned beneath. `[data-cover-deep]` inside it travels a
-  fraction of the distance on the same timeline so the sheet's trailing
-  edge crops it.
+  the Team roster pinned beneath. Fine pointers only; touch scrolls
+  straight through. `[data-cover-deep]` inside it gives up almost half the
+  distance on the same timeline, so the sheet's trailing edge crops it and
+  the exit visibly shears into two planes.
 - `[data-hscroll]` / `[data-hscroll-track]` — diagonal scroll-hijack
   (season build log): the track pans sideways while climbing, panels
   counter-drift past each other, and the track skews with scroll velocity.
@@ -135,21 +136,29 @@ drawer nav doubles as the scroll nav (anchor ids in parentheses); `Finale`
 carries the contact line, so BaseLayout gets `hideFooter` on home. The five
 sections above the finale ride in an opaque `.curtain`; the finale sits under it and
 is revealed by the page's last scroll (mechanics in `index.astro`). Blog
-posts keep their own pages; `/lab/onyx/` stays parked and unlinked. One
-trick per section:
+posts keep their own pages; `/lab/onyx/` stays parked and unlinked.
+Touch gets none of the scroll choreography: the cover wipe and the finale
+gesture lock are gated to `(hover: hover) and (pointer: fine)` (the same
+media query in index.astro's geometry, motion.ts and Finale's script, so
+they can never disagree), and a phone simply scrolls straight down the
+page with only the finale's sticky curtain reveal intact. One trick per
+section:
 
 - **Hero**: nothing along the top · the split intro headline sitting above
-  centre on an oversized indigo-watermark ONYX the frame crops · one line
-  along the bottom edge, team mark at the left and the two CTAs at the
-  right, bottoms level and clear of the corner nav toggle. The wordmark is
-  the cover wipe's far plane (`[data-cover-deep]`): it lags the sheet on the
-  same scrub, so the exit has depth.
-- **Team** (`#team`): the section the hero uncovers, pinned under the cover
-  wipe. No headline and no rule: a grid of portrait plates with the name and
-  that member's previous team numbers under each, three across on a phone
-  and five (two full rows) above 40rem · plate height set in `svh` so the
-  grid always stands inside the one viewport the wipe hands over · hover
-  turns the name grape and moves nothing.
+  centre on an oversized indigo-watermark ONYX, the whole word inside the
+  frame · one line along the bottom edge, team mark at the left and the two
+  CTAs at the right, bottoms level and clear of the corner nav toggle. The
+  wordmark is the cover wipe's far plane (`[data-cover-deep]`): it gives up
+  almost half the sheet's travel on the same scrub, so the exit reads as
+  two planes at two speeds. On a phone the composition centres instead:
+  headline over the word, then the mark and the stacked CTAs on one axis.
+- **Team** (`#team`): the section the hero uncovers, pinned under the
+  cover wipe on fine pointers, plain flow on touch. A small "Team members"
+  display title over a grid of portrait plates with the name and that
+  member's previous team numbers under each, three across on a phone
+  (everything centred) and five (two full rows) above 40rem · plate height
+  set in `svh` so the grid always stands inside the one viewport the wipe
+  hands over · nothing in the grid answers the pointer.
 - **Season** (`#season`): collapsible event rows (Qualifier 1 / Qualifier 2
   / States / More to come), exclusive: opening one sweeps the other shut.
   The hover poster flies from the cursor card into its seat on bare
@@ -170,9 +179,10 @@ trick per section:
   lands there). From REACH the first push is answered with a short tug; a
   second push, or the first one simply kept up (accumulated swallowed
   travel counts as insistence, so a firm trackpad push opens through the
-  tug), runs one input-locked lift to FULL (sponsors on screen). Touch
-  pays once: a single swipe opens. A deliberate pull back from FULL runs
-  the move in reverse; trackpad wobble never does. Gesture segmentation is
+  tug), runs one input-locked lift to FULL (sponsors on screen). A
+  deliberate pull back from FULL runs the move in reverse; trackpad wobble
+  never does. Fine pointers only: on touch the lock stands down entirely
+  and the curtain reveal is plain scrolling. Gesture segmentation is
   envelope-based (a decaying memory of delta sizes, kept warm by an
   always-on passive tracker) so momentum tails, wheel notches, and noise
   reversals are told apart, and a page caught raw-scrolling between the
@@ -183,11 +193,13 @@ trick per section:
   line beneath, no boxes or rules, placeholder names until real sponsors
   land) and, on the bottom edge, one centered contact line: the "Get in
   touch" headline with the two machined keys and the form button standing
-  offset to their right. On fine pointers the keys rest collapsed to
-  their glyphs; hover or focus explodes the value outward on a sprung
-  curve, physically shoving everything to its right further right (the
-  one layout-property animation on the site). Touch keeps the values
-  standing open. No footer on the home page; that line is the sign-off.
+  offset to their right. On fine pointers the keys rest collapsed to their
+  glyphs and take the buttons' grape on hover; hover or focus explodes the
+  value outward on a sprung curve, rightward only: the script pins the
+  one-line row by its left edge at exactly the offset centring gave it, so
+  the form button is shoved further right while the headline holds still
+  (the one layout-property animation on the site). Touch keeps the values
+  standing open in a centred stack. No footer on the home page; that line is the sign-off.
   The REACH strip is only that line, and the Sponsors frame above
   overfills the remaining viewport (min-height with svh-aware rhythm,
   content centered), so the resting frame is the whole pitch over the
@@ -215,12 +227,12 @@ boxes just appear.
 ## The blog (Outreach)
 
 Markdown collection in `src/content/blog/`. The home Outreach section
-lists posts as a ruled index and opens each one as a paper popup in
-place (real dialog, Lenis-aware scroll lock, focus returned to the row);
-`outreach/[id].astro` stays as the deep-link and no-JS page with the same
-header. Both are measured: the sheet and the page each hold the body near
-seventy characters a line rather than running the full width of the paper. Post pages run the paper scheme (`light` on BaseLayout): back
-button, date, title, body, small-print footer. No comments, no view
+lists posts as a ruled index whose rows are plain links to
+`outreach/[id].astro`; the shared view transition carries the reader over
+and back. There is no popup: the post's own page IS the reading
+experience, one 44rem measured column (about seventy characters a line)
+for header and body both. Post pages run the paper scheme (`light` on
+BaseLayout): back button, date, title, rule, body, small-print footer. No comments, no view
 counts. The intro cover runs only on the home page (`intro` on
 BaseLayout).
 
@@ -240,9 +252,9 @@ BaseLayout).
 - Content column: `mx-auto max-w-[88rem] px-5 sm:px-8` on the one-page
   sections; body copy caps its own measure (`ch`-based) inside the wide
   column. The blog is measured, not full-width: the post page runs a 44rem
-  column for header and body both, and the popup sheet is sized (58rem) so
-  its own margins hold the body near 72 characters. The shared Footer
-  defaults to 64rem and takes the finale's measure via `--foot-measure`.
+  column for header and body both, near 72 characters a line. The shared
+  Footer defaults to 64rem and takes the finale's measure via
+  `--foot-measure`.
 - Section rhythm varies on purpose; don't metronome identical sections.
 - No eyebrows: sections open with a display headline, plus the `.mark`
   grape bar on black bands. `.type-label` is for metadata only.

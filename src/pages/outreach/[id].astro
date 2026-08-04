@@ -1,14 +1,12 @@
 ---
 /**
  * Blog post page. One route per markdown file in src/content/blog/.
- * A paper page: back button, date, title, body. The shared Footer is the
- * small-print bar.
+ * A paper page: back button, date, title, rule, body, all on one 44rem
+ * reading column. The shared Footer is the small-print bar.
  *
- * This is the deep link and the no-JS route; on the home page the same
- * post opens as a popup instead (Outreach.astro). The two share a header,
- * down to the long dateline and the title's size, so arriving either way
- * looks like arriving at the same post. Only the way out differs: a back
- * button here, a close control there.
+ * This is THE way a post is read: the home Outreach index links straight
+ * here, and the shared view transition (BaseLayout) carries the reader
+ * over and back.
  */
 import { getCollection, render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';

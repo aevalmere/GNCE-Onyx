@@ -43,8 +43,10 @@ Manage the background server with `astro dev stop`, `astro dev status`, and `ast
   `[data-reveal-scrub]` clip wipes, `[data-parallax]`,
   `[data-hover-preview]`, `[data-cursor-card]`) plus named scenes
   (`[data-cover-wipe]`, `[data-hscroll]` horizontal pan,
-  `[data-ladder]`, `[data-progress]`). Nothing follows the cursor on
-  buttons and display type never answers the pointer. All reduced-motion
+  `[data-ladder]`, `[data-progress]`). The cover wipe and the finale
+  gesture lock run on fine pointers only; touch scrolls the page straight
+  through, with just the finale's sticky curtain reveal. Nothing follows
+  the cursor on buttons and display type never answers the pointer. All reduced-motion
   safe. No opacity cross-fades.
 - The WebGL ONYX word (`src/scripts/onyx3d.ts` + `src/data/onyx-glyphs.ts`)
   is parked on the unlinked page `/lab/onyx/`. Keep it building and usable;

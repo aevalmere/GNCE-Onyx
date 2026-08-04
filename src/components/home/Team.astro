@@ -1,22 +1,21 @@
 ---
 /**
- * Team — the roster as a grid of portraits, the section the hero uncovers:
- * index.astro pins it under the cover wipe, so this is the first thing the
- * page opens onto.
- *
- * No headline and no rule above it: the ten faces are the heading. That also
- * buys the grid the height it needs, since this section has to stand inside
- * one viewport for the wipe to hand it over cleanly.
+ * Team — the roster as a grid of portraits under one small title, the
+ * section the hero uncovers: index.astro pins it under the cover wipe on
+ * fine pointers, so this is the first thing the page opens onto. On touch
+ * it sits in plain flow and the page scrolls straight into it.
  *
  * Five across and two down at full width, so the grid always ends on a full
- * row. The plates are sized by height rather than by ratio, which is what
- * keeps every row the same depth and every name on the same line, and what
- * lets the whole block shrink with a short viewport instead of overrunning
- * it. Photos drop straight into the plates.
+ * row; three across on a phone, everything centred. The plates are sized by
+ * height rather than by ratio, which is what keeps every row the same depth
+ * and every name on the same line, and what lets the whole block shrink
+ * with a short viewport instead of overrunning it. Photos drop straight
+ * into the plates.
  *
  * Each member's previous GNCE teams sit under the name as a permanent line:
  * it is the whole point of a rookie team of veterans, so it reads on every
- * machine rather than waiting for a hover.
+ * machine rather than waiting for a hover. Nothing in the grid answers the
+ * pointer.
  */
 import Reveal from '../Reveal.astro';
 
@@ -43,7 +42,7 @@ const slug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
 <section id="team" aria-labelledby="team-title">
   <div class="team-frame mx-auto w-full max-w-[88rem] px-5 sm:px-8">
-    <h2 id="team-title" class="sr-only">Our team</h2>
+    <h2 id="team-title" class="team-head type-display" data-split>Team members</h2>
 
     <ul class="roster" data-reveal-group>
       {
@@ -67,14 +66,19 @@ const slug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 </section>
 
 <style>
-  /* One screen, the grid centred in it. */
+  /* One screen, the title and the grid centred in it. */
   .team-frame {
     display: flex;
     flex-direction: column;
     justify-content: center;
     min-height: 100svh;
-    padding-top: clamp(3.5rem, 9svh, 6rem);
-    padding-bottom: clamp(3.5rem, 9svh, 6rem);
+    padding-top: clamp(3.5rem, 8svh, 5.5rem);
+    padding-bottom: clamp(3.5rem, 8svh, 5.5rem);
+  }
+
+  .team-head {
+    margin-bottom: clamp(1.5rem, 4svh, 2.75rem);
+    font-size: clamp(1.75rem, 4vw, 3rem);
   }
 
   /* One gap value drives both axes, so the columns and the rows are spaced
@@ -118,7 +122,6 @@ const slug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     font-weight: 700;
     font-size: clamp(0.9375rem, 1.05vw, 1.125rem);
     line-height: 1.25;
-    transition: color 200ms ease;
   }
 
   .member-teams {
@@ -129,10 +132,17 @@ const slug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     font-variant-numeric: tabular-nums lining-nums;
   }
 
-  /* Hover moves nothing: the name turns grape and that is the whole state. */
-  @media (hover: hover) and (pointer: fine) {
-    .member:hover .member-name {
-      color: var(--color-accent);
+  /* No hover state anywhere in the grid: the names are a record, not
+     controls, and nothing here answers the pointer. */
+
+  /* The phone grid centres: plates, names and the title on one axis. */
+  @media (max-width: 40rem) {
+    .team-head {
+      text-align: center;
+    }
+
+    .member {
+      text-align: center;
     }
   }
 </style>

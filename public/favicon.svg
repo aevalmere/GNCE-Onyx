@@ -1,14 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64">
-  <g stroke="#6E0D25" stroke-width="9">
-    <line x1="0" y1="-18" x2="0" y2="-28"/>
-    <line x1="0" y1="18" x2="0" y2="28"/>
-    <line x1="-18" y1="0" x2="-28" y2="0"/>
-    <line x1="18" y1="0" x2="28" y2="0"/>
-    <line x1="12.7" y1="-12.7" x2="19.8" y2="-19.8"/>
-    <line x1="-12.7" y1="-12.7" x2="-19.8" y2="-19.8"/>
-    <line x1="12.7" y1="12.7" x2="19.8" y2="19.8"/>
-    <line x1="-12.7" y1="12.7" x2="-19.8" y2="19.8"/>
-  </g>
-  <circle r="21" fill="#6E0D25"/>
-  <circle r="9" fill="#0A0908"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- The team mark on its own paper tile. The tile is the point: the old
+       icon sat transparent strokes on the tab bar, which read as a black
+       square on dark chrome. Colors are the site's: pale slate paper,
+       space indigo ring, grape diamond. -->
+  <rect width="64" height="64" rx="14" fill="#C9CFDD"/>
+  <circle cx="32" cy="32" r="20" fill="none" stroke="#10254F" stroke-width="6"/>
+  <rect x="32" y="20.7" width="16" height="16" transform="rotate(45 32 20.7)" fill="#823A80"/>
 </svg>

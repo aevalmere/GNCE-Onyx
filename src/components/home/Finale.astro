@@ -192,6 +192,16 @@ import Placeholder from '../Placeholder.astro';
     text-align: center;
   }
 
+  /* The script below pins the one-line form of this row by its LEFT edge,
+     parked exactly where centring had put it. A centred flex line re-seats
+     itself around a growing item, which dragged "Get in touch" leftward
+     every time a key drawer opened; pinned, all the growth spends itself on
+     the right and only the form button is shoved. */
+  .reach-pinned {
+    justify-content: flex-start;
+    padding-left: var(--reach-pin, 0px);
+  }
+
   /* The site's last headline, sized to share its line with the controls:
      the two together have to clear the 88rem frame with air to spare, and
      the svh cap keeps a short landscape screen from stacking them. */
@@ -221,7 +231,9 @@ import Placeholder from '../Placeholder.astro';
     padding-inline: 1rem;
     background: var(--color-surface);
     color: var(--color-paper);
-    transition: transform 160ms var(--ease-out-strong);
+    transition:
+      transform 160ms var(--ease-out-strong),
+      background-color 200ms ease;
   }
 
   .pin:active {
@@ -279,6 +291,13 @@ import Placeholder from '../Placeholder.astro';
      faster than the centred line re-seats, so the hand never loses what it
      is holding. */
   @media (hover: hover) and (pointer: fine) {
+    /* The keys take the same grape the buttons do: one hover vocabulary
+       across every control on the site. */
+    .pin:hover,
+    .pin:focus-visible {
+      background: var(--color-accent);
+    }
+
     .pin-slot {
       grid-template-columns: 0fr;
       transition: grid-template-columns 480ms var(--ease-spring);
@@ -335,17 +354,19 @@ import Placeholder from '../Placeholder.astro';
    * push is answered with a short tug that springs back; a second push, or
    * the same push simply kept up (trackpads pour one gesture out as a long
    * decaying stream, so enough swallowed travel counts as insistence), lifts
-   * the curtain in one animated move with the input locked. Touch pays once:
-   * a single swipe from REACH opens. From FULL a deliberate pull up plays
-   * the move in reverse; the stray counter-deltas inside a momentum tail do
-   * not, which is what kept yanking the page around. Scrolling up from REACH
+   * the curtain in one animated move with the input locked. From FULL a
+   * deliberate pull up plays the move in reverse; the stray counter-deltas
+   * inside a momentum tail do not, which is what kept yanking the page
+   * around. Scrolling up from REACH
    * is left free after at most a few swallowed pixels of noise, and if the
    * page is ever caught raw-scrolling between the levels under a live
    * gesture, the trip is finished toward whichever level it was headed for.
    *
-   * Wheel and touch only. Keyboard scrolling stays native and unlocked, and a
-   * page held still by the nav drawer or a post popup (both take Lenis down
-   * with `overflow: hidden`) is left to them. Reduced motion gets none of it:
+   * Fine pointers only: on touch the whole lock stands down and the page
+   * scrolls straight through the curtain reveal (which is plain sticky CSS
+   * and needs no help). Keyboard scrolling stays native and unlocked, and a
+   * page held still by the nav drawer (it takes Lenis down with
+   * `overflow: hidden`) is left to it. Reduced motion gets none of it:
    * plain scrolling, plus the anchor landing.
    */
   function initFinaleLock() {
@@ -355,8 +376,34 @@ import Placeholder from '../Placeholder.astro';
     if (!contact || !curtain || !head) return;
 
     const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+    const fine = matchMedia('(hover: hover) and (pointer: fine)');
     const engine = () => (window as any).__motion;
     const now = () => performance.now();
+
+    /* ---- the contact line's left pin ------------------------------- */
+
+    // The key drawers must explode rightward only: the form button gets
+    // shoved, the headline holds still. A centred flex line cannot promise
+    // that (it re-centres around the growing key), so wherever the drawers
+    // exist (fine pointers) and the line is actually one line, it is pinned
+    // by its left edge at exactly the offset centring gave it at rest.
+    const reachLine = contact.querySelector<HTMLElement>('.reach');
+    const row = contact.querySelector<HTMLElement>('.reach-row');
+    const pinLine = () => {
+      if (!reachLine || !row) return;
+      // Never re-measure against an open drawer; the resting pin stays.
+      if (reachLine.querySelector('.pin:hover, .pin:focus-visible')) return;
+      reachLine.classList.remove('reach-pinned');
+      reachLine.style.removeProperty('--reach-pin');
+      if (!fine.matches) return;
+      const headBox = head.getBoundingClientRect();
+      // Wrapped into a stack (a narrow window), centred is the right shape.
+      if (row.getBoundingClientRect().top >= headBox.bottom - 1) return;
+      const left = headBox.left - reachLine.getBoundingClientRect().left;
+      reachLine.style.setProperty('--reach-pin', `${Math.max(0, Math.round(left))}px`);
+      reachLine.classList.add('reach-pinned');
+    };
+    fine.addEventListener?.('change', () => pinLine());
 
     /* ---- the two levels ------------------------------------------- */
 
@@ -416,10 +463,12 @@ import Placeholder from '../Placeholder.astro';
         queued = 0;
         const was = reach;
         measure();
+        pinLine();
         if (Math.abs(was - reach) >= 1) moved(was);
       });
     };
     measure();
+    pinLine();
     const sizes = new ResizeObserver(remeasure);
     sizes.observe(contact);
     sizes.observe(curtain);
@@ -454,6 +503,12 @@ import Placeholder from '../Placeholder.astro';
     }
 
     if (reduced.matches) return;
+
+    // Touch scrolls straight through: the curtain reveal above is plain
+    // sticky CSS and runs everywhere, but the gesture lock is a wheel-and-
+    // trackpad conversation, and on a phone it read as a broken page. The
+    // measuring and the deep-link landing above stay for everyone.
+    if (!fine.matches) return;
 
     /* ---- the lock -------------------------------------------------- */
 
@@ -509,9 +564,9 @@ import Placeholder from '../Placeholder.astro';
     let fingerAt = 0; // when the current drag started
     let crossedAt = 0; // when a reader's own gesture last landed on REACH
 
-    // The drawer and the post popups hold the page themselves (their
-    // holdPage takes Lenis down and puts `overflow: hidden` on the root).
-    // Whatever they are doing outranks this.
+    // The nav drawer holds the page itself (its holdPage takes Lenis down
+    // and puts `overflow: hidden` on the root). Whatever it is doing
+    // outranks this.
     const held = () => {
       const lenis = engine()?.lenis;
       return !!lenis?.isStopped || document.documentElement.style.overflow === 'hidden';
