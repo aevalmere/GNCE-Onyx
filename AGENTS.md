@@ -32,7 +32,7 @@ Manage the background server with `astro dev stop`, `astro dev status`, and `ast
 
 ## Architecture notes
 
-- Fonts: Uncial Antiqua (display), Grey Qo (script accent), Cardo (body).
+- Fonts: Uncial Antiqua (display), Grey Qo (script accent), Ubuntu (body).
   Light site: pale slate paper, space indigo as the main color, deep-tinted
   alternate bands, grape for true highlights only; no idle glows, no
   gradient fills. See `DESIGN.md`.

@@ -11,9 +11,9 @@
  */
 import '@fontsource/uncial-antiqua';
 import '@fontsource/grey-qo';
-import '@fontsource/cardo/400.css';
-import '@fontsource/cardo/700.css';
-import '@fontsource/cardo/400-italic.css';
+import '@fontsource/ubuntu/400.css';
+import '@fontsource/ubuntu/700.css';
+import '@fontsource/ubuntu/400-italic.css';
 import '../styles/global.css';
 import Footer from '../components/Footer.astro';
 import GearNav from '../components/GearNav.astro';
@@ -164,9 +164,9 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
                 var specs = [
                   '1em "Uncial Antiqua"',
                   '1em "Grey Qo"',
-                  '1em "Cardo"',
-                  '700 1em "Cardo"',
-                  'italic 1em "Cardo"',
+                  '1em "Ubuntu"',
+                  '700 1em "Ubuntu"',
+                  'italic 1em "Ubuntu"',
                 ];
                 var loaded = 0;
                 var step = function () {
@@ -275,7 +275,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
 
       /* The mask. Full leading plus padding is real headroom: the clip
          edge stands clear of the glyphs on every side, so the digits and
-         the % print whole. Tabular Cardo so the digits hold their box
+         the % print whole. Tabular figures so the digits hold their box
          while the number climbs. */
       .intro-count {
         overflow: clip;

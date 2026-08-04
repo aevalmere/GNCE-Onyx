@@ -10,13 +10,13 @@
    and stubs).
    No idle glows. No gradient fills. Motion and solid color carry the
    life; texture is grain and (non-gradient) frosted glass, used sparingly.
-   Type: Uncial Antiqua (display), Grey Qo (script accent), Cardo (body).
+   Type: Uncial Antiqua (display), Grey Qo (script accent), Ubuntu (body).
    ================================================================== */
 @theme {
   /* Type */
-  --font-display: 'Uncial Antiqua', 'Cardo', serif;
+  --font-display: 'Uncial Antiqua', 'Ubuntu', serif;
   --font-script: 'Grey Qo', 'Uncial Antiqua', cursive;
-  --font-text: 'Cardo', Georgia, serif;
+  --font-text: 'Ubuntu', system-ui, sans-serif;
   --font-code: ui-monospace, 'SFMono-Regular', Menlo, monospace;
 
   /* Color — the six values + pale slate alphas */
@@ -107,7 +107,7 @@ body {
   line-height: 1;
 }
 
-/* Label: Cardo, spaced small caps. Metadata and the rare eyebrow. */
+/* Label: Ubuntu, spaced caps. Metadata and the rare eyebrow. */
 .type-label {
   font-family: var(--font-text);
   font-size: 0.8125rem;

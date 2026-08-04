@@ -4,7 +4,7 @@ A light, medieval-modern identity built for a scroll-driven experience.
 Pale slate paper everywhere, space indigo as the main color (ink, fills,
 controls), sections alternating between paper and a deeper blue-tinted
 band, grape reserved for true highlights, and a distinctive uncial +
-script + old-style-serif type system. Typography carries the identity;
+script + clean-sans type system. Typography carries the identity;
 motion is the life. Read this (and the skills in `.claude/skills/`) before
 touching UI.
 
@@ -24,8 +24,9 @@ touching UI.
    color. Texture is film grain and *non-gradient* frosted glass (uniform
    tint + blur + hairline), used sparingly. No ambient/looping glow.
 3. **Type is the imagery.** Uncial Antiqua (display), Grey Qo (one script
-   flourish per page), Cardo (body). Push display scale hard; keep body
-   readable (Cardo is a scholar's old-style serif, tuned for length).
+   flourish per page), Ubuntu (body). Push display scale hard; keep body
+   readable (Ubuntu is a plain modern sans; the fancy faces stay on the
+   titles alone).
 4. **Machined edges.** Radius 0, no exceptions. Hairline rules and negative
    space over cards; glass panels where a surface is warranted.
 5. **Every animation is scroll-driven and motivated.** It communicates
@@ -48,7 +49,7 @@ touching UI.
 | --- | --- | --- |
 | `--font-display` | Uncial Antiqua | Headlines, the ONYX wordmark |
 | `--font-script` | Grey Qo | One script flourish per page |
-| `--font-text` | Cardo | Body, labels (`.type-label` = spaced small caps) |
+| `--font-text` | Ubuntu | Body, labels (`.type-label` = spaced caps) |
 | `--color-bg` | `#000000` | Black, veils only: scrims, popup backdrops |
 | `--color-surface` | `#10254F` | Space indigo: text on the light bands, small solid fills (nav toggle). Not a background |
 | `--color-panel` | `#303D6A` | Twilight indigo: glass panels, raised surfaces, footer |
