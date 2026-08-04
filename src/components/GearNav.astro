@@ -16,8 +16,8 @@
  *
  * The site is one page, so every link but Home is a section anchor: the
  * click handler closes the drawer and hands the trip to Lenis instead of
- * reloading. Hovering a link floats a small card off the cursor saying
- * what is down there.
+ * reloading. Hover is the word turning grape, nothing more; each link's
+ * one-line description stays in the accessibility tree as sr-only text.
  *
  * Blog posts and the lab page carry the Footer's plain-text links, which is
  * also where navigation goes when there is no JS: a button that cannot open
@@ -27,36 +27,16 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
 type NavLink = {
   href: string;
   label: string;
-  card: string;
+  /** Read to screen readers with the label; not shown visually. */
   note: string;
 };
 const links: NavLink[] = [
-  { href: `${base}/`, label: 'Home', card: 'nav-card-home', note: 'Back to the top' },
-  { href: `${base}/#team`, label: 'Team', card: 'nav-card-team', note: 'Ten students' },
-  {
-    href: `${base}/#season`,
-    label: 'Season',
-    card: 'nav-card-season',
-    note: 'Qualifiers and States',
-  },
-  {
-    href: `${base}/#outreach`,
-    label: 'Outreach',
-    card: 'nav-card-outreach',
-    note: 'Posts and events we show up to',
-  },
-  {
-    href: `${base}/#sponsors`,
-    label: 'Sponsors',
-    card: 'nav-card-sponsors',
-    note: 'Recognition, low to high',
-  },
-  {
-    href: `${base}/#contact`,
-    label: 'Contact',
-    card: 'nav-card-contact',
-    note: 'Email or Instagram',
-  },
+  { href: `${base}/`, label: 'Home', note: 'Back to the top' },
+  { href: `${base}/#team`, label: 'Team', note: 'Ten students' },
+  { href: `${base}/#season`, label: 'Season', note: 'Qualifiers and States' },
+  { href: `${base}/#outreach`, label: 'Outreach', note: 'Posts and events we show up to' },
+  { href: `${base}/#sponsors`, label: 'Sponsors', note: 'Recognition, low to high' },
+  { href: `${base}/#contact`, label: 'Contact', note: 'Email or Instagram' },
 ];
 ---
 
@@ -68,7 +48,7 @@ const links: NavLink[] = [
       {
         links.map((link, i) => (
           <li class="nav-item" style={`--i:${i}`}>
-            <a class="nav-link type-display" href={link.href} data-cursor-card={link.card}>
+            <a class="nav-link type-display" href={link.href}>
               {link.label}
               <span class="sr-only">{link.note}</span>
             </a>
@@ -92,26 +72,12 @@ const links: NavLink[] = [
     <span class="sr-only">Open navigation</span>
   </button>
 
-  <!-- Cursor cards: fixed, and parked here as siblings of the drawer on
-       purpose. The drawer slides on a transform, and a transform would make
-       it the containing block for anything fixed inside it, which would drag
-       these along with the panel. Each one repeats what its link already says
-       in sr-only text, which is why they are decoration to assistive tech. -->
-  {
-    links.map((link) => (
-      <p class="cursor-card nav-card" id={link.card} aria-hidden="true">
-        {link.note}
-      </p>
-    ))
-  }
 </nav>
 
 <style>
   /* The nav is the only stacking context in play here: fixed with a z-index,
-     so the scrim, drawer, toggle and cards below sort among themselves and
-     the whole set sits above the page (and under the intro cover, z 120).
-     Keep this element free of transforms so the fixed cards stay pinned to
-     the viewport rather than to the nav.
+     so the scrim, drawer and toggle sort among themselves and the whole set
+     sits above the page (and under the intro cover, z 120).
 
      --nav-lock is the scrollbar width the page gives up while the drawer
      holds it still (see the script). Carrying it here keeps the corner from
@@ -342,14 +308,6 @@ const links: NavLink[] = [
      the pointer; only the small-tag scale is set here. The z-index sorts
      inside .nav-root, so it has to beat the scrim, the panel and the toggle
      and nothing else. */
-  .cursor-card.nav-card {
-    z-index: 100;
-    padding: 0.5rem 0.8rem;
-    font-size: 0.9375rem;
-    line-height: 1.2;
-    white-space: nowrap;
-  }
-
   /* ---- Reduced motion --------------------------------------------- */
   /* The panel, the scrim and the links just appear: no slide, no zoom, no
      fade. The mark still crosses, it just snaps, and the press gives its

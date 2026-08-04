@@ -239,11 +239,9 @@ const galleryCols = [
     cursor: default;
   }
 
+  /* Hover moves nothing, here as everywhere: the plus turning grape is the
+     whole hover, and the small nudge is saved for the press itself. */
   @media (hover: hover) and (pointer: fine) {
-    button.event-row:hover .event-name {
-      transform: translateX(0.6rem);
-    }
-
     button.event-row:hover .event-mark {
       color: var(--color-accent);
     }
@@ -909,8 +907,14 @@ const galleryCols = [
         // gives its height back below the row. Anything still tweening up
         // there counts as well, open or not, since a row caught mid-collapse
         // is holding height that is on its way out.
+        //
+        // Fine pointers only: the corrector writes the scroll position every
+        // frame, and on touch that fights the browser's own momentum
+        // scrolling (the panels visibly stuttered). A phone taps a header it
+        // can see, so the ride-up the corrector prevents barely exists
+        // there, and native scrolling matters more.
         const above = rows.some((o, i) => i < index && (o.isOpen() || gsap.isTweening(o.panel)));
-        const start = above ? hold(row.btn) : null;
+        const start = above && fine.matches ? hold(row.btn) : null;
         rows.forEach((other) => {
           if (other !== row && other.isOpen()) other.collapse(true);
         });

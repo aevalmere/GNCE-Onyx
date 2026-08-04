@@ -122,7 +122,13 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
           // loading and lifts the cover itself; this timeout is only a
           // last resort so the cover can never get stuck if that script
           // fails to run.
-          if (intro) {
+          //
+          // Only for arrivals at the top: a deep link (coming back from a
+          // blog post lands on /#outreach) goes straight to its section
+          // with no loading screen in the way. A reload with a fragment
+          // was already stripped above, so a plain reload still plays the
+          // intro over the hero, which is always what sits under the lift.
+          if (intro && !location.hash) {
             document.documentElement.classList.add('loading');
             setTimeout(function () {
               document.documentElement.classList.remove('loading');

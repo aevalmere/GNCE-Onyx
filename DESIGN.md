@@ -145,8 +145,8 @@ page with only the finale's sticky curtain reveal intact. One trick per
 section:
 
 - **Hero**: nothing along the top · the split intro headline sitting above
-  centre on an oversized indigo-watermark ONYX, the whole word inside the
-  frame · one line along the bottom edge, team mark at the left and the two
+  centre on an oversized indigo-watermark ONYX running edge to edge, only
+  its outer serifs shaved by the frame · one line along the bottom edge, team mark at the left and the two
   CTAs at the right, bottoms level and clear of the corner nav toggle. The
   wordmark is the cover wipe's far plane (`[data-cover-deep]`): it gives up
   almost half the sheet's travel on the same scrub, so the exit reads as
@@ -155,10 +155,11 @@ section:
 - **Team** (`#team`): the section the hero uncovers, pinned under the
   cover wipe on fine pointers, plain flow on touch. A small "Team members"
   display title over a grid of portrait plates with the name and that
-  member's previous team numbers under each, three across on a phone
+  member's previous team numbers under each, two across on a phone
   (everything centred) and five (two full rows) above 40rem · plate height
-  set in `svh` so the grid always stands inside the one viewport the wipe
-  hands over · nothing in the grid answers the pointer.
+  set in `svh` so the grid never overruns the screens it has · the names
+  never answer the pointer; the plate does, barely: a one-degree lean and
+  two lifting corner folds, like a print picked up off the table.
 - **Season** (`#season`): collapsible event rows (Qualifier 1 / Qualifier 2
   / States / More to come), exclusive: opening one sweeps the other shut.
   The hover poster flies from the cursor card into its seat on bare
@@ -192,14 +193,16 @@ section:
   lockup (lead name across the top, the rest sharing a tightened centered
   line beneath, no boxes or rules, placeholder names until real sponsors
   land) and, on the bottom edge, one centered contact line: the "Get in
-  touch" headline with the two machined keys and the form button standing
-  offset to their right. On fine pointers the keys rest collapsed to their
-  glyphs and take the buttons' grape on hover; hover or focus explodes the
-  value outward on a sprung curve, rightward only: the script pins the
-  one-line row by its left edge at exactly the offset centring gave it, so
-  the form button is shoved further right while the headline holds still
-  (the one layout-property animation on the site). Touch keeps the values
-  standing open in a centred stack. No footer on the home page; that line is the sign-off.
+  touch" headline with three machined keys beside it, one type: email,
+  Instagram, and the sponsor form (its drawer says just "Form"). The keys
+  take the buttons' grape on hover. The drawers exist only when the script
+  has PROVED the geometry (fine pointer, everything on one line, room for
+  the widest drawer to open fully): then the line is pinned by its left
+  edge exactly where centring had put it, wrapping is forbidden, and a
+  hover or focus explodes the value rightward on a sprung curve, shoving
+  only what sits to its right (the one layout-property animation on the
+  site; the no-wrap proof is what keeps it from ever flickering). Anywhere
+  the proof fails, the values simply stand open in a centred line. No footer on the home page; that line is the sign-off.
   The REACH strip is only that line, and the Sponsors frame above
   overfills the remaining viewport (min-height with svh-aware rhythm,
   content centered), so the resting frame is the whole pitch over the
@@ -244,7 +247,7 @@ BaseLayout).
 | `layouts/BaseLayout.astro` | Shell: fonts, intro cover, heat rail, view transitions, GearNav, footer (`hideFooter` on home), imports motion. |
 | `components/home/*.astro` | The six one-page sections, composed by `pages/index.astro`. |
 | `components/Reveal.astro` | `[data-reveal]` wrapper. |
-| `components/GearNav.astro` | Corner toggle (two rules that cross) + right-side drawer: paper panel, bare display-type links that zoom in, cursor-card descriptors, Lenis smooth anchors. Old filename, no gear. |
+| `components/GearNav.astro` | Corner toggle (two rules that cross) + right-side drawer: paper panel, bare display-type links that zoom in (hover turns them grape, nothing floats), Lenis smooth anchors. Old filename, no gear. |
 | `components/Placeholder.astro` / `SectionLabel.astro` / `Footer.astro` | Invisible slot markers / label / the shared small print (blog + lab pages only; home ends on the finale's contact line). |
 
 ## Conventions

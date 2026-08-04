@@ -14,8 +14,9 @@
  *
  * Each member's previous GNCE teams sit under the name as a permanent line:
  * it is the whole point of a rookie team of veterans, so it reads on every
- * machine rather than waiting for a hover. Nothing in the grid answers the
- * pointer.
+ * machine rather than waiting for a hover. The names never answer the
+ * pointer; the portrait plate does, barely: a one-degree lean and two
+ * lifting corners, like a print picked up off the table.
  */
 import Reveal from '../Reveal.astro';
 
@@ -87,21 +88,23 @@ const slug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
   .roster {
     --grid-gap: clamp(0.85rem, 1.8vw, 1.75rem);
     display: grid;
-    /* Three across on a phone: ten names in four rows, which is what fits a
-       phone screen. Five across from the tablet breakpoint up, where the
-       grid ends on two full rows. */
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    /* Two across on a phone: ten faces in five even rows, portraits big
+       enough to be faces. Five across from the tablet breakpoint up, where
+       the grid ends on two full rows. */
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: clamp(1.25rem, 3svh, 2.5rem) var(--grid-gap);
   }
 
   /* Fixed plate height, full cell width: every portrait in a row is the same
      depth, so the names below them sit on one line across the whole grid. A
      photo dropped in here covers the plate. The height is set against the
-     viewport rather than the cell so the whole grid always stands inside one
-     screen, which is what the wipe above it hands over to. */
+     viewport rather than the cell so the whole grid never overruns the
+     screens it has; on a phone the page scrolls straight, so five rows are
+     allowed to run past one viewport. */
   .member-plate {
+    position: relative;
     width: 100%;
-    height: clamp(5rem, 11svh, 8rem);
+    height: clamp(5.5rem, 12svh, 8.5rem);
     background: var(--color-slot);
     border: 1px solid var(--color-line);
   }
@@ -132,8 +135,61 @@ const slug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     font-variant-numeric: tabular-nums lining-nums;
   }
 
-  /* No hover state anywhere in the grid: the names are a record, not
-     controls, and nothing here answers the pointer. */
+  /* The one hover in the grid, and it belongs to the picture, not the name:
+     the plate leans a degree and its bottom corners lift like a print
+     coming off the table. The corner is a solid fold (a deeper indigo
+     triangle growing out of the corner), no gradient, and the whole thing
+     is small enough to read as paper, not as a card trick. */
+  .member-plate::before,
+  .member-plate::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    width: 0;
+    height: 0;
+    background: color-mix(in srgb, #10254f 42%, #c9cfdd);
+    transition:
+      width 300ms var(--ease-out-strong),
+      height 300ms var(--ease-out-strong);
+  }
+
+  .member-plate::before {
+    left: 0;
+    clip-path: polygon(0 0, 100% 100%, 0 100%);
+  }
+
+  .member-plate::after {
+    right: 0;
+    clip-path: polygon(100% 0, 100% 100%, 0 100%);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .member-plate {
+      transition: transform 300ms var(--ease-out-strong);
+    }
+
+    .member:hover .member-plate {
+      transform: perspective(700px) rotateZ(-0.8deg) rotateX(2deg);
+    }
+
+    .member:hover .member-plate::before,
+    .member:hover .member-plate::after {
+      width: 13px;
+      height: 13px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .member-plate,
+    .member-plate::before,
+    .member-plate::after {
+      transition: none;
+    }
+
+    .member:hover .member-plate {
+      transform: none;
+    }
+  }
 
   /* The phone grid centres: plates, names and the title on one axis. */
   @media (max-width: 40rem) {

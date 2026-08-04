@@ -85,6 +85,7 @@ function boot() {
       }
       // scenes (each no-ops if its element is absent)
       initCoverWipe();
+      initHashLand();
       initJourney();
       initHorizontalReveal();
       initHScroll();
@@ -127,12 +128,19 @@ function boot() {
   }, revealFailsafe);
 
   // Re-split headings on width change so masked lines stay correct.
+  // WIDTH change only: on a phone the URL bar collapsing mid-scroll fires
+  // resize with the width untouched, and re-splitting plus a full trigger
+  // refresh in the middle of a live scroll is a visible stutter. Nothing
+  // about the line boxes changes when only the height does.
+  let lastW = window.innerWidth;
   let rz: number | undefined;
   addEventListener(
     'resize',
     () => {
+      if (window.innerWidth === lastW) return;
       clearTimeout(rz);
       rz = window.setTimeout(() => {
+        lastW = window.innerWidth;
         if (root.classList.contains('motion-booted')) {
           resplitAll();
           ScrollTrigger.refresh();
@@ -764,6 +772,44 @@ function initCoverWipe() {
     addEventListener('load', land, { once: true });
     setTimeout(stop, 1400);
   }
+}
+
+/* ================================================================== */
+/* Deep-link landings. The browser resolves a fragment while this module */
+/* is still booting, and its own smooth-scroll animation then fights the */
+/* Lenis instance that has just taken the page over: the two animators   */
+/* trade the scroll position and the landing dies wherever the fight     */
+/* ends (coming back from a blog post to /#outreach landed at the top).  */
+/* So once the engine owns the page, the landing is re-done here, once,  */
+/* immediately, unless the reader has already started driving. #team and */
+/* #contact keep their own smarter landings (the wipe end and the REACH  */
+/* level); this covers every other section.                              */
+/* ================================================================== */
+function initHashLand() {
+  const hash = location.hash;
+  if (!hash || hash === '#team' || hash === '#contact') return;
+  let target: HTMLElement | null = null;
+  try {
+    target = document.querySelector<HTMLElement>(hash);
+  } catch {
+    return; // not a selector-safe fragment: nothing to land on
+  }
+  if (!target) return;
+  let landing = true;
+  const stop = () => (landing = false);
+  addEventListener('wheel', stop, { passive: true, once: true });
+  addEventListener('touchstart', stop, { passive: true, once: true });
+  addEventListener('keydown', stop, { once: true });
+  const land = () => {
+    if (!landing) return;
+    const y = target!.getBoundingClientRect().top + window.scrollY;
+    const lenis = (window as any).__motion?.lenis;
+    if (lenis?.scrollTo) lenis.scrollTo(y, { immediate: true, force: true });
+    else window.scrollTo(0, y);
+  };
+  requestAnimationFrame(land);
+  addEventListener('load', land, { once: true });
+  setTimeout(stop, 1400);
 }
 
 /* ================================================================== */

@@ -4,8 +4,9 @@
  * scrolls the rest of the page off it like a curtain, so it has to read as
  * one still picture instead of a sequence: no reveals, no split headline,
  * nothing that arrives. The sponsor lockup holds the top edge and one
- * centred line closes the bottom: the "Get in touch" headline with the two
- * contact keys and the form button beside it. No footer and no small print;
+ * centred line closes the bottom: the "Get in touch" headline with three
+ * machined keys beside it (email, Instagram, the sponsor form). No footer
+ * and no small print;
  * the contact line IS the sign-off (the blog pages keep the shared Footer,
  * where it does navigation work). Sized to one viewport, so what the
  * curtain uncovers is the whole thing.
@@ -50,9 +51,10 @@ import Placeholder from '../Placeholder.astro';
       <h2 class="reach-head type-display">Get in touch</h2>
 
       <div class="reach-row">
-        <!-- Two keys, values in the open: glyph then address, one block.
-             Envelope and Instagram are drawn here rather than pulled from a
-             set, on the same 24 grid at the same stroke weight. -->
+        <!-- Three keys, one type: glyph then value, one block each. Email,
+             Instagram and the sponsor form are the same control at the same
+             size, drawn here rather than pulled from a set, on the same 24
+             grid at the same stroke weight. -->
         <a class="pin" href="#" title="Email pending">
           <span class="sr-only">Email</span>
           <svg
@@ -94,8 +96,26 @@ import Placeholder from '../Placeholder.astro';
           </span>
         </a>
 
-        <a href="#" class="btn btn-solid stub cta" title="Form link pending">
-          Open the form
+        <a class="pin" href="#" title="Form link pending">
+          <span class="sr-only">Sponsor form</span>
+          <svg
+            class="pin-glyph"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            aria-hidden="true"
+          >
+            <rect x="4.5" y="3" width="15" height="18"></rect>
+            <path d="M8 8 H 16"></path>
+            <path d="M8 12 H 16"></path>
+            <path d="M8 16 H 13"></path>
+          </svg>
+          <span class="pin-slot">
+            <span class="pin-clip">
+              <span class="pin-value stub" title="Form link pending">Form</span>
+            </span>
+          </span>
         </a>
       </div>
     </div>
@@ -192,14 +212,23 @@ import Placeholder from '../Placeholder.astro';
     text-align: center;
   }
 
-  /* The script below pins the one-line form of this row by its LEFT edge,
-     parked exactly where centring had put it. A centred flex line re-seats
-     itself around a growing item, which dragged "Get in touch" leftward
-     every time a key drawer opened; pinned, all the growth spends itself on
-     the right and only the form button is shoved. */
-  .reach-pinned {
+  /* The armed state, set by the script and only when it has PROVED the
+     geometry: a fine pointer, everything on one line, and room to the right
+     for the widest drawer to open fully. Armed, the line is pinned by its
+     left edge exactly where centring had put it and forbidden to wrap, so a
+     key exploding can only push rightward: the headline holds still, the
+     keys to the right get shoved, and the line can never wrap under and
+     snap back (which is what used to make the explosion flicker). Anywhere
+     the proof fails (touch, a narrow window, no JS) the class never lands:
+     the line centres, wraps calmly, and the values simply stand open. */
+  .reach-live {
+    flex-wrap: nowrap;
     justify-content: flex-start;
     padding-left: var(--reach-pin, 0px);
+  }
+
+  .reach-live .reach-row {
+    flex-wrap: nowrap;
   }
 
   /* The site's last headline, sized to share its line with the controls:
@@ -209,8 +238,8 @@ import Placeholder from '../Placeholder.astro';
     font-size: clamp(2.25rem, min(5.2vw, 9svh), 4.75rem);
   }
 
-  /* One family, one gap. The keys and the form button share --key-h and the
-     same 14px on every side, so the row reads as one machined strip. */
+  /* One family, one gap. The three keys share --key-h and the same 14px on
+     every side, so the row reads as one machined strip. */
   .reach-row {
     --key-h: 3.375rem;
 
@@ -238,15 +267,6 @@ import Placeholder from '../Placeholder.astro';
 
   .pin:active {
     transform: scale(0.97);
-  }
-
-  /* The grape block runs the same height as the keys instead of the .btn
-     padding's own, so the row has one silhouette. It stands offset to the
-     right of the keys, still on the line: the air marks it as the other
-     kind of ask, and it is also the room the email drawer opens into. */
-  .cta {
-    height: var(--key-h);
-    padding-block: 0;
   }
 
   .pin-glyph {
@@ -282,48 +302,42 @@ import Placeholder from '../Placeholder.astro';
     cursor: inherit;
   }
 
-  /* Where there is a pointer, the keys rest collapsed to their glyphs and
-     the value EXPLODES outward on hover or focus: the block itself gets
-     wider on a sprung curve and everything to its right is physically
-     shoved further right, which is the point of the gesture. This is the
-     one place on the site that animates a layout property instead of a
-     transform. The pointer keeps its key: the box grows around the glyph
-     faster than the centred line re-seats, so the hand never loses what it
-     is holding. */
+  /* The keys take the same grape the buttons do: one hover vocabulary
+     across every control on the site. Color only; nothing moves on hover
+     except the drawer the armed state opens. */
   @media (hover: hover) and (pointer: fine) {
-    /* The keys take the same grape the buttons do: one hover vocabulary
-       across every control on the site. */
     .pin:hover,
     .pin:focus-visible {
       background: var(--color-accent);
     }
+  }
 
-    .pin-slot {
-      grid-template-columns: 0fr;
-      transition: grid-template-columns 480ms var(--ease-spring);
-    }
+  /* Armed, the keys rest collapsed to their glyphs and the value EXPLODES
+     outward on hover or focus: the block itself gets wider on a sprung
+     curve and everything to its right is physically shoved further right,
+     which is the point of the gesture. This is the one place on the site
+     that animates a layout property instead of a transform; the armed
+     state's no-wrap proof (above) is what makes that safe. The pointer
+     keeps its key: the box grows around the glyph, so the hand never loses
+     what it is holding. */
+  .reach-live .pin-slot {
+    grid-template-columns: 0fr;
+    transition: grid-template-columns 480ms var(--ease-spring);
+  }
 
-    .pin-value {
-      transform: translateX(-0.4rem);
-      transition: transform 480ms var(--ease-spring);
-    }
+  .reach-live .pin-value {
+    transform: translateX(-0.4rem);
+    transition: transform 480ms var(--ease-spring);
+  }
 
-    .pin:hover .pin-slot,
-    .pin:focus-visible .pin-slot {
-      grid-template-columns: 1fr;
-    }
+  .reach-live .pin:hover .pin-slot,
+  .reach-live .pin:focus-visible .pin-slot {
+    grid-template-columns: 1fr;
+  }
 
-    .pin:hover .pin-value,
-    .pin:focus-visible .pin-value {
-      transform: none;
-    }
-
-    /* The offset that separates the solid ask from the keys; the shove
-       lands on top of it. Only where the keys collapse: the touch line
-       stays evenly gapped. */
-    .cta {
-      margin-left: clamp(1.25rem, 3vw, 2.75rem);
-    }
+  .reach-live .pin:hover .pin-value,
+  .reach-live .pin:focus-visible .pin-value {
+    transform: none;
   }
 
   /* Reduced motion: the value is simply there, and gone. */
@@ -380,28 +394,49 @@ import Placeholder from '../Placeholder.astro';
     const engine = () => (window as any).__motion;
     const now = () => performance.now();
 
-    /* ---- the contact line's left pin ------------------------------- */
+    /* ---- arming the contact line ----------------------------------- */
 
-    // The key drawers must explode rightward only: the form button gets
-    // shoved, the headline holds still. A centred flex line cannot promise
-    // that (it re-centres around the growing key), so wherever the drawers
-    // exist (fine pointers) and the line is actually one line, it is pinned
-    // by its left edge at exactly the offset centring gave it at rest.
+    // The key drawers must explode rightward only, and must never wrap: a
+    // centred flex line re-centres around a growing key (the headline
+    // walked left), and a line that wraps under the grown key and snaps
+    // back the moment the pointer loses it is a flicker loop. So the
+    // drawers only exist at all when the whole gesture is provable by
+    // arithmetic: fine pointer, the headline and the collapsed key row fit
+    // one line, and the right-hand air holds the WIDEST drawer fully open.
+    // Then the line is pinned by its left edge at exactly the offset
+    // centring gave it, wrapping is forbidden, and the explosion has
+    // nowhere to go but right. Anywhere the proof fails, the class stays
+    // off and the values simply stand open in the centred, wrappable line.
     const reachLine = contact.querySelector<HTMLElement>('.reach');
     const row = contact.querySelector<HTMLElement>('.reach-row');
     const pinLine = () => {
       if (!reachLine || !row) return;
       // Never re-measure against an open drawer; the resting pin stays.
       if (reachLine.querySelector('.pin:hover, .pin:focus-visible')) return;
-      reachLine.classList.remove('reach-pinned');
+      if (!fine.matches) {
+        reachLine.classList.remove('reach-live');
+        reachLine.style.removeProperty('--reach-pin');
+        return;
+      }
+      // Measure the armed geometry itself: drawers collapsed, pin cleared,
+      // so the widths read are the widths the pin will govern.
+      reachLine.classList.add('reach-live');
       reachLine.style.removeProperty('--reach-pin');
-      if (!fine.matches) return;
-      const headBox = head.getBoundingClientRect();
-      // Wrapped into a stack (a narrow window), centred is the right shape.
-      if (row.getBoundingClientRect().top >= headBox.bottom - 1) return;
-      const left = headBox.left - reachLine.getBoundingClientRect().left;
-      reachLine.style.setProperty('--reach-pin', `${Math.max(0, Math.round(left))}px`);
-      reachLine.classList.add('reach-pinned');
+      const width = reachLine.clientWidth;
+      const gap = parseFloat(getComputedStyle(reachLine).columnGap) || 0;
+      const rest =
+        head.getBoundingClientRect().width + gap + row.getBoundingClientRect().width;
+      // The widest value, padding included, plus a hair of margin: what one
+      // open drawer adds to the line.
+      let drawer = 0;
+      row.querySelectorAll<HTMLElement>('.pin-value').forEach((v) => {
+        drawer = Math.max(drawer, v.offsetWidth);
+      });
+      if (rest + drawer + 12 > width) {
+        reachLine.classList.remove('reach-live');
+        return;
+      }
+      reachLine.style.setProperty('--reach-pin', `${Math.round((width - rest) / 2)}px`);
     };
     fine.addEventListener?.('change', () => pinLine());
 

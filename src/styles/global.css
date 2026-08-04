@@ -67,6 +67,14 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Once the motion engine is up, Lenis drives every programmatic trip.
+   Leaving the native smooth animation on under it puts two animators on
+   one scroll position, and a deep link's fragment landing came down
+   wherever the fight happened to end (motion.ts lands those itself). */
+html.gsap {
+  scroll-behavior: auto;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -332,8 +340,9 @@ html.no-js .cursor-card {
 
 /* ==================================================================
    BUTTONS — tactile press (emil), indigo as the working fill. Nothing
-   follows the cursor: hover is a quiet 1px rise and the fill turning
-   grape, which is what "highlight" means on this site. No glow.
+   follows the cursor and nothing moves on hover: the fill turning grape
+   is the whole hover, which is what "highlight" means on this site.
+   Movement is reserved for the press. No glow.
    ================================================================== */
 .btn {
   position: relative;
@@ -369,14 +378,9 @@ html.no-js .cursor-card {
 
 @media (hover: hover) and (pointer: fine) {
   .btn:hover {
-    transform: translateY(-1px);
     background: var(--color-accent);
     border-color: var(--color-accent);
     color: var(--color-paper);
-  }
-
-  .btn:active {
-    transform: scale(0.97);
   }
 }
 
