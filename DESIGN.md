@@ -1,21 +1,25 @@
 # Design System — GNCE Onyx
 
-A dark, medieval-modern identity built for a scroll-driven experience.
-Black fields alternating with pale slate paper bands, indigo as type and
-small fills, one grape accent, and a distinctive uncial + script +
-old-style-serif type system. Typography carries the identity; motion is the
-life. Read this (and the skills in `.claude/skills/`) before touching UI.
+A light, medieval-modern identity built for a scroll-driven experience.
+Pale slate paper everywhere, space indigo as the main color (ink, fills,
+controls), sections alternating between paper and a deeper blue-tinted
+band, grape reserved for true highlights, and a distinctive uncial +
+script + old-style-serif type system. Typography carries the identity;
+motion is the life. Read this (and the skills in `.claude/skills/`) before
+touching UI.
 
 ## Principles
 
-1. **Six colors.** `#000000` black (fields), `#10254F` space indigo (text on
-   the light bands, plus small solid fills where text sits on it, like the
-   nav toggle; never a section background), `#303D6A` twilight indigo
-   (glass, raised surfaces), `#2B2C33` shadow grey (`--color-steel`: media
-   slots, code frames), `#823A80` grape soda (accent), `#C9CFDD` pale slate
-   (ink on black, paper under the light bands), plus alphas of whichever of
-   indigo and pale slate is carrying the text on a given band, for rules and
-   muted copy. Grape reads as text on black (intentional low-key contrast).
+1. **Six colors.** `#C9CFDD` pale slate is the paper the whole site sits
+   on; `#10254F` space indigo is the main color (all text, solid button
+   fills, the nav toggle, the intro cover) plus its alphas for rules and
+   muted copy, and a 9% wash of it into the paper makes `--color-deep`,
+   the alternate band. `#000000` black keeps only the veils (scrims, popup
+   backdrops). `#303D6A` twilight indigo (glass, raised surfaces) and
+   `#2B2C33` shadow grey (`--color-steel`: media slots, code frames) hold
+   their jobs. `#823A80` grape soda appears ONLY as a true highlight:
+   selection, the heat rail, hover states, the section marks, the stub
+   dashes.
 2. **No idle glows. No gradient fills.** Life comes from motion and solid
    color. Texture is film grain and *non-gradient* frosted glass (uniform
    tint + blur + hairline), used sparingly. No ambient/looping glow.
@@ -45,22 +49,23 @@ life. Read this (and the skills in `.claude/skills/`) before touching UI.
 | `--font-display` | Uncial Antiqua | Headlines, the ONYX wordmark |
 | `--font-script` | Grey Qo | One script flourish per page |
 | `--font-text` | Cardo | Body, labels (`.type-label` = spaced small caps) |
-| `--color-bg` | `#000000` | Black background |
+| `--color-bg` | `#000000` | Black, veils only: scrims, popup backdrops |
 | `--color-surface` | `#10254F` | Space indigo: text on the light bands, small solid fills (nav toggle). Not a background |
 | `--color-panel` | `#303D6A` | Twilight indigo: glass panels, raised surfaces, footer |
 | `--color-steel` | `#2B2C33` | Shadow grey: media slots, code frames, quiet surfaces |
 | `--color-paper` | `#C9CFDD` | Pale slate as a surface: light bands, cursor cards |
 | `--color-accent` | `#823A80` | Grape soda: fills, accent text, markers |
-| `--color-ink` / `--color-muted` / `--color-faint` / `--color-line` | pale slate at 100 / 60 / 38 / 14% | The ink ramp: text, secondary text, quiet text, hairlines |
+| `--color-ink` / `--color-muted` / `--color-faint` / `--color-line` | space indigo at 100 / 70 / 52 / 18% | The ink ramp: text, secondary text, quiet text, hairlines |
 | `--ease-out-strong` etc. | cubic-beziers | Entrances, on-screen movement, spring |
 
-**Bands.** Sections alternate black and paper. Black: Hero, Team, Season,
-Sponsors. Light: Lineage, Build, Outreach, Finale. A light one opts in with
-`band-light`, which paints `--color-paper` and re-declares the ink ramp in
-indigo for everything inside it (full / 62 / 40 / 18%), so token-driven
-rules and Tailwind utilities follow with no second stylesheet. Grape,
-shadow grey and the buttons do not move. `.cursor-card` carries the same
-flip wherever it floats, so a hover card is a paper tag on either band.
+**Bands.** The whole site runs the paper + indigo ramp; sections alternate
+paper and `.band-deep` (a 9% indigo wash) strictly down the page: Hero
+deep, Team paper, Build deep, Season paper, Outreach deep, Sponsors paper,
+Finale deep. The alternation is what keeps the two curtain seams (the hero
+wipe over Team, the page curtain over the Finale) legible on a light page.
+`band-light` restates the default and stays only on blog page bodies;
+`.cursor-card` shares its declaration so a hover card is a paper tag over
+either band.
 
 ## Motion engine — `src/scripts/motion.ts`
 
@@ -76,21 +81,18 @@ Under reduced motion the module bows out and static CSS stands in.
   enter, opacity held at 1 (no fade); `diag` is a corner wipe. Lists
   alternate variants instead of repeating one. `[data-reveal-scrub]` is the
   same, locked to scroll. `data-reveal-group` staggers children.
-- `[data-parallax="±px"]`, `[data-count]` (number counter),
-  `[data-magnetic]` (cursor pull, pointer-fine), `[data-hover-preview]`
+- `[data-parallax="±px"]`, `[data-hover-preview]`
   (image beside cursor, needs `[data-preview-root]` + `[data-preview-img]`).
+  Nothing follows the cursor on buttons: hover on a control is a 1px rise
+  and the fill turning grape, and display type never answers the pointer.
 - `[data-cursor-card="id"]` — hover detail that rides the pointer: the
   trigger floats the element `#id.cursor-card` beside the cursor
   (viewport-clamped, edge-flipping, pointer-fine only). Triggers must carry
   the same info accessibly (sr-only text plus a static line on coarse
   pointers / reduced motion). Every card is a paper tag (see Bands). Used by
   the roster, the season rows, and the nav drawer's link descriptors.
-- Hover on display type (automatic, no attribute): a `[data-split]` heading
-  answers the pointer by dipping the character it crosses back under the
-  split mask and rippling the dip outward, once per visit, only after its
-  entrance has finished; headings inside links/buttons are skipped. The
-  `.type-script` flourish lifts and leans in CSS. Both transform-only,
-  pointer-fine, off under reduced motion.
+- Display type never answers the pointer: no ripple on headings, no lean
+  on the script flourish. Titles and subtitles hold still.
 
 **Scenes** (named, run only when their element exists):
 - The WebGL ONYX journey (`src/scripts/onyx3d.ts` + `src/data/onyx-glyphs.ts`)
@@ -98,10 +100,11 @@ Under reduced motion the module bows out and static CSS stands in.
   (`src/pages/lab/onyx.astro`). Home no longer uses it; keep it building,
   don't link it.
 - `[data-cover-wipe]` — the hero cover: the whole opening viewport slides
-  off to the left over one viewport of scroll (geometry in index.astro),
-  with `[data-cover-deep]` inside it travelling a fraction of the distance
-  on the same timeline so the sheet's trailing edge crops it.
-- `[data-stack]` / `[data-stack-card]` — pinned card stack (lineage).
+  off to the left over 1.6 viewports of scroll (geometry in index.astro;
+  the same 1.6 lives in motion.ts and GearNav's #team trip), uncovering
+  the Team roster pinned beneath. `[data-cover-deep]` inside it travels a
+  fraction of the distance on the same timeline so the sheet's trailing
+  edge crops it.
 - `[data-hscroll]` / `[data-hscroll-track]` — diagonal scroll-hijack
   (season build log): the track pans sideways while climbing, panels
   counter-drift past each other, and the track skews with scroll velocity.
@@ -109,44 +112,34 @@ Under reduced motion the module bows out and static CSS stands in.
   scrubbed (season highlight match).
 - `[data-drift="±px"]` — sibling columns scrub opposite directions so a
   grid shears and crosses as it passes (season gallery).
-- `[data-marquee]` / `[data-marquee-track]` — looping ticker geared to
-  scroll velocity; scrolling back up rolls it backwards (outreach).
 - `[data-tilt]` — glass panels lean toward the cursor, pointer-fine only
   (contact channels).
-- `[data-coverflow]` — Swiper coverflow (roster), Swiper dynamically
-  imported only where used.
-- `[data-flip]` (awards), `[data-ladder]`/`[data-rung]` (sponsor tiers),
-  `[data-progress]` (blog reading bar).
+- `[data-ladder]`/`[data-rung]` (sponsor tiers), `[data-progress]` (blog
+  reading bar).
 
 One trick per section: no two sections on a page share an entrance or
 scroll behaviour.
 
 ## The one-page structure
 
-The whole site is `src/pages/index.astro`, composing eight sections from
-`src/components/home/` over alternating black and paper bands. The drawer
+The whole site is `src/pages/index.astro`, composing seven sections from
+`src/components/home/` over alternating paper and deep bands. The drawer
 nav doubles as the scroll nav (anchor ids in parentheses); `Finale` carries
-the footer, so BaseLayout gets `hideFooter` on home. The seven sections
+the contact line, so BaseLayout gets `hideFooter` on home. The six sections
 above the finale ride in an opaque `.curtain`; the finale sits under it and
 is revealed by the page's last scroll (mechanics in `index.astro`). Blog
 posts keep their own pages; `/lab/onyx/` stays parked and unlinked. One
 trick per section:
 
 - **Hero**: masthead plate (script name left, three particulars right, one
-  hairline) · the split intro headline on an oversized steel ONYX the frame
-  crops · magnetic CTAs on the bottom edge. The wordmark is the cover
-  wipe's far plane (`[data-cover-deep]`): it lags the sheet on the same
-  scrub, so the exit has depth.
-- **Lineage** (`#lineage`): count-up team numbers · staggered award ledger.
-  Hovering a ledger line sweeps a pale grape wash behind the name and
-  brings the year to full ink: a highlight, deliberately not link
-  dressing (no underline, no colour flip). Hovering a team number spins
-  its digits through noise and resolves them left to right (tabular
-  figures, so nothing shifts). Both pointer-fine; reduced motion gets the
-  wash without the sweep and no scramble.
-- **Team** (`#team`): ten rows wiping in from alternating sides, in the
-  team's own order · cursor cards with each member's previous team numbers
-  (static fallback on touch).
+  hairline) · the split intro headline on an oversized indigo-watermark
+  ONYX the frame crops · CTAs on the bottom edge. The wordmark is the
+  cover wipe's far plane (`[data-cover-deep]`): it lags the sheet on the
+  same scrub, so the exit has depth.
+- **Team** (`#team`): the section the hero uncovers, pinned under the
+  cover wipe. Ten rows wiping in from alternating sides, in the team's own
+  order · cursor cards with each member's previous team numbers (static
+  fallback on touch) · hover turns the name grape and moves nothing.
 - **Build** (`#build`): one short blurb, a connective beat.
 - **Season** (`#season`): collapsible event rows (Qualifier 1 / Qualifier 2
   / States / More to come), exclusive: opening one sweeps the other shut.
@@ -158,7 +151,7 @@ trick per section:
   screen: when a row above sweeps shut, the scroll pays the leaving height
   back frame by frame, so the header the reader clicked never rides up.
   Accordion logic lives in the component's own script.
-- **Outreach** (`#outreach`): velocity ticker · post rows · invite-us CTA.
+- **Outreach** (`#outreach`): post rows · invite-us CTA.
 - **Sponsors** (`#sponsors`): scrubbed recognition ladder, no amounts.
 - **Finale** (`#contact`): the curtain reveal, with exactly two resting
   levels. Everything above it scrolls up like a sheet lifted off a static
@@ -180,15 +173,15 @@ trick per section:
   line beneath, no boxes or rules, placeholder names until real sponsors
   land) and, on the bottom edge, one centered contact line: the "Get in
   touch" headline with the two machined keys and the form button standing
-  offset to their right. On fine pointers the keys collapse to their
-  glyphs and are magnetic; hover or focus draws the value out as a drawer
-  OVER the line (absolute, clip wipe), never in flow, because a centered
-  group that grew would slide out from under the pointer. Touch keeps the
-  values standing open. No footer on the home page; that line is the
-  sign-off. The REACH strip is only that line, and the Sponsors frame
-  above overfills the remaining viewport (min-height with svh-aware
-  rhythm, content centered), so the resting frame is the whole pitch over
-  the contact line and nothing else.
+  offset to their right. On fine pointers the keys rest collapsed to
+  their glyphs; hover or focus explodes the value outward on a sprung
+  curve, physically shoving everything to its right further right (the
+  one layout-property animation on the site). Touch keeps the values
+  standing open. No footer on the home page; that line is the sign-off.
+  The REACH strip is only that line, and the Sponsors frame above
+  overfills the remaining viewport (min-height with svh-aware rhythm,
+  content centered), so the resting frame is the whole pitch over the
+  contact line and nothing else.
 - **Blog post**: reading-progress bar · masked title.
 
 Old page URLs (`/season/`, `/contact/`, `/outreach/`) redirect to their
@@ -226,7 +219,7 @@ BaseLayout).
 | --- | --- |
 | `scripts/motion.ts` | Motion engine: primitives + scenes. Reduced-motion safe. |
 | `layouts/BaseLayout.astro` | Shell: fonts, intro cover, heat rail, view transitions, GearNav, footer (`hideFooter` on home), imports motion. |
-| `components/home/*.astro` | The eight one-page sections, composed by `pages/index.astro`. |
+| `components/home/*.astro` | The seven one-page sections, composed by `pages/index.astro`. |
 | `components/Reveal.astro` | `[data-reveal]` wrapper. |
 | `components/GearNav.astro` | Corner toggle (two rules that cross) + right-side drawer: paper panel, bare display-type links that zoom in, cursor-card descriptors, Lenis smooth anchors. Old filename, no gear. |
 | `components/Placeholder.astro` / `SectionLabel.astro` / `Footer.astro` | Invisible slot markers / label / the shared small print (blog + lab pages only; home ends on the finale's contact line). |

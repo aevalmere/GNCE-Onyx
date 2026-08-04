@@ -12,7 +12,7 @@
  *
  * At REACH only that contact line shows under the curtain, which is what
  * leaves the rest of the viewport to the sponsor pitch above it: the strip
- * is sized so the whole "Back the build." section stands in the black with
+ * is sized so the whole "Back the build." section stands in the field above with
  * the paper line beneath it, one composed screen.
  *
  * Two levels, not a range. The page rests at REACH: the curtain's bottom edge
@@ -29,7 +29,7 @@
 import Placeholder from '../Placeholder.astro';
 ---
 
-<section id="contact" class="finale band-light">
+<section id="contact" class="finale band-deep">
   <div class="finale-frame mx-auto w-full max-w-[88rem] px-5 sm:px-8">
     <!-- The shirt back: the names printed between the shoulders, biggest
          backer on top, the rest sharing the line under it. One list, one
@@ -53,7 +53,7 @@ import Placeholder from '../Placeholder.astro';
         <!-- Two keys, values in the open: glyph then address, one block.
              Envelope and Instagram are drawn here rather than pulled from a
              set, on the same 24 grid at the same stroke weight. -->
-        <a class="pin" href="#" title="Email pending" data-magnetic="0.3">
+        <a class="pin" href="#" title="Email pending">
           <span class="sr-only">Email</span>
           <svg
             class="pin-glyph"
@@ -73,7 +73,7 @@ import Placeholder from '../Placeholder.astro';
           </span>
         </a>
 
-        <a class="pin" href="#" title="Handle pending" data-magnetic="0.3">
+        <a class="pin" href="#" title="Handle pending">
           <span class="sr-only">Instagram</span>
           <svg
             class="pin-glyph"
@@ -94,7 +94,7 @@ import Placeholder from '../Placeholder.astro';
           </span>
         </a>
 
-        <a href="#" class="btn btn-solid stub cta" title="Form link pending" data-magnetic="0.35">
+        <a href="#" class="btn btn-solid stub cta" title="Form link pending">
           Open the form
         </a>
       </div>
@@ -212,8 +212,7 @@ import Placeholder from '../Placeholder.astro';
   }
 
   /* Machined keys: a solid indigo block with the glyph centred in it, no
-     outline and no label. Square at rest, which is the hit area too, and
-     magnetic like every other control on the line. */
+     outline and no label. Square at rest, which is the hit area too. */
   .pin {
     position: relative;
     display: inline-flex;
@@ -271,42 +270,28 @@ import Placeholder from '../Placeholder.astro';
     cursor: inherit;
   }
 
-  /* Where there is a pointer, the keys collapse to their glyphs and the
-     value becomes a drawer: parked out of the layout entirely (absolute,
-     off the key's right edge) and drawn OVER the line on hover or focus as
-     a clip wipe. Over, not into: this group is centred, and a control that
-     grew in flow would re-centre the whole line and slide out from under
-     the pointer that opened it. The drawer stays hoverable, so a hand
-     drifting onto the address keeps it open and the whole key stays one
-     click target; the raised z-index carries it over the neighbouring key
-     and the form button for as long as it is out. */
+  /* Where there is a pointer, the keys rest collapsed to their glyphs and
+     the value EXPLODES outward on hover or focus: the block itself gets
+     wider on a sprung curve and everything to its right is physically
+     shoved further right, which is the point of the gesture. This is the
+     one place on the site that animates a layout property instead of a
+     transform. The pointer keeps its key: the box grows around the glyph
+     faster than the centred line re-seats, so the hand never loses what it
+     is holding. */
   @media (hover: hover) and (pointer: fine) {
     .pin-slot {
-      position: absolute;
-      left: 100%;
-      top: 0;
-      bottom: 0;
-      display: flex;
-      align-items: center;
-      padding-right: 1rem;
-      background: var(--color-surface);
-      clip-path: inset(0 100% 0 0);
-      transition: clip-path 360ms var(--ease-out-strong);
-    }
-
-    .pin:hover,
-    .pin:focus-visible {
-      z-index: 2;
+      grid-template-columns: 0fr;
+      transition: grid-template-columns 480ms var(--ease-spring);
     }
 
     .pin-value {
       transform: translateX(-0.4rem);
-      transition: transform 360ms var(--ease-out-strong);
+      transition: transform 480ms var(--ease-spring);
     }
 
     .pin:hover .pin-slot,
     .pin:focus-visible .pin-slot {
-      clip-path: inset(0 0 0 0);
+      grid-template-columns: 1fr;
     }
 
     .pin:hover .pin-value,
@@ -314,15 +299,15 @@ import Placeholder from '../Placeholder.astro';
       transform: none;
     }
 
-    /* The offset that separates the grape ask from the keys, and doubles as
-       the drawer's runway. Only where the drawer exists: the touch line
+    /* The offset that separates the solid ask from the keys; the shove
+       lands on top of it. Only where the keys collapse: the touch line
        stays evenly gapped. */
     .cta {
       margin-left: clamp(1.25rem, 3vw, 2.75rem);
     }
   }
 
-  /* Reduced motion: the drawer is simply out, and back. */
+  /* Reduced motion: the value is simply there, and gone. */
   @media (prefers-reduced-motion: reduce) {
     .pin-slot,
     .pin-value {
@@ -376,7 +361,7 @@ import Placeholder from '../Placeholder.astro';
     /* ---- the two levels ------------------------------------------- */
 
     // Bare paper left between the curtain's edge and the headline, so the
-    // black band does not sit on the type it uncovers.
+    // curtain's edge does not sit on the type it uncovers.
     const edge = () => Math.min(56, window.innerHeight * 0.06);
 
     // How far short of a full lift REACH sits, measured inside the pinned
@@ -878,13 +863,19 @@ import Placeholder from '../Placeholder.astro';
     // trip arriving from below, a native anchor landing) still arms the lock.
     // It waits for the page to actually stop: taking hold of a reader who is
     // only passing back up through the level would put a wall in front of
-    // someone on their way out.
+    // someone on their way out. A stop a tug's width off the level is a tug
+    // or a catch that died mid-flight; nothing rests there, so it is set
+    // down properly rather than left hanging a few pixels shy.
+    const NEAR = 20;
     let resting: number | undefined;
     const onRest = () => {
       resting = undefined;
-      if (state === 'free' && live() && Math.abs(window.scrollY - reach) <= EPS) {
-        hold('locked', null);
-      }
+      if (state !== 'free' || !live()) return;
+      const off = Math.abs(window.scrollY - reach);
+      if (off <= EPS) hold('locked', null);
+      // Only from the dead-zone side: a reader paused just ABOVE the level
+      // is on their way out, and the magnet has no business with them.
+      else if (off <= NEAR && window.scrollY > reach) grab();
     };
 
     // Undo an overrun a drag could not be stopped from making. Never while
@@ -941,9 +932,14 @@ import Placeholder from '../Placeholder.astro';
         // Touch momentum runs on after the finger is gone and no gesture can
         // be prevented: catch it again. Anything moving the page a beat after
         // the last gesture is somebody else (a keyboard, a find-in-page jump)
-        // and gets the level back.
+        // and gets the level back — but the rest watcher stays armed, so a
+        // move that dies a tug's width into the dead zone is still set down
+        // on the level instead of resting there.
         if (y > reach + EPS && now() - touchedAt < 800) grab();
-        else enter('free');
+        else {
+          enter('free');
+          if (Math.abs(y - reach) <= NEAR) resting = window.setTimeout(onRest, 140);
+        }
         return;
       }
 
@@ -962,7 +958,7 @@ import Placeholder from '../Placeholder.astro';
         // Keyboard scrolling never lands in this branch: it stamps no
         // touchedAt, and stays native the whole way.
         run(y > prev ? 'full' : 'reach');
-      } else if (Math.abs(y - reach) <= EPS) resting = window.setTimeout(onRest, 140);
+      } else if (Math.abs(y - reach) <= NEAR) resting = window.setTimeout(onRest, 140);
     };
 
     // Lenis emits inside its own rAF, right after it has written the scroll

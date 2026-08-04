@@ -41,7 +41,7 @@ const roster =
             <h1 class="flow-line flow-hero type-display">A rookie team of championship veterans.</h1>
             <p class="flow-line flow-support">Built for the 2026-2027 BIOBUZZ season, presented by RTX.</p>
             <p class="flow-line flow-cta">
-              <a href={`${base}/#sponsors`} class="btn btn-solid" data-magnetic="0.4">Sponsor the team</a>
+              <a href={`${base}/#sponsors`} class="btn btn-solid">Sponsor the team</a>
               <a href={`${base}/#season`} class="flow-link">Our first season</a>
             </p>
           </div>
@@ -74,7 +74,7 @@ const roster =
             <h2 class="flow-line flow-roster">{roster}</h2>
             <p class="flow-line flow-support">Two or three more, joining soon.</p>
             <p class="flow-line flow-cta">
-              <a href={`${base}/#sponsors`} class="btn btn-solid" data-magnetic="0.4">Back the build</a>
+              <a href={`${base}/#sponsors`} class="btn btn-solid">Back the build</a>
             </p>
           </div>
         </div>
@@ -88,8 +88,18 @@ const roster =
 </script>
 
 <style>
+  /* The lab keeps its dark stage on the now-light site, so it carries its
+     own pale ramp and black field: everything inside was written for ink
+     on stone, and the site's indigo default would sink into the scene. */
   .onyx3d {
+    --color-ink: #c9cfdd;
+    --color-muted: color-mix(in srgb, #c9cfdd 60%, transparent);
+    --color-faint: color-mix(in srgb, #c9cfdd 38%, transparent);
+    --color-line: color-mix(in srgb, #c9cfdd 14%, transparent);
+
     position: relative;
+    background: var(--color-bg);
+    color: var(--color-ink);
   }
 
   .onyx3d-stage {

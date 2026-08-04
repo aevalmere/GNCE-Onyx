@@ -3,9 +3,11 @@
 /* ==================================================================
    GNCE ONYX — design tokens
    Six colors only: black, space indigo, twilight indigo, shadow grey,
-   grape soda, pale slate. Pale slate works both ends: ink on the black
-   bands, paper under the light ones (see PAPER below), so the count
-   holds at six.
+   grape soda, pale slate. The site is a light page now: pale slate is
+   the paper everywhere, space indigo is the main color (ink, fills,
+   controls), black keeps the intro cover and the veils, and grape is
+   reserved for true highlights (selection, heat rail, hovers, marks
+   and stubs).
    No idle glows. No gradient fills. Motion and solid color carry the
    life; texture is grain and (non-gradient) frosted glass, used sparingly.
    Type: Uncial Antiqua (display), Grey Qo (script accent), Cardo (body).
@@ -18,7 +20,7 @@
   --font-code: ui-monospace, 'SFMono-Regular', Menlo, monospace;
 
   /* Color — the six values + pale slate alphas */
-  --color-bg: #000000; /* black — the page */
+  --color-bg: #000000; /* black — the veils only: scrims, backdrops */
   --color-surface: #10254F; /* space indigo — text on paper, small fills */
   --color-panel: #303D6A; /* twilight indigo — glass, raised surfaces */
   --color-steel: #2B2C33; /* shadow grey — media slots, code frames */
@@ -36,11 +38,27 @@
 }
 
 /* ==================================================================
-   BASE
+   BASE — the light page.
+   The site runs on paper with space indigo as the working color: text,
+   fills, controls. Black keeps only the intro cover and the veils
+   (scrims, popup backdrops), and grape appears solely as a true
+   highlight: selection, the heat rail, hover states, the small marks,
+   the stub dashes. The default ink ramp below is the
+   indigo one; .band-deep tints a section a step deeper into the blue so
+   neighbouring bands and the two curtain seams stay legible.
    ================================================================== */
+:root {
+  --color-ink: #10254f;
+  --color-muted: color-mix(in srgb, #10254f 70%, transparent);
+  --color-faint: color-mix(in srgb, #10254f 52%, transparent);
+  --color-line: color-mix(in srgb, #10254f 18%, transparent);
+  /* One step deeper into the blue than paper: the alternate band. */
+  --color-deep: color-mix(in srgb, #10254f 9%, #c9cfdd);
+}
+
 html {
-  background: var(--color-bg);
-  color-scheme: dark;
+  background: var(--color-paper);
+  color-scheme: light;
   overflow-x: clip;
   scroll-behavior: smooth;
 }
@@ -52,7 +70,7 @@ html {
 }
 
 body {
-  background: var(--color-bg);
+  background: var(--color-paper);
   color: var(--color-ink);
   font-family: var(--font-text);
   font-size: 1.0625rem;
@@ -61,9 +79,10 @@ body {
   overflow-x: clip;
 }
 
+/* Grape earns its keep here: selection is a real highlight. */
 ::selection {
   background: var(--color-accent);
-  color: var(--color-ink);
+  color: var(--color-paper);
 }
 
 :focus-visible {
@@ -104,7 +123,8 @@ body {
   z-index: 200;
   padding: 0.55rem 0.9rem;
   background: var(--color-accent);
-  color: var(--color-ink);
+  /* Pale on grape: the indigo ink the page inherits would land near 2:1. */
+  color: var(--color-paper);
   font-family: var(--font-text);
   font-size: 0.8125rem;
   font-weight: 700;
@@ -167,20 +187,17 @@ body {
 }
 
 /* ==================================================================
-   PAPER — the light bands
-   Space indigo stopped being a background: the alternate bands are pale
-   slate now, with indigo as the type. A paper surface flips the whole ink
-   ramp in place, so every token-driven rule (Tailwind utilities included)
-   follows without a second stylesheet. Sections opt in with .band-light;
-   the cursor cards carry the same paper wherever they float. Grape and
-   shadow grey do not move.
+   BANDS
+   The whole site is paper with the indigo ramp, so .band-light only
+   restates the default (blog pages still carry it on <body>, and the
+   cursor cards share its declaration so a floating tag reads the same
+   over any band). .band-deep is the alternate: one step deeper into the
+   blue, same ink, used on every other section so the seams the two
+   curtain moves depend on stay visible on a light page.
    ================================================================== */
 .band-light,
 .cursor-card {
-  /* Same ramp shape as the dark one, inverted: full, 62, 40, 18. */
   --color-ink: var(--color-surface);
-  /* Indigo needs a heavier hand than slate: 62/40 lands under 4:1 on paper
-     for small type, so the light ramp runs hotter than the dark one. */
   --color-muted: color-mix(in srgb, var(--color-surface) 70%, transparent);
   --color-faint: color-mix(in srgb, var(--color-surface) 52%, transparent);
   --color-line: color-mix(in srgb, var(--color-surface) 18%, transparent);
@@ -188,13 +205,8 @@ body {
   color: var(--color-ink);
 }
 
-/* Selection keeps its grape fill, but the letters on that fill have to stay
-   pale: with the ramp flipped, the global rule would paint indigo on grape
-   and the words disappear. */
-.band-light::selection,
-.band-light ::selection {
-  background: var(--color-accent);
-  color: var(--color-paper);
+.band-deep {
+  background-color: var(--color-deep);
 }
 
 /* ==================================================================
@@ -278,58 +290,21 @@ html.gsap [data-reveal] {
    it otherwise). */
 html.will-animate [data-split],
 html.will-animate [data-reveal-scrub],
-html.will-animate [data-count],
 html.will-animate .flow,
 html.will-animate .station-letter {
   opacity: 0;
 }
 
-[data-magnetic] {
-  will-change: transform;
-}
-
-/* ==================================================================
-   TYPE UNDER THE POINTER
-   Two gestures, both transform only, both pointer-fine.
-   Display headings are handled in motion.ts: the character the pointer
-   crosses dips back under the split mask and the dip travels outward
-   through the line, which is the entrance again, one beat long.
-   The script flourish is one short line, so it answers in CSS: it lifts
-   off its baseline and leans, the way a signature does when you nudge
-   the paper. Nothing glows, nothing fades.
-   ================================================================== */
-@media (hover: hover) and (pointer: fine) {
-  .type-script {
-    /* The flourish is block level, so its box runs the whole measure and
-       the hover would fire an arm's length past the last letter. Shrink
-       the box onto the words; still a block, so no inline leading creeps
-       in underneath it. */
-    width: fit-content;
-    transform-origin: 0 85%;
-    transition: transform 260ms var(--ease-out-strong);
-  }
-
-  .type-script:hover {
-    transform: translateY(-0.05em) rotate(-1.75deg);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .type-script {
-    transition: none;
-  }
-
-  .type-script:hover {
-    transform: none;
-  }
-}
+/* Display type does not answer the pointer: headings, subtitles and the
+   script flourish hold still. The life under the cursor belongs to the
+   controls and the ledgers, not to the type. */
 
 /* ==================================================================
    CURSOR CARDS — hover detail that rides the pointer instead of sitting
    in the layout. Authored anywhere in the page, parked hidden here;
    motion.ts shows one and drives its transform on pointer-fine devices.
    Paper fill and indigo ink come from the PAPER rule above: the card is a
-   paper tag, the same on a black band or a light one.
+   paper tag, the same over either band.
    ================================================================== */
 .cursor-card {
   position: fixed;
@@ -351,8 +326,9 @@ html.no-js .cursor-card {
 }
 
 /* ==================================================================
-   BUTTONS — tactile press (emil), grape fill for legibility on black.
-   Hover draws a border in, no glow.
+   BUTTONS — tactile press (emil), indigo as the working fill. Nothing
+   follows the cursor: hover is a quiet 1px rise and the fill turning
+   grape, which is what "highlight" means on this site. No glow.
    ================================================================== */
 .btn {
   position: relative;
@@ -381,48 +357,33 @@ html.no-js .cursor-card {
 }
 
 .btn-solid {
-  background: var(--color-accent);
-  border-color: var(--color-accent);
-  color: var(--color-ink);
+  background: var(--color-surface);
+  border-color: var(--color-surface);
+  color: var(--color-paper);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .btn:hover {
+    transform: translateY(-1px);
     background: var(--color-accent);
     border-color: var(--color-accent);
-    color: var(--color-ink);
+    color: var(--color-paper);
   }
 
-  .btn-solid:hover {
-    filter: brightness(1.2);
+  .btn:active {
+    transform: scale(0.97);
   }
-}
-
-/* A grape fill keeps pale letters even where the ink ramp flipped to indigo:
-   indigo on grape is 2:1 and the label disappears. */
-.band-light .btn-solid {
-  color: var(--color-paper);
 }
 
 /* A button can wear the .stub mark itself (the form link is still pending).
-   .btn's border shorthand outruns .stub, so the dash is redrawn here, and on
-   a grape fill it switches to paper where a grape dash would be nothing. */
+   .btn's border shorthand outruns .stub, so the dash is redrawn here, and
+   on a solid fill it switches to paper where an indigo dash would drown. */
 .btn.stub {
   border-bottom: 1px dashed color-mix(in srgb, var(--color-accent) 60%, transparent);
 }
 
 .btn-solid.stub {
   border-bottom-color: color-mix(in srgb, var(--color-paper) 60%, transparent);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .band-light .btn:hover {
-    color: var(--color-paper);
-  }
-
-  .btn.stub:hover {
-    border-bottom-color: color-mix(in srgb, var(--color-paper) 60%, transparent);
-  }
 }
 
 /* ==================================================================
@@ -502,9 +463,9 @@ html.no-js .cursor-card {
   padding: 0;
 }
 
-/* Steel stays a dark surface everywhere: on a paper page the inherited ink
-   is indigo, which would sink into it, so code keeps the pale ink. */
-.band-light .post-body :is(code, pre) {
+/* Steel stays a dark surface everywhere: the site's indigo ink would sink
+   into it, so code keeps the pale ink on every band and in the popups. */
+.post-body :is(code, pre) {
   color: var(--color-paper);
 }
 

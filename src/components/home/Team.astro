@@ -1,16 +1,19 @@
 ---
 /**
- * Team — ten names on black, wiping in from alternating sides.
+ * Team — ten names wiping in from alternating sides, the section the hero
+ * uncovers: index.astro pins it under the cover wipe, so this is the first
+ * thing the page opens onto.
  *
  * Hovering a row rides a cursor card carrying that member's previous GNCE
- * teams (motion.ts `initCursorCards`, pointer-fine only). The same lineage
- * is always in the accessibility tree as sr-only text, and drops into the
- * layout as a static line wherever hover is not available: coarse pointers,
- * reduced motion, no JS.
+ * teams (motion.ts `initCursorCards`, pointer-fine only) and turns the
+ * name grape; nothing moves. The same lineage is always in the
+ * accessibility tree as sr-only text, and drops into the layout as a
+ * static line wherever hover is not available: coarse pointers, reduced
+ * motion, no JS.
  */
 import Reveal from '../Reveal.astro';
 
-// Previous GNCE team numbers only; the Lineage section carries the record.
+// Previous GNCE team numbers only; the record lives in git history.
 // Both orders below are the team's own and neither is a ranking: the roster
 // runs in the order the team set, and each member's numbers run the way that
 // member lists them. Editing this array is the whole job; the rows, the
@@ -42,7 +45,6 @@ const slug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
           <li>
             <Reveal variant={i % 2 ? 'left' : 'right'} class="hairline border-t">
               <div class="roster-row" data-cursor-card={`member-${slug(member.name)}`}>
-                <span class="roster-marker" aria-hidden="true" />
                 <p class="roster-name">{member.name}</p>
                 <span class="sr-only">
                   {member.teams.length
@@ -79,7 +81,7 @@ const slug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 </section>
 
 <style>
-  /* Grape mark above the headline: the only garnish black sections get. */
+  /* Grape mark above the headline: the small grape highlight over the headline. */
   .mark {
     display: block;
     width: 2.75rem;
@@ -91,17 +93,6 @@ const slug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
   .roster-row {
     position: relative;
     padding: 1rem 0;
-    transition: padding-left 300ms var(--ease-out-strong);
-  }
-
-  .roster-marker {
-    position: absolute;
-    left: 0;
-    top: 1.75rem;
-    width: 0;
-    height: 2px;
-    background: var(--color-accent);
-    transition: width 300ms var(--ease-out-strong);
   }
 
   /* Body serif, not the distressed display face: ten names read cleanly. */
@@ -140,13 +131,10 @@ const slug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     display: block;
   }
 
+  /* Hover moves nothing: the name turns grape, and the cursor card says
+     the rest. A row that slid made the floating card jitter and the list
+     feel loose; colour alone reads as the highlight it is. */
   @media (hover: hover) and (pointer: fine) {
-    .roster-row:hover {
-      padding-left: 2.75rem;
-    }
-    .roster-row:hover .roster-marker {
-      width: 1.75rem;
-    }
     .roster-row:hover .roster-name {
       color: var(--color-accent);
     }

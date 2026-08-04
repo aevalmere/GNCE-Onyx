@@ -28,7 +28,7 @@ const FINE = matchMedia('(hover: hover) and (pointer: fine)').matches;
 function showEverything() {
   root.classList.remove('will-animate');
   document
-    .querySelectorAll<HTMLElement>('[data-split],[data-reveal],[data-reveal-scrub],[data-count]')
+    .querySelectorAll<HTMLElement>('[data-split],[data-reveal],[data-reveal-scrub]')
     .forEach((el) => {
       el.style.opacity = '1';
       el.style.clipPath = 'none';
@@ -54,7 +54,7 @@ if (REDUCED) {
 
 function boot() {
   // The class the home page's cover-wipe and curtain geometry is gated
-  // behind: adding it pulls Lineage a full two viewports up and hands the
+  // behind: adding it pulls the roster 2.6 viewports up and hands the
   // hero a sticky box. Nothing may measure the page until that has been
   // applied, so we flush the layout here, before a single trigger exists.
   root.classList.add('gsap');
@@ -79,10 +79,7 @@ function boot() {
       initScrubReveals();
       initSplits();
       initParallax();
-      initCounters();
       if (FINE) {
-        initSplitHover();
-        initMagnetic();
         initHoverPreview();
         initCursorCards();
       }
@@ -93,7 +90,6 @@ function boot() {
       initHScroll();
       initScreens();
       initDriftCols();
-      initMarquee();
       initFloatCards();
       if (FINE) initTilt();
       initFlip();
@@ -285,77 +281,6 @@ function resplitAll() {
     (el as any)._hover?.kill(); // the characters it was holding are about to go
     delete el.dataset.splitDone;
     buildSplit(el);
-  });
-}
-
-/* ================================================================== */
-/* Hover on a split heading: the entrance, borrowed for one beat.       */
-/*                                                                     */
-/* Every heading arrives by riding its letters up from behind the line. */
-/* On hover the letter the pointer crosses drops back under that same   */
-/* mask and the dip travels outward through its neighbours, then the    */
-/* line is exactly where it was. No new mechanic, no fade, no glow:     */
-/* one property, the same one the entrance moves.                       */
-/*                                                                     */
-/* Rules it holds to: pointer-fine only (bound in run()); once per      */
-/* visit, re-armed when the pointer leaves the heading; never while the */
-/* entrance is still playing; never on a heading that sits inside a     */
-/* control, which already answers the pointer its own way.              */
-/* ================================================================== */
-const RIPPLE_DIP = 24; // yPercent: enough for the mask to bite, never a word's shape
-const RIPPLE_DOWN = 0.12;
-const RIPPLE_BACK = 0.2;
-const RIPPLE_SPREAD = 0.13; // longest the wave may take to cross the whole line
-
-/** The entrance owns yPercent until it is finished with it. A scrubbed
- *  heading is done when its trigger has passed its end; the intro cascade
- *  (and any heading opened by the failsafe) is done when the last character
- *  it staggers has landed. Either way the test is the resting position. */
-function rippleReady(el: HTMLElement, chars: HTMLElement[]) {
-  if ((el as any)._st && (el as any)._st.progress < 0.999) return false;
-  const last = chars[chars.length - 1];
-  return !!last && Math.abs((gsap.getProperty(last, 'yPercent') as number) || 0) < 0.5;
-}
-
-function initSplitHover() {
-  document.querySelectorAll<HTMLElement>('[data-split]').forEach((el) => {
-    if (el.closest('a,button,[role="button"],label,summary')) return;
-    let armed = true;
-
-    el.addEventListener('pointerleave', () => (armed = true));
-
-    // pointerover, not pointerenter: the heading is a block, so its box runs
-    // to the end of the measure. Arriving over the empty tail of a line is
-    // not arriving at the words — stay armed until a character is actually
-    // under the pointer, and let that character be where the wave starts.
-    el.addEventListener('pointerover', (e) => {
-      if (!armed) return;
-      const hit = (e.target as Element | null)?.closest?.('.split-char') as HTMLElement | null;
-      if (!hit) return;
-      const chars = gsap.utils.toArray<HTMLElement>('.split-char', el);
-      const idx = chars.indexOf(hit);
-      if (idx < 0 || !rippleReady(el, chars)) return;
-      armed = false;
-
-      const stagger = {
-        amount: Math.min(RIPPLE_SPREAD, chars.length * 0.012),
-        from: idx,
-      };
-      const st = (el as any)._st;
-      const tl = gsap.timeline({
-        // Scrolled back into its own entrance window mid-gesture: hand the
-        // characters over rather than tug against the scrub.
-        onUpdate: () => {
-          if (st && st.progress < 0.999) {
-            gsap.set(chars, { yPercent: 0 });
-            tl.kill();
-          }
-        },
-      });
-      tl.to(chars, { yPercent: RIPPLE_DIP, duration: RIPPLE_DOWN, ease: 'power2.out', stagger })
-        .to(chars, { yPercent: 0, duration: RIPPLE_BACK, ease: 'power3.out', stagger }, RIPPLE_DOWN);
-      (el as any)._hover = tl;
-    });
   });
 }
 
@@ -627,50 +552,6 @@ function initParallax() {
 }
 
 /* ================================================================== */
-/* [data-count] — number counts up from 0 when it locks in.           */
-/* ================================================================== */
-function initCounters() {
-  document.querySelectorAll<HTMLElement>('[data-count]').forEach((el) => {
-    const target = parseFloat(el.dataset.count || '0');
-    const suffix = el.dataset.countSuffix || '';
-    el.style.opacity = '1';
-    const obj = { n: 0 };
-    ScrollTrigger.create({
-      trigger: el,
-      start: 'top 82%',
-      once: true,
-      onEnter: () =>
-        gsap.to(obj, {
-          n: target,
-          duration: 1.4,
-          ease: 'power2.out',
-          onUpdate: () => (el.textContent = Math.round(obj.n) + suffix),
-        }),
-    });
-  });
-}
-
-/* ================================================================== */
-/* [data-magnetic] — CTAs lean toward the cursor (pointer-fine only).  */
-/* ================================================================== */
-function initMagnetic() {
-  document.querySelectorAll<HTMLElement>('[data-magnetic]').forEach((el) => {
-    const strength = parseFloat(el.dataset.magnetic || '0.35');
-    const xTo = gsap.quickTo(el, 'x', { duration: 0.5, ease: 'power3.out' });
-    const yTo = gsap.quickTo(el, 'y', { duration: 0.5, ease: 'power3.out' });
-    el.addEventListener('pointermove', (e) => {
-      const r = el.getBoundingClientRect();
-      xTo((e.clientX - (r.left + r.width / 2)) * strength);
-      yTo((e.clientY - (r.top + r.height / 2)) * strength);
-    });
-    el.addEventListener('pointerleave', () => {
-      xTo(0);
-      yTo(0);
-    });
-  });
-}
-
-/* ================================================================== */
 /* [data-hover-preview] — a row reveals its image beside the cursor.  */
 /* Wrapper [data-preview-root] holds one shared floating <img>.        */
 /* ================================================================== */
@@ -839,17 +720,43 @@ function initCoverWipe() {
   // flat slab. Both planes ride ONE timeline: on separate triggers a stray
   // refresh could leave them scrubbing against slightly different offsets.
   const deep = cover.querySelector<HTMLElement>('[data-cover-deep]');
+  // 1.6 viewports of scroll for one viewport of travel: the hero takes its
+  // time leaving. The distance is measured off the wrapper's own spacer
+  // (wrapper height minus the hero) rather than recomputed from
+  // innerHeight, so the trigger's end and index.astro's svh-authored
+  // geometry can never disagree, URL bars included.
   const tl = gsap.timeline({
     scrollTrigger: {
       trigger: wrap,
       start: 'top top',
-      end: () => `+=${window.innerHeight}`,
+      end: () => `+=${wrap.offsetHeight - cover.offsetHeight}`,
       scrub: 0.4,
       invalidateOnRefresh: true,
     },
   });
   tl.to(cover, { xPercent: -100, ease: 'none' }, 0);
   if (deep) tl.to(deep, { xPercent: 18, ease: 'none' }, 0);
+
+  // A /#team deep link was resolved by the browser before html.gsap pulled
+  // the roster to the document top, which leaves the page parked mid-wipe.
+  // Re-land it at the wipe's end unless the reader has already taken over.
+  if (location.hash === '#team') {
+    let landing = true;
+    const stop = () => (landing = false);
+    addEventListener('wheel', stop, { passive: true, once: true });
+    addEventListener('touchstart', stop, { passive: true, once: true });
+    addEventListener('keydown', stop, { once: true });
+    const land = () => {
+      if (!landing) return;
+      const end = wrap.offsetHeight - cover.offsetHeight;
+      const lenis = (window as any).__motion?.lenis;
+      if (lenis?.scrollTo) lenis.scrollTo(end, { immediate: true, force: true });
+      else window.scrollTo(0, end);
+    };
+    requestAnimationFrame(land);
+    addEventListener('load', land, { once: true });
+    setTimeout(stop, 1400);
+  }
 }
 
 /* ================================================================== */
@@ -1137,30 +1044,6 @@ function initDriftCols() {
         scrub: true,
       },
     });
-  });
-}
-
-/* SCENE: outreach ticker. [data-marquee] loops its duplicated            */
-/* [data-marquee-track], geared to the scroll: it turns when the page     */
-/* turns (backwards when you scroll back up), coasts briefly on released  */
-/* momentum, and RESTS when the reader rests — motion is never idle.      */
-function initMarquee() {
-  const wrap = document.querySelector<HTMLElement>('[data-marquee]');
-  const trk = wrap?.querySelector<HTMLElement>('[data-marquee-track]');
-  if (!wrap || !trk) return;
-  let x = 0;
-  let momentum = 0;
-  const BASE = 42; // px/sec steady leftward crawl: a real running ticker
-  (window as any).__motion?.lenis?.on('scroll', (e: { velocity?: number }) => {
-    momentum = gsap.utils.clamp(-360, 360, (e.velocity || 0) * -9);
-  });
-  gsap.ticker.add((_t, dms) => {
-    const dt = Math.min(dms, 80) / 1000;
-    x += (-BASE + momentum) * dt; // always drifting, scroll gives it a shove
-    momentum *= Math.pow(0.12, dt); // the shove coasts off within ~a second
-    const h = trk.scrollWidth / 2;
-    if (h > 0) x = -((-x % h) + h) % h;
-    gsap.set(trk, { x });
   });
 }
 

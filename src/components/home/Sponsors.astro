@@ -1,9 +1,9 @@
 ---
 /**
- * Sponsors — black band, second to last. The recognition ladder is the whole
+ * Sponsors — paper band, second to last. The recognition ladder is the whole
  * pitch: four rungs, low to high, no amounts and no "what the money buys"
  * copy. Rungs wipe in one at a time on scrub via [data-ladder]/[data-rung].
- * Closes on the magnetic CTA into the contact section.
+ * Closes on the CTA into the contact section.
  */
 import Reveal from '../Reveal.astro';
 
@@ -18,10 +18,10 @@ const rungs = [
 ];
 ---
 
-<!-- The last section under the curtain, so its tail is the black field the
+<!-- The last section under the curtain, so its tail is the field the
      page rests on at the finale's REACH level. The frame is sized to OWN
      that field: min-height is one viewport less a reservation smaller than
-     the contact strip ever runs, so the section always overfills the black
+     the contact strip ever runs, so the section always overfills that field
      (the section above can never peek into the resting frame) and the
      overshoot is swallowed by the top padding while the pitch itself sits
      centred in the room it has. -->
@@ -38,7 +38,7 @@ const rungs = [
       {
         rungs.map((rung) => (
           <div class="rung hairline" data-rung>
-            <dt class="type-display rung-tier text-accent">{rung.tier}</dt>
+            <dt class="type-display rung-tier">{rung.tier}</dt>
             <dd class="rung-gets text-muted">{rung.gets}</dd>
           </div>
         ))
@@ -46,13 +46,13 @@ const rungs = [
     </dl>
 
     <Reveal variant="up" class="mt-[clamp(1.5rem,4svh,2.5rem)]">
-      <a href="#contact" class="btn btn-solid" data-magnetic="0.4">Get in touch</a>
+      <a href="#contact" class="btn btn-solid">Get in touch</a>
     </Reveal>
   </div>
 </section>
 
 <style>
-  /* Grape rule above the headline: the only garnish on a black section. */
+  /* Grape rule above the headline: the small grape highlight over the headline. */
   .mark {
     display: block;
     width: 2.75rem;
@@ -99,7 +99,7 @@ const rungs = [
   /* Wide band: the ladder gets taller rungs and a bigger tier so it holds
      its own against the headline above it. Capped against viewport height
      the same way the headline is, so the four rungs, the headline and the
-     button all stand inside the black field the REACH level leaves them. */
+     button all stand inside the field the REACH level leaves them. */
   @media (min-width: 64rem) {
     .rung {
       gap: 0.5rem 3rem;

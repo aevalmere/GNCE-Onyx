@@ -1,6 +1,7 @@
 ---
 /**
- * Hero — the opening viewport on black, and the sheet that wipes off it.
+ * Hero — the opening viewport on the deep band, and the sheet that wipes
+ * off it.
  *
  * Three registers inside one viewport instead of one centred stack: a
  * masthead (the script name at the left, the team's particulars at the
@@ -9,9 +10,9 @@
  * The bottom right corner stays empty on purpose: the nav toggle lives
  * there.
  *
- * Behind the headline the wordmark is set at viewport scale in shadow grey
- * and cut by the frame, so the line lands on stone rather than on empty
- * black. It carries [data-cover-deep], which is the one trick in the
+ * Behind the headline the wordmark is set at viewport scale as an indigo
+ * watermark and cut by the frame, so the line lands on something rather
+ * than on empty paper. It carries [data-cover-deep], which is the one trick in the
  * section: index.astro pins the hero and motion.ts slides it off to the
  * left, and the wordmark travels only part of that distance, so the sheet's
  * own trailing edge crops it on the way out.
@@ -28,7 +29,7 @@
 import Reveal from '../Reveal.astro';
 ---
 
-<section class="hero" aria-label="GNCE Onyx">
+<section class="hero band-deep" aria-label="GNCE Onyx">
   <div class="hero-inner mx-auto w-full max-w-[88rem] px-5 sm:px-8" data-reveal-group>
     <div class="hero-mast">
       <Reveal variant="up"><p class="hero-script type-script">GNCE Onyx</p></Reveal>
@@ -52,7 +53,7 @@ import Reveal from '../Reveal.astro';
 
     <Reveal variant="up">
       <p class="hero-cta">
-        <a href="#sponsors" class="btn btn-solid" data-magnetic="0.4">Sponsor the team</a>
+        <a href="#sponsors" class="btn btn-solid">Sponsor the team</a>
         <a href="#season" class="hero-link">Our first season</a>
       </p>
     </Reveal>
@@ -147,7 +148,9 @@ import Reveal from '../Reveal.astro';
        word off centre by that much. */
     margin-right: -0.06em;
     white-space: nowrap;
-    color: var(--color-steel);
+    /* A watermark on the light page: indigo thinned until the headline can
+       sit on it, not a slab competing with it. */
+    color: color-mix(in srgb, var(--color-surface) 16%, transparent);
   }
 
   /* An absolutely positioned sibling paints over a static block whatever the
@@ -158,7 +161,7 @@ import Reveal from '../Reveal.astro';
     z-index: 1;
     /* The headline owns the wide measure: it scales until it breaks into two
        long lines across the 88rem column, so a 1920 viewport gets a headline
-       and not a headline with a field of black beside it. The ch cap is what
+       and not a headline with a field of empty band beside it. The ch cap is what
        forces that second line; without it the sentence would run on. */
     font-size: clamp(2.25rem, 6.2vw, 6rem);
     line-height: 1.03;

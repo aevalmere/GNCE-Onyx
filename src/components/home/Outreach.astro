@@ -1,8 +1,7 @@
 ---
 /**
- * Outreach — paper band. Headline, the velocity ticker, then the blog
- * posts as line-hover rows wiping in from alternating sides, and a closing
- * ask to be invited somewhere.
+ * Outreach — deep band. Headline, the blog posts as line-hover rows wiping
+ * in from alternating sides, and a closing ask to be invited somewhere.
  *
  * A row opens its post as a paper popup over the band. The whole post is
  * already in the page (Astro renders the markdown at build time), so there
@@ -10,10 +9,9 @@
  * scroll position underneath. The rows stay real links to /outreach/<id>/,
  * which is where a modified click, a crawler and a visitor without JS go.
  *
- * Nothing in the band is ruled. The ticker lost the lines above and below
- * it, the list lost the hairline under every row, and what separates the
- * posts now is the date column, the size of the display titles and four
- * rems of paper between them.
+ * Nothing in the band is ruled: what separates the posts is the date
+ * column, the size of the display titles and four rems of paper between
+ * them.
  */
 import { getCollection, render } from 'astro:content';
 import Reveal from '../Reveal.astro';
@@ -37,21 +35,9 @@ const longDate = (d: Date) =>
   d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 ---
 
-<section id="outreach" class="band-light">
+<section id="outreach" class="band-deep">
   <div class="mx-auto max-w-[88rem] px-5 pt-24 pb-14 sm:px-8 sm:pt-32 sm:pb-16">
     <h2 class="type-display text-[clamp(2.5rem,7vw,6.5rem)]" data-split>Outreach</h2>
-  </div>
-
-  <!-- TICKER: the kinds of events we run, geared to the scroll -->
-  <div class="marquee" data-marquee aria-hidden="true">
-    <div class="marquee-track" data-marquee-track>
-      <span class="marquee-run type-display">
-        Robot demos · school workshops · scout nights · STEM fairs ·&nbsp;
-      </span>
-      <span class="marquee-run type-display">
-        Robot demos · school workshops · scout nights · STEM fairs ·&nbsp;
-      </span>
-    </div>
   </div>
 
   <!-- POSTS: line-hover rows, wiping in from alternating sides -->
@@ -88,7 +74,7 @@ const longDate = (d: Date) =>
         Got an event? We want in.
       </h3>
       <Reveal variant="up" delay={90}>
-        <a href="#contact" class="btn btn-solid" data-magnetic="0.4">Invite us</a>
+        <a href="#contact" class="btn btn-solid">Invite us</a>
       </Reveal>
     </div>
   </div>
@@ -128,34 +114,6 @@ const longDate = (d: Date) =>
 </section>
 
 <style>
-  /* Ticker band: oversized outlined display type, no rules around it. The
-     type is the band. Purely decorative (aria-hidden); the motion engine
-     gears it to scroll velocity. The stroke rides --color-ink, so it turns
-     indigo on the paper band, and the alpha is set for that case. The
-     padding is descender room, since the track is clipped. */
-  .marquee {
-    overflow: clip;
-    padding-block: clamp(1rem, 1.6vw, 1.5rem);
-  }
-
-  .marquee-track {
-    display: flex;
-    width: max-content;
-    will-change: transform;
-  }
-
-  /* The cap has to keep one run wider than the viewport: the track holds two
-     copies and wraps at half its width, so a run narrower than the screen
-     opens a hole in the ticker. 4.5vw is the rate that already clears it, and
-     the cap only lets it stop growing past a very wide screen. */
-  .marquee-run {
-    white-space: nowrap;
-    font-size: clamp(1.9rem, 4.5vw, 4.5rem);
-    line-height: 1.1;
-    color: transparent;
-    -webkit-text-stroke: 1px color-mix(in srgb, var(--color-ink) 48%, transparent);
-  }
-
   /* ---- Post rows -------------------------------------------------- */
   /* No rules at all, not even one edge: a season's posts make a short
      list, and a ruled short list reads as a table with rows missing. The

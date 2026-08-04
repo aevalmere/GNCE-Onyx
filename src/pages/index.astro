@@ -2,7 +2,7 @@
 /**
  * Home — the whole site on one scrolling page.
  *
- * Seven sections ride inside an opaque curtain that scrolls up over the
+ * Six sections ride inside an opaque curtain that scrolls up over the
  * pinned finale: the finale's first viewport is revealed in place as the
  * curtain lifts, then its remainder scrolls normally (pure CSS: negative
  * pull, sticky child, one-viewport spacer). GearNav doubles as the scroll
@@ -11,7 +11,6 @@
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Hero from '../components/home/Hero.astro';
-import Lineage from '../components/home/Lineage.astro';
 import Team from '../components/home/Team.astro';
 import Build from '../components/home/Build.astro';
 import Season from '../components/home/Season.astro';
@@ -31,9 +30,8 @@ import Finale from '../components/home/Finale.astro';
       <Hero />
     </div>
     <div class="under-wrap">
-      <Lineage />
+      <Team />
     </div>
-    <Team />
     <Build />
     <Season />
     <Outreach />
@@ -50,61 +48,68 @@ import Finale from '../components/home/Finale.astro';
   .curtain {
     position: relative;
     z-index: 2;
-    background: var(--color-bg);
+    background: var(--color-paper);
   }
 
-  /* The cover wipe: the hero pins for one viewport while motion.ts slides
-     it off to the LEFT, with Lineage already pinned in place beneath it;
-     both release together and the page scrolls on normally. Mirrors the
-     finale curtain, rotated ninety degrees. Gated behind html.gsap so
-     reduced motion and no-JS get plain flow. */
+  /* The cover wipe: the hero pins while motion.ts slides it off to the
+     LEFT, with the Team roster already pinned in place beneath it; both
+     release together and the page scrolls on normally. Mirrors the finale
+     curtain, rotated ninety degrees. The travel is 1.6 viewports of scroll
+     (the same 1.6 lives in motion.ts's trigger and GearNav's #team trip),
+     so the hero takes its time leaving and the roster has time to arrive.
+     Gated behind html.gsap so reduced motion and no-JS get plain flow. */
   :global(html.gsap) .cover-wrap {
     position: relative;
     z-index: 2;
-    /* The wrapper is a two-viewport transparent box sitting on z-index 2,
-       directly over the pinned Lineage on z-index 1. Left alive it swallows
-       every hover and every text selection over the award ledger for the
-       whole of that range, so the pointer goes through it and only the hero
-       inside it answers. The hero's hit box travels with its own transform,
-       so it stops taking events the moment it has wiped off screen. */
+    /* The wrapper is a transparent box sitting on z-index 2, directly over
+       the pinned roster on z-index 1. Left alive it swallows every hover
+       and every text selection over the roster for the whole of that
+       range, so the pointer goes through it and only the hero inside it
+       answers. The hero's hit box travels with its own transform, so it
+       stops taking events the moment it has wiped off screen. */
     pointer-events: none;
   }
 
   :global(html.gsap) .cover-wrap > :global(.hero) {
     position: sticky;
     top: 0;
-    background: var(--color-bg);
+    /* Opacity comes from the section's own band-deep fill; nothing extra
+       here, so the hero's color lives in exactly one place. */
     will-change: transform;
     pointer-events: auto;
   }
 
-  /* One viewport of sticky travel: the wipe's scroll distance. */
+  /* 1.6 viewports of sticky travel: the wipe's scroll distance. */
   :global(html.gsap) .cover-wrap::after {
     content: '';
     display: block;
-    height: 100svh;
+    height: 160svh;
   }
 
   :global(html.gsap) .under-wrap {
     position: relative;
-    z-index: 1;
-    /* Pulled fully under the cover: Lineage's flow top lands at the very
-       top of the document, pinned there while the hero wipes off it. */
-    margin-top: -200svh;
+    /* No z-index here, deliberately: the cover-wrap's z-index 2 already
+       wins the overlap, and giving this wrapper its own stacking context
+       would trap the roster's fixed cursor cards (z 90) beneath the hero
+       mid-wipe. */
+    /* Pulled fully under the cover (hero viewport + wipe travel): the
+       roster's flow top lands at the very top of the document, pinned
+       there while the hero wipes off it. */
+    margin-top: -260svh;
   }
 
-  :global(html.gsap) .under-wrap > :global(#lineage) {
+  :global(html.gsap) .under-wrap > :global(#team) {
     position: sticky;
     top: 0;
-    /* Anchor jumps land where the wipe has finished, one viewport past
-       Lineage's flow position. */
-    scroll-margin-top: -100svh;
+    /* Anchor jumps land where the wipe has finished, 1.6 viewports past
+       the roster's flow position. */
+    scroll-margin-top: -160svh;
   }
 
   :global(html.gsap) .under-wrap::after {
     content: '';
     display: block;
-    height: 100svh;
+    height: 160svh;
   }
 
   /* Pulled one viewport under the curtain; the sticky finale holds still

@@ -6,12 +6,12 @@
  * The site's only persistent chrome: a small machined square pinned to the
  * bottom-right corner, two rules stacked inside it. Press it and the rules
  * cross into a close mark while a paper panel slides in from the right edge
- * over a black scrim. The seven links carry no chrome of their own: bare
+ * over a black scrim. The links carry no chrome of their own: bare
  * display type stacked on one left margin, zooming the last few percent
  * into place as the panel lands. The panel's own left edge is the single
  * hairline in the component.
  *
- * The nav floats over black and light sections alike, so it carries the
+ * The nav floats over deep and paper bands alike, so it carries the
  * light band set itself (indigo type on paper) instead of inheriting one.
  *
  * The site is one page, so every link but Home is a section anchor: the
@@ -32,12 +32,6 @@ type NavLink = {
 };
 const links: NavLink[] = [
   { href: `${base}/`, label: 'Home', card: 'nav-card-home', note: 'Back to the top' },
-  {
-    href: `${base}/#lineage`,
-    label: 'Lineage',
-    card: 'nav-card-lineage',
-    note: 'The teams we came from',
-  },
   { href: `${base}/#team`, label: 'Team', card: 'nav-card-team', note: 'Ten students' },
   {
     href: `${base}/#season`,
@@ -159,7 +153,7 @@ const links: NavLink[] = [
 
   /* ---- Drawer ----------------------------------------------------- */
   /* Paper panel on the right edge. The light band set is declared here
-     rather than inherited: this thing floats over black and light sections
+     rather than inherited: this thing floats over deep and paper bands
      both, so it has to bring its own. Same ramp as .band-light, so every
      token-driven rule inside resolves indigo without a second sheet. */
   .nav-drawer {
@@ -239,7 +233,7 @@ const links: NavLink[] = [
      margin: the words all hang off one line, so that line is what they
      contract onto. Scaling about the centre would swim the left edge
      sideways and the margin would wobble. The stagger is short enough that
-     the seventh settles as the panel lands (6 x 26ms + 300ms against the
+     the last settles as the panel lands (5 x 26ms + 300ms against the
      panel's 420ms), and transform outruns opacity so it reads as a push in,
      not a fade. Going out, no delays: the whole set leaves with the panel. */
   .nav-root[data-open='true'] .nav-link {
@@ -282,7 +276,10 @@ const links: NavLink[] = [
     height: 56px;
     border: 1px solid var(--color-line);
     background: var(--color-surface);
-    color: var(--color-ink);
+    /* Pinned pale: the square is an indigo fill on a page whose inherited
+       ink is ALSO indigo now, and inheriting would paint the two rules of
+       the mark into their own background. */
+    color: var(--color-paper);
     cursor: pointer;
     transition:
       transform 160ms var(--ease-out-strong),
@@ -464,9 +461,9 @@ const links: NavLink[] = [
     // Travel inside the page: Lenis when the motion engine is up, native
     // smooth scrolling when it is not, a hash jump as the floor.
     //
-    // The finale sits under a curtain and says so with a negative
-    // scroll-margin-top (index.astro), which means an anchor has to land one
-    // viewport past the section's flow position. All three paths read
+    // The finale and the roster both sit under covers and say so with
+    // negative scroll-margins (index.astro), which means their anchors have
+    // to land past the sections' flow positions. All three paths read
     // scroll-margin, so all three land in the same place: Lenis subtracts it
     // in scrollTo, and the other two are the browser doing it. No offset of
     // our own goes on top, or #contact overshoots by a screen.
@@ -482,12 +479,24 @@ const links: NavLink[] = [
       } else if (!target) {
         location.hash = hash; // not a section on this page after all
         return;
-      } else if (hash === '#lineage' && document.querySelector('[data-cover-wipe]')) {
-        // Lineage sits pinned under the hero's cover wipe, so measuring the
-        // element is position-dependent (its sticky offset moves). The wipe
-        // always ends exactly one viewport down; land there.
-        if (lenis?.scrollTo) lenis.scrollTo(window.innerHeight, { immediate: reduced.matches });
-        else window.scrollTo({ top: window.innerHeight, behavior });
+      } else if (
+        hash === '#team' &&
+        document.documentElement.classList.contains('gsap') &&
+        document.querySelector('[data-cover-wipe]')
+      ) {
+        // The roster sits pinned under the hero's cover wipe, so measuring
+        // the element is position-dependent (its sticky offset moves). The
+        // wipe ends where the cover's spacer says it does, so that spacer is
+        // measured rather than assumed: svh-authored CSS and innerHeight
+        // disagree on phones. Gated on html.gsap, because without the
+        // engine there is no pull and the roster sits in plain flow, where
+        // the generic branch below lands correctly.
+        const cover = document.querySelector<HTMLElement>('[data-cover-wipe]');
+        const heroEl = cover?.firstElementChild as HTMLElement | null;
+        const end =
+          cover && heroEl ? cover.offsetHeight - heroEl.offsetHeight : window.innerHeight * 1.6;
+        if (lenis?.scrollTo) lenis.scrollTo(end, { immediate: reduced.matches });
+        else window.scrollTo({ top: end, behavior });
       } else if (hash === '#contact' && (window as any).__finale?.reachLevel) {
         // The finale is the same case at the other end of the page: it sits
         // pinned under the curtain, and it rests one block short of a full

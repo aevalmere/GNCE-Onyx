@@ -129,11 +129,7 @@ const galleryCols = [
 </section>
 
 <style>
-  .season {
-    background: var(--color-bg);
-  }
-
-  /* Grape bar above the headline: the only garnish black sections get. */
+  /* Grape bar above the headline: a small true highlight. */
   .mark {
     display: block;
     width: 2.75rem;
@@ -292,6 +288,9 @@ const galleryCols = [
      picture, and a 1px rule is the one thing that cannot survive a scale. */
   .poster {
     --poster-em: 3.6cqw;
+    /* The plate is steel whatever band it sits on, so it carries pale ink
+       of its own: the section's indigo would sink into it. */
+    --color-ink: var(--color-paper);
     display: flex;
     flex-direction: column;
     align-items: flex-start;

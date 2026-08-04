@@ -127,7 +127,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
       }
     </script>
   </head>
-  <body class:list={['min-h-svh antialiased', light ? 'band-light' : 'bg-bg text-ink']}>
+  <body class:list={['min-h-svh antialiased', light ? 'band-light' : 'bg-paper text-ink']}>
     <a class="skip-link" href="#main">Skip to content</a>
 
     {
@@ -238,8 +238,8 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     <GearNav />
 
     <!-- The motion engine: GSAP + ScrollTrigger + Lenis, the pinned hero
-         and roster, masked split-text, clip-wipe reveals, parallax, and
-         magnetic pull. Bows out under reduced motion (static CSS stands in). -->
+         and roster, masked split-text, and clip-wipe reveals. Bows out
+         under reduced motion (static CSS stands in). -->
     <script>
       import '../scripts/motion';
     </script>
@@ -255,7 +255,9 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
         display: flex;
         align-items: center;
         justify-content: center;
-        background: var(--color-bg);
+        /* Space indigo, not black: the cover lifts into a light page, and
+           the blue is the site's main color now. */
+        background: var(--color-surface);
         transform: translateY(-101%);
         transition: transform 560ms var(--ease-in-out-strong);
         pointer-events: none;
@@ -282,7 +284,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
         font-weight: 700;
         font-size: clamp(3rem, 11vw, 7rem);
         line-height: 1;
-        color: var(--color-paper); /* pinned: the cover is black even on paper pages */
+        color: var(--color-paper);
         font-variant-numeric: tabular-nums lining-nums;
         font-feature-settings: 'tnum' 1, 'lnum' 1;
       }

@@ -38,7 +38,7 @@ const dateStr = post.data.date.toLocaleDateString('en-US', {
       <div class="mx-auto max-w-3xl px-5 sm:px-8">
         <Reveal>
           <p>
-            <a class="back" href={`${base}/#outreach`} data-magnetic="0.25">
+            <a class="back" href={`${base}/#outreach`}>
               <span class="back-arrow" aria-hidden="true">&larr;</span>
               <span class="back-label type-label">Outreach</span>
             </a>
@@ -77,8 +77,8 @@ const dateStr = post.data.date.toLocaleDateString('en-US', {
     transform-origin: 0 0;
   }
 
-  /* Back button: the arrow leads, the word follows. Magnetic pull comes
-     from motion.ts; the arrow slide is the hover's own beat. */
+  /* Back button: the arrow leads, the word follows; the arrow's short
+     slide is the whole hover. */
   .back {
     display: inline-flex;
     align-items: center;
