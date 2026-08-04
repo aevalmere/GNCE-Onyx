@@ -324,9 +324,9 @@ const REVEAL_GRACE = 2600;
 
 /** Pre-reveal state for a variant: clipped and offset, opacity forced to 1
  *  (global.css holds every reveal at 0 until we get here) so nothing ever
- *  cross-fades. The blur and the will-change belong to the tween, not to
- *  this: a reveal can sit armed for the whole life of the page, and a page
- *  of permanently promoted, permanently blurred layers costs real frames. */
+ *  cross-fades. The will-change belongs to the tween, not to this: a reveal
+ *  can sit armed for the whole life of the page, and a page of permanently
+ *  promoted layers costs real frames. */
 function revealFrom(v: string): gsap.TweenVars {
   const from: gsap.TweenVars = { opacity: 1 };
   if (v === 'left') {
@@ -353,29 +353,31 @@ function revealFrom(v: string): gsap.TweenVars {
   return from;
 }
 
-/** Landed: drop the clip, the blur and the promotion entirely rather than
- *  leaving an identity transform and a no-op inset behind, so a hovered row
- *  can push past its own box afterwards and a fixed child inside one is
- *  still positioned against the viewport. */
+/** Landed: drop the clip and the promotion entirely rather than leaving an
+ *  identity transform and a no-op inset behind, so a hovered row can push
+ *  past its own box afterwards and a fixed child inside one is still
+ *  positioned against the viewport. (filter stays in the clearProps list to
+ *  scrub anything an older visit's inline style left behind.) */
 function revealDone(el: HTMLElement) {
   el.dataset.revealed = '1';
   gsap.set(el, { clearProps: 'clipPath,filter,willChange,transform' });
 }
 
-/** The buttery settle: clip opens, offset resolves, blur clears over a long
- *  gentle decel (SkiperUI-style), never a snap. */
+/** The buttery settle: clip opens and the offset resolves over a long
+ *  gentle decel, never a snap. No blur anywhere in it: the wipe and the
+ *  drift are the whole entrance, and content is sharp from its first
+ *  painted frame. */
 function revealIn(el: HTMLElement, delay: number) {
   if (el.dataset.revealed) return;
   el.dataset.revealed = 'run';
   gsap.fromTo(
     el,
-    { filter: 'blur(9px)', willChange: 'clip-path, transform, filter' },
+    { willChange: 'clip-path, transform' },
     {
       clipPath: REVEAL_OPEN,
       x: 0,
       y: 0,
       scale: 1,
-      filter: 'blur(0px)',
       duration: REVEAL_DUR,
       delay,
       ease: 'power2.out',

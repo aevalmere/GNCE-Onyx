@@ -15,8 +15,9 @@
  * Each member's previous GNCE teams sit under the name as a permanent line:
  * it is the whole point of a rookie team of veterans, so it reads on every
  * machine rather than waiting for a hover. The names never answer the
- * pointer; the portrait plate does, barely: a one-degree lean and two
- * lifting corners, like a print picked up off the table.
+ * pointer; the portraits do: the hovered face zooms in a touch and its
+ * grid neighbours follow at half the step (script at the end of the file),
+ * attention falling off with distance.
  */
 import Reveal from '../Reveal.astro';
 
@@ -135,58 +136,33 @@ const slug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     font-variant-numeric: tabular-nums lining-nums;
   }
 
-  /* The one hover in the grid, and it belongs to the picture, not the name:
-     the plate leans a degree and its bottom corners lift like a print
-     coming off the table. The corner is a solid fold (a deeper indigo
-     triangle growing out of the corner), no gradient, and the whole thing
-     is small enough to read as paper, not as a card trick. */
-  .member-plate::before,
-  .member-plate::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    width: 0;
-    height: 0;
-    background: color-mix(in srgb, #10254f 42%, #c9cfdd);
-    transition:
-      width 300ms var(--ease-out-strong),
-      height 300ms var(--ease-out-strong);
-  }
-
-  .member-plate::before {
-    left: 0;
-    clip-path: polygon(0 0, 100% 100%, 0 100%);
-  }
-
-  .member-plate::after {
-    right: 0;
-    clip-path: polygon(100% 0, 100% 100%, 0 100%);
-  }
-
+  /* The one hover in the grid, and it belongs to the pictures: the portrait
+     under the pointer zooms in a touch, and its grid neighbours (the cell
+     either side plus the one above or below, marked data-near by the script
+     at the end of this file) come along at half the step. The attention
+     falls off with distance, like leaning in toward one face in a team
+     photo. Transform only, so the grid itself never moves a pixel. */
   @media (hover: hover) and (pointer: fine) {
     .member-plate {
-      transition: transform 300ms var(--ease-out-strong);
+      transition: transform 340ms var(--ease-out-strong);
     }
 
     .member:hover .member-plate {
-      transform: perspective(700px) rotateZ(-0.8deg) rotateX(2deg);
+      transform: scale(1.045);
     }
 
-    .member:hover .member-plate::before,
-    .member:hover .member-plate::after {
-      width: 13px;
-      height: 13px;
+    .member[data-near] .member-plate {
+      transform: scale(1.022);
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .member-plate,
-    .member-plate::before,
-    .member-plate::after {
+    .member-plate {
       transition: none;
     }
 
-    .member:hover .member-plate {
+    .member:hover .member-plate,
+    .member[data-near] .member-plate {
       transform: none;
     }
   }
@@ -202,3 +178,36 @@ const slug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     }
   }
 </style>
+
+<script>
+  // The neighbour half of the roster zoom. CSS carries the hovered cell
+  // (:hover) and this marks the cells adjacent to it in the GRID, not the
+  // DOM: either side on the same row, plus the one directly above or below,
+  // read off the grid's live column count so the 5-across and 2-across
+  // layouts both get their true neighbours. Fine pointers only; a phone
+  // has no hover and gets nothing to clean up.
+  function initRosterZoom() {
+    const grid = document.querySelector<HTMLElement>('#team .roster');
+    if (!grid || !matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+    const cells = [...grid.querySelectorAll<HTMLElement>('.member')];
+
+    const clear = () => cells.forEach((c) => delete c.dataset.near);
+
+    cells.forEach((cell, i) => {
+      cell.addEventListener('pointerenter', () => {
+        clear();
+        const cols = getComputedStyle(grid).gridTemplateColumns.split(' ').length || 1;
+        const col = i % cols;
+        const near = [i - cols, i + cols];
+        if (col > 0) near.push(i - 1);
+        if (col < cols - 1) near.push(i + 1);
+        near.forEach((n) => {
+          if (n >= 0 && n < cells.length) cells[n].dataset.near = '';
+        });
+      });
+      cell.addEventListener('pointerleave', clear);
+    });
+  }
+
+  initRosterZoom();
+</script>

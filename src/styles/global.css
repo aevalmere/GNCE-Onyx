@@ -65,6 +65,16 @@ html {
   color-scheme: light;
   overflow-x: clip;
   scroll-behavior: smooth;
+  /* No browser scrollbar: the grape heat rail is this page's progress, and
+     the overlay bar expanding on top of it read as chrome the design never
+     asked for. Wheel, keys and touch all still scroll; only the bar goes. */
+  scrollbar-width: none;
+}
+
+html::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 /* Once the motion engine is up, Lenis drives every programmatic trip.
@@ -152,8 +162,7 @@ body {
 
 /* ==================================================================
    TEXTURE
-   Grain only (no gradient). Frosted glass is a uniform tint + blur +
-   hairline, never a colored gradient.
+   Grain only (no gradient, no blur anywhere on the site).
    ================================================================== */
 .grain::after {
   content: '';
@@ -163,13 +172,6 @@ body {
   pointer-events: none;
   opacity: 0.04;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-
-.glass {
-  background: color-mix(in srgb, var(--color-panel) 55%, transparent);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
-  border: 1px solid var(--color-line);
 }
 
 /* Empty media frame awaiting real content (photos, video). An indigo wash

@@ -1,7 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none" role="img" aria-label="GNCE Onyx">
-  <!-- Stand-in team mark: replace this file with the real logo, same path
-       and name, any size. The hero sizes it by height, so the layout holds
-       whatever proportions the artwork has. -->
-  <circle cx="256" cy="256" r="208" stroke="#10254F" stroke-width="40" />
-  <rect x="256" y="140" width="164" height="164" transform="rotate(45 256 140)" fill="#823A80" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="GNCE Onyx">
+  <!-- The team mark: the circle of hands. One unbroken line looping five
+       times around a shared centre, closing where it began - ten people,
+       four old teams, one ring. Drawn as a single unicursal path so the
+       intro cover can animate it drawing itself (stroke-dashoffset). -->
+  <path d="M32.0,9.0 C30.8,9.0 29.7,9.7 28.9,10.9 C28.0,12.1 27.6,13.9 27.7,15.9 C27.8,18.0 28.5,20.2 29.7,22.4 C30.9,24.5 32.7,26.5 34.9,28.1 C37.0,29.6 39.4,30.7 41.9,31.2 C44.3,31.7 46.6,31.7 48.6,31.1 C50.6,30.6 52.1,29.6 53.0,28.5 C54.0,27.3 54.2,26.0 53.9,24.9 C53.5,23.8 52.5,22.9 51.1,22.5 C49.7,22.1 47.8,22.2 45.9,22.9 C44.0,23.7 42.1,25.0 40.4,26.9 C38.8,28.7 37.5,31.0 36.6,33.5 C35.8,36.0 35.5,38.7 35.8,41.1 C36.1,43.6 36.8,45.8 38.0,47.5 C39.1,49.2 40.5,50.4 41.9,50.9 C43.2,51.4 44.6,51.3 45.5,50.6 C46.5,49.9 47.0,48.7 46.9,47.2 C46.9,45.7 46.2,44.0 44.9,42.5 C43.6,40.9 41.8,39.4 39.5,38.4 C37.3,37.4 34.6,36.9 32.0,36.9 C29.4,36.9 26.7,37.4 24.5,38.4 C22.2,39.4 20.4,40.9 19.1,42.5 C17.8,44.0 17.1,45.7 17.1,47.2 C17.0,48.7 17.5,49.9 18.5,50.6 C19.4,51.3 20.8,51.4 22.1,50.9 C23.5,50.4 24.9,49.2 26.0,47.5 C27.2,45.8 27.9,43.6 28.2,41.1 C28.5,38.7 28.2,36.0 27.4,33.5 C26.5,31.0 25.2,28.7 23.6,26.9 C21.9,25.0 20.0,23.7 18.1,22.9 C16.2,22.2 14.3,22.1 12.9,22.5 C11.5,22.9 10.5,23.8 10.1,24.9 C9.8,26.0 10.0,27.3 11.0,28.5 C11.9,29.6 13.4,30.6 15.4,31.1 C17.4,31.7 19.7,31.7 22.1,31.2 C24.6,30.7 27.0,29.6 29.1,28.1 C31.3,26.5 33.1,24.5 34.3,22.4 C35.5,20.2 36.2,18.0 36.3,15.9 C36.4,13.9 36.0,12.1 35.1,10.9 C34.3,9.7 33.2,9.0 32.0,9.0 Z"
+    fill="none" stroke="#10254F" stroke-width="4.5"
+    stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

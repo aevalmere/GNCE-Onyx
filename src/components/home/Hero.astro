@@ -49,15 +49,12 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
          component's root element does not carry this file's style scope, so
          anything the layout depends on is authored here. -->
     <div class="hero-foot">
+      <!-- The circle-of-hands mark (public/logo.svg): one line, five loops,
+           closing where it began. The same artwork draws itself on the
+           intro cover and sits in the favicon's paper tile. -->
       <div class="hero-logo">
         <Reveal variant="up">
-          <img
-            src={`${base}/logo.svg`}
-            alt="GNCE Onyx"
-            width="512"
-            height="512"
-            data-placeholder="team-logo"
-          />
+          <img src={`${base}/logo.svg`} alt="GNCE Onyx" width="512" height="512" />
         </Reveal>
       </div>
 

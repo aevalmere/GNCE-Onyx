@@ -20,13 +20,21 @@ touching UI.
    their jobs. `#823A80` grape soda appears ONLY as a true highlight:
    selection, the heat rail, hover states, the section marks, the stub
    dashes.
-2. **No idle glows. No gradient fills.** Life comes from motion and solid
-   color. Texture is film grain and *non-gradient* frosted glass (uniform
-   tint + blur + hairline), used sparingly. No ambient/looping glow.
+2. **No idle glows. No gradient fills. No blur.** Life comes from motion
+   and solid color; content is sharp from its first painted frame (reveals
+   are clip wipes and drift, never a blur-in), and nothing frosted sits
+   over anything. Texture is film grain alone, used sparingly.
 3. **Type is the imagery.** Uncial Antiqua (display), Grey Qo (one script
    flourish per page), Ubuntu (body). Push display scale hard; keep body
    readable (Ubuntu is a plain modern sans; the fancy faces stay on the
    titles alone).
+3b. **The mark.** The team logo is the "circle of hands": one unbroken
+   indigo line looping five times around a shared centre and closing where
+   it began (`public/logo.svg`, viewBox 64). It sits in the hero's foot,
+   draws itself on the intro cover in step with the load count
+   (stroke-dashoffset in BaseLayout's meter script), and lives in the
+   favicon on its own paper tile (`favicon.svg` + PNG fallbacks). One
+   artwork, three homes; edit the path in all of them together.
 4. **Machined edges.** Radius 0, no exceptions. Hairline rules and negative
    space over cards; glass panels where a surface is warranted.
 5. **Every animation is scroll-driven and motivated.** It communicates
@@ -158,8 +166,10 @@ section:
   member's previous team numbers under each, two across on a phone
   (everything centred) and five (two full rows) above 40rem · plate height
   set in `svh` so the grid never overruns the screens it has · the names
-  never answer the pointer; the plate does, barely: a one-degree lean and
-  two lifting corner folds, like a print picked up off the table.
+  never answer the pointer; the portraits do: the hovered face zooms in a
+  touch (1.045) and its grid neighbours (either side plus the vertical one)
+  follow at half the step, attention falling off with distance. Transform
+  only; the grid never moves.
 - **Season** (`#season`): collapsible event rows (Qualifier 1 / Qualifier 2
   / States / More to come), exclusive: opening one sweeps the other shut.
   The hover poster flies from the cursor card into its seat on bare
@@ -244,7 +254,7 @@ BaseLayout).
 | Component | Purpose |
 | --- | --- |
 | `scripts/motion.ts` | Motion engine: primitives + scenes. Reduced-motion safe. |
-| `layouts/BaseLayout.astro` | Shell: fonts, intro cover, heat rail, view transitions, GearNav, footer (`hideFooter` on home), imports motion. |
+| `layouts/BaseLayout.astro` | Shell: fonts, intro cover (the mark drawing itself over the count), heat rail, view transitions, GearNav, footer (`hideFooter` on home), imports motion. |
 | `components/home/*.astro` | The six one-page sections, composed by `pages/index.astro`. |
 | `components/Reveal.astro` | `[data-reveal]` wrapper. |
 | `components/GearNav.astro` | Corner toggle (two rules that cross) + right-side drawer: paper panel, bare display-type links that zoom in (hover turns them grape, nothing floats), Lenis smooth anchors. Old filename, no gear. |
@@ -258,6 +268,9 @@ BaseLayout).
   column for header and body both, near 72 characters a line. The shared
   Footer defaults to 64rem and takes the finale's measure via
   `--foot-measure`.
+- The browser scrollbar is hidden site-wide (`scrollbar-width: none` +
+  the webkit twin): the grape heat rail is the page's progress. Wheel,
+  keyboard and touch scrolling are untouched.
 - Section rhythm varies on purpose; don't metronome identical sections.
 - No eyebrows: sections open with a display headline, plus the `.mark`
   grape bar on black bands. `.type-label` is for metadata only.
