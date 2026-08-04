@@ -46,14 +46,14 @@ const galleryCols = [
 ---
 
 <section id="season" class="season" aria-labelledby="season-title">
-  <div class="mx-auto max-w-[88rem] px-5 pt-28 pb-32 sm:px-8 sm:pt-40 sm:pb-44">
+  <div class="season-frame mx-auto max-w-[88rem] px-5 sm:px-8">
     <span class="mark" aria-hidden="true"></span>
     <h2 id="season-title" class="season-title type-display" data-split>Biobuzz</h2>
     <Reveal variant="up" class="mt-6">
       <p class="season-line text-muted">Our rookie season: 2026-2027, presented by RTX.</p>
     </Reveal>
 
-    <div class="events mt-16 sm:mt-20">
+    <div class="events mt-[clamp(2.5rem,7svh,5rem)]">
       {
         events.map((e) => (
           <div class="event">
@@ -129,6 +129,18 @@ const galleryCols = [
 </section>
 
 <style>
+  /* One screen with everything shut, and taller than one the moment a panel
+     opens: min-height sets the resting frame, and the section grows past it
+     rather than clipping. */
+  .season-frame {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 100svh;
+    padding-top: clamp(4rem, 11svh, 8rem);
+    padding-bottom: clamp(4rem, 11svh, 8rem);
+  }
+
   /* Grape bar above the headline: a small true highlight. */
   .mark {
     display: block;
@@ -284,12 +296,13 @@ const galleryCols = [
      same artwork at two scales. Both boxes are 16:9 for the same reason:
      the flight between them is then a single uniform scale with nothing to
      stretch and nothing to reflow.
-     No outline: like every media slot it is a flat steel plate waiting for a
-     picture, and a 1px rule is the one thing that cannot survive a scale. */
+     No outline anywhere on it: a 1px rule is the one thing that cannot
+     survive a scale, and the flight scales this by a factor of four. */
   .poster {
     --poster-em: 3.6cqw;
-    /* The plate is steel whatever band it sits on, so it carries pale ink
-       of its own: the section's indigo would sink into it. */
+    /* Solid space indigo, the site's working colour, so the artwork plate
+       reads as the one filled block in the section. It carries pale ink of
+       its own against that fill. */
     --color-ink: var(--color-paper);
     display: flex;
     flex-direction: column;
@@ -298,7 +311,7 @@ const galleryCols = [
     gap: 0.9em;
     padding: 1.25em;
     font-size: var(--poster-em);
-    background: var(--color-steel);
+    background: var(--color-surface);
   }
 
   .poster-rule {

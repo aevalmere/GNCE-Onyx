@@ -60,6 +60,10 @@ Manage the background server with `astro dev stop`, `astro dev status`, and `ast
   siblings by putting `data-reveal-group` on their parent. For a heading
   that should fly in per character, add `data-split` to it instead (plain
   text only, no inner markup). See `DESIGN.md` "Motion engine".
+  A component's own root element does NOT inherit the calling file's style
+  scope, so a scoped rule can never target a class passed to `<Reveal>`
+  (only Tailwind utilities work there). Put the reveal inside the element
+  the layout depends on, not around it.
 - Blog: posts are markdown in `src/content/blog/` (collection defined in
   `src/content.config.ts`), rendered by `src/pages/outreach/[id].astro`.
 

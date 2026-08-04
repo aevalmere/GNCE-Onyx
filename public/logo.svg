@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none" role="img" aria-label="GNCE Onyx">
+  <!-- Stand-in team mark: replace this file with the real logo, same path
+       and name, any size. The hero sizes it by height, so the layout holds
+       whatever proportions the artwork has. -->
+  <circle cx="256" cy="256" r="208" stroke="#10254F" stroke-width="40" />
+  <rect x="256" y="140" width="164" height="164" transform="rotate(45 256 140)" fill="#823A80" />
+</svg>

@@ -1,23 +1,30 @@
 ---
 /**
- * Team — ten names wiping in from alternating sides, the section the hero
- * uncovers: index.astro pins it under the cover wipe, so this is the first
- * thing the page opens onto.
+ * Team — the roster as a grid of portraits, the section the hero uncovers:
+ * index.astro pins it under the cover wipe, so this is the first thing the
+ * page opens onto.
  *
- * Hovering a row rides a cursor card carrying that member's previous GNCE
- * teams (motion.ts `initCursorCards`, pointer-fine only) and turns the
- * name grape; nothing moves. The same lineage is always in the
- * accessibility tree as sr-only text, and drops into the layout as a
- * static line wherever hover is not available: coarse pointers, reduced
- * motion, no JS.
+ * No headline and no rule above it: the ten faces are the heading. That also
+ * buys the grid the height it needs, since this section has to stand inside
+ * one viewport for the wipe to hand it over cleanly.
+ *
+ * Five across and two down at full width, so the grid always ends on a full
+ * row. The plates are sized by height rather than by ratio, which is what
+ * keeps every row the same depth and every name on the same line, and what
+ * lets the whole block shrink with a short viewport instead of overrunning
+ * it. Photos drop straight into the plates.
+ *
+ * Each member's previous GNCE teams sit under the name as a permanent line:
+ * it is the whole point of a rookie team of veterans, so it reads on every
+ * machine rather than waiting for a hover.
  */
 import Reveal from '../Reveal.astro';
 
 // Previous GNCE team numbers only; the record lives in git history.
 // Both orders below are the team's own and neither is a ranking: the roster
 // runs in the order the team set, and each member's numbers run the way that
-// member lists them. Editing this array is the whole job; the rows, the
-// cursor cards and the static fallback lines all read from it.
+// member lists them. Editing this array is the whole job; the cells and the
+// photo slots all read from it.
 const roster: { name: string; teams: string[] }[] = [
   { name: 'Ethan Zhang', teams: ['22489', '26111'] },
   { name: 'Anson Su', teams: ['22489', '26111'] },
@@ -34,136 +41,98 @@ const roster: { name: string; teams: string[] }[] = [
 const slug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 ---
 
-<section id="team">
-  <div class="mx-auto max-w-[88rem] px-5 py-24 sm:px-8 sm:py-32">
-    <span class="mark" aria-hidden="true"></span>
-    <h2 class="type-display text-[clamp(1.75rem,4vw,3rem)]" data-split>Our team</h2>
+<section id="team" aria-labelledby="team-title">
+  <div class="team-frame mx-auto w-full max-w-[88rem] px-5 sm:px-8">
+    <h2 id="team-title" class="sr-only">Our team</h2>
 
-    <ul class="hairline mt-12 border-b" data-reveal-group>
+    <ul class="roster" data-reveal-group>
       {
-        roster.map((member, i) => (
-          <li>
-            <Reveal variant={i % 2 ? 'left' : 'right'} class="hairline border-t">
-              <div class="roster-row" data-cursor-card={`member-${slug(member.name)}`}>
-                <p class="roster-name">{member.name}</p>
+        roster.map((member) => (
+          <li class="member">
+            <Reveal variant="up">
+              <div class="member-plate" data-placeholder={`member-photo-${slug(member.name)}`} />
+              <p class="member-name">{member.name}</p>
+              <p class="member-teams">
+                {member.teams.length ? member.teams.join(' · ') : 'Rookie'}
                 <span class="sr-only">
-                  {member.teams.length
-                    ? `Previous teams: ${member.teams.join(', ')}.`
-                    : 'Rookie season, no previous teams.'}
+                  {member.teams.length ? ' previous GNCE teams' : ', no previous teams'}
                 </span>
-                <p class="roster-teams" aria-hidden="true">
-                  {member.teams.length ? member.teams.join(' · ') : 'Rookie'}
-                </p>
-              </div>
+              </p>
             </Reveal>
           </li>
         ))
       }
     </ul>
   </div>
-
-  <!-- Parked outside the reveals: a clipped ancestor would clip the fixed card. -->
-  {
-    roster.map((member) => (
-      <div class="cursor-card member-card" id={`member-${slug(member.name)}`} aria-hidden="true">
-        {member.teams.length ? (
-          member.teams.map((num) => (
-            <p class="card-team">
-              <span class="card-num">{num}</span>
-            </p>
-          ))
-        ) : (
-          <p class="card-rookie">Rookie</p>
-        )}
-      </div>
-    ))
-  }
 </section>
 
 <style>
-  /* Grape mark above the headline: the small grape highlight over the headline. */
-  .mark {
-    display: block;
-    width: 2.75rem;
-    height: 3px;
-    margin-bottom: 1.75rem;
-    background: var(--color-accent);
+  /* One screen, the grid centred in it. */
+  .team-frame {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 100svh;
+    padding-top: clamp(3.5rem, 9svh, 6rem);
+    padding-bottom: clamp(3.5rem, 9svh, 6rem);
   }
 
-  .roster-row {
-    position: relative;
-    padding: 1rem 0;
+  /* One gap value drives both axes, so the columns and the rows are spaced
+     by the same measure and the block reads as a grid rather than as rows
+     that happen to line up. */
+  .roster {
+    --grid-gap: clamp(0.85rem, 1.8vw, 1.75rem);
+    display: grid;
+    /* Three across on a phone: ten names in four rows, which is what fits a
+       phone screen. Five across from the tablet breakpoint up, where the
+       grid ends on two full rows. */
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(1.25rem, 3svh, 2.5rem) var(--grid-gap);
   }
 
-  /* Body sans, not the distressed display face: ten names read cleanly. */
-  .roster-name {
-    font-family: var(--font-text);
+  /* Fixed plate height, full cell width: every portrait in a row is the same
+     depth, so the names below them sit on one line across the whole grid. A
+     photo dropped in here covers the plate. The height is set against the
+     viewport rather than the cell so the whole grid always stands inside one
+     screen, which is what the wipe above it hands over to. */
+  .member-plate {
+    width: 100%;
+    height: clamp(5rem, 11svh, 8rem);
+    background: var(--color-slot);
+    border: 1px solid var(--color-line);
+  }
+
+  @media (min-width: 40rem) {
+    .roster {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: clamp(1.75rem, 4svh, 3rem) var(--grid-gap);
+    }
+
+    .member-plate {
+      height: clamp(7rem, 19svh, 13rem);
+    }
+  }
+
+  .member-name {
+    margin-top: 0.85rem;
     font-weight: 700;
-    font-size: clamp(1.4rem, 3vw, 2rem);
-    line-height: 1.2;
+    font-size: clamp(0.9375rem, 1.05vw, 1.125rem);
+    line-height: 1.25;
     transition: color 200ms ease;
   }
 
-  /* The no-pointer twin of the cursor card. Hidden wherever hover works. */
-  .roster-teams {
-    display: none;
-    margin-top: 0.35rem;
+  .member-teams {
+    margin-top: 0.15rem;
     font-size: 0.8125rem;
     line-height: 1.4;
-    color: var(--color-muted);
+    color: var(--color-faint);
     font-variant-numeric: tabular-nums lining-nums;
   }
 
-  @media (hover: none) {
-    .roster-teams {
-      display: block;
-    }
-  }
-
-  /* Reduced motion and no-JS never get the card, so the line stands in. */
-  @media (prefers-reduced-motion: reduce) {
-    .roster-teams {
-      display: block;
-    }
-  }
-
-  :global(html.no-js) .roster-teams {
-    display: block;
-  }
-
-  /* Hover moves nothing: the name turns grape, and the cursor card says
-     the rest. A row that slid made the floating card jitter and the list
-     feel loose; colour alone reads as the highlight it is. */
+  /* Hover moves nothing: the name turns grape and that is the whole state. */
   @media (hover: hover) and (pointer: fine) {
-    .roster-row:hover .roster-name {
+    .member:hover .member-name {
       color: var(--color-accent);
     }
-  }
-
-  /* Cursor card: compact stack of previous teams. Panel background, border
-     and hidden resting state all come from the base .cursor-card class. */
-  .member-card {
-    min-width: 8.5rem;
-  }
-
-  .card-team + .card-team {
-    margin-top: 0.55rem;
-  }
-
-  .card-num {
-    display: block;
-    font-family: var(--font-text);
-    font-weight: 700;
-    font-size: 1.5rem;
-    line-height: 1;
-    font-variant-numeric: tabular-nums lining-nums;
-  }
-
-  .card-rookie {
-    font-family: var(--font-text);
-    font-weight: 700;
-    font-size: 1.125rem;
-    line-height: 1.2;
-    white-space: nowrap;
   }
 </style>

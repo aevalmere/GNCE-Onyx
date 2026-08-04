@@ -37,8 +37,8 @@ touching UI.
    it is missing. `<Placeholder name="...">` renders nothing visible: it
    only stamps `data-placeholder` so every open slot is one grep away
    (`grep -rn "data-placeholder" src/`). An empty media block is a `.slot`,
-   a flat steel field with no outline and no label inside, and it reads as a
-   plate waiting for a picture. `.stub` (a dashed grape underline) still
+   an indigo wash inside the band's own hairline, with no label in it, and
+   it reads as a plate waiting for a picture. `.stub` (a dashed grape underline) still
    marks inline unknowns: team number, handle, the pending form link.
 7. **No em-dashes in visible copy. Lean copy only** (no-slop-writing): every
    visible sentence earns its place; anything that restates gets cut.
@@ -53,17 +53,21 @@ touching UI.
 | `--color-bg` | `#000000` | Black, veils only: scrims, popup backdrops |
 | `--color-surface` | `#10254F` | Space indigo: text on the light bands, small solid fills (nav toggle). Not a background |
 | `--color-panel` | `#303D6A` | Twilight indigo: glass panels, raised surfaces, footer |
-| `--color-steel` | `#2B2C33` | Shadow grey: media slots, code frames, quiet surfaces |
+| `--color-steel` | `#2B2C33` | Shadow grey: code frames and quiet dark surfaces |
+| `--color-slot` | indigo 20% on paper | Media plates waiting on a picture (`.slot`, the roster portraits) |
 | `--color-paper` | `#C9CFDD` | Pale slate as a surface: light bands, cursor cards |
 | `--color-accent` | `#823A80` | Grape soda: fills, accent text, markers |
 | `--color-ink` / `--color-muted` / `--color-faint` / `--color-line` | space indigo at 100 / 70 / 52 / 18% | The ink ramp: text, secondary text, quiet text, hairlines |
 | `--ease-out-strong` etc. | cubic-beziers | Entrances, on-screen movement, spring |
 
 **Bands.** The whole site runs the paper + indigo ramp; sections alternate
-paper and `.band-deep` (a 9% indigo wash) strictly down the page: Hero
-deep, Team paper, Build deep, Season paper, Outreach deep, Sponsors paper,
-Finale deep. The alternation is what keeps the two curtain seams (the hero
-wipe over Team, the page curtain over the Finale) legible on a light page.
+paper and `.band-deep` (a 9% indigo wash) down the page: Hero deep, Team
+paper, Season paper, Outreach deep, Sponsors paper, Finale deep. Six
+sections cannot alternate perfectly with both ends deep and Sponsors paper,
+so the one repeat sits in the middle (Team into Season) where nothing
+depends on it. What the alternation is for is the two curtain seams (the
+hero wipe over Team, the page curtain over the Finale), and both of those
+still land on a change of band.
 `band-light` restates the default and stays only on blog page bodies;
 `.cursor-card` shares its declaration so a hover card is a paper tag over
 either band.
@@ -123,25 +127,29 @@ scroll behaviour.
 
 ## The one-page structure
 
-The whole site is `src/pages/index.astro`, composing seven sections from
-`src/components/home/` over alternating paper and deep bands. The drawer
-nav doubles as the scroll nav (anchor ids in parentheses); `Finale` carries
-the contact line, so BaseLayout gets `hideFooter` on home. The six sections
-above the finale ride in an opaque `.curtain`; the finale sits under it and
+The whole site is `src/pages/index.astro`, composing six sections from
+`src/components/home/` over alternating paper and deep bands. Every one of
+them stands one viewport tall (`min-height: 100svh`) with its content
+centred in that frame, and grows past it only when something opens. The
+drawer nav doubles as the scroll nav (anchor ids in parentheses); `Finale`
+carries the contact line, so BaseLayout gets `hideFooter` on home. The five
+sections above the finale ride in an opaque `.curtain`; the finale sits under it and
 is revealed by the page's last scroll (mechanics in `index.astro`). Blog
 posts keep their own pages; `/lab/onyx/` stays parked and unlinked. One
 trick per section:
 
-- **Hero**: masthead plate (script name left, three particulars right, one
-  hairline) · the split intro headline on an oversized indigo-watermark
-  ONYX the frame crops · CTAs on the bottom edge. The wordmark is the
-  cover wipe's far plane (`[data-cover-deep]`): it lags the sheet on the
+- **Hero**: nothing along the top · the split intro headline sitting above
+  centre on an oversized indigo-watermark ONYX the frame crops · one line
+  along the bottom edge, team mark at the left and the two CTAs at the
+  right, bottoms level and clear of the corner nav toggle. The wordmark is
+  the cover wipe's far plane (`[data-cover-deep]`): it lags the sheet on the
   same scrub, so the exit has depth.
-- **Team** (`#team`): the section the hero uncovers, pinned under the
-  cover wipe. Ten rows wiping in from alternating sides, in the team's own
-  order · cursor cards with each member's previous team numbers (static
-  fallback on touch) · hover turns the name grape and moves nothing.
-- **Build** (`#build`): one short blurb, a connective beat.
+- **Team** (`#team`): the section the hero uncovers, pinned under the cover
+  wipe. No headline and no rule: a grid of portrait plates with the name and
+  that member's previous team numbers under each, three across on a phone
+  and five (two full rows) above 40rem · plate height set in `svh` so the
+  grid always stands inside the one viewport the wipe hands over · hover
+  turns the name grape and moves nothing.
 - **Season** (`#season`): collapsible event rows (Qualifier 1 / Qualifier 2
   / States / More to come), exclusive: opening one sweeps the other shut.
   The hover poster flies from the cursor card into its seat on bare
@@ -152,7 +160,8 @@ trick per section:
   screen: when a row above sweeps shut, the scroll pays the leaving height
   back frame by frame, so the header the reader clicked never rides up.
   Accordion logic lives in the component's own script.
-- **Outreach** (`#outreach`): post rows · invite-us CTA.
+- **Outreach** (`#outreach`): the posts as a ruled index (date, title, the
+  line about it, columns repeating exactly down the list) · invite-us CTA.
 - **Sponsors** (`#sponsors`): scrubbed recognition ladder, no amounts.
 - **Finale** (`#contact`): the curtain reveal, with exactly two resting
   levels. Everything above it scrolls up like a sheet lifted off a static
@@ -206,10 +215,11 @@ boxes just appear.
 ## The blog (Outreach)
 
 Markdown collection in `src/content/blog/`. The home Outreach section
-lists posts as line-hover rows and opens each one as a paper popup in
+lists posts as a ruled index and opens each one as a paper popup in
 place (real dialog, Lenis-aware scroll lock, focus returned to the row);
 `outreach/[id].astro` stays as the deep-link and no-JS page with the same
-header. Post pages run the paper scheme (`light` on BaseLayout): back
+header. Both are measured: the sheet and the page each hold the body near
+seventy characters a line rather than running the full width of the paper. Post pages run the paper scheme (`light` on BaseLayout): back
 button, date, title, body, small-print footer. No comments, no view
 counts. The intro cover runs only on the home page (`intro` on
 BaseLayout).
@@ -220,7 +230,7 @@ BaseLayout).
 | --- | --- |
 | `scripts/motion.ts` | Motion engine: primitives + scenes. Reduced-motion safe. |
 | `layouts/BaseLayout.astro` | Shell: fonts, intro cover, heat rail, view transitions, GearNav, footer (`hideFooter` on home), imports motion. |
-| `components/home/*.astro` | The seven one-page sections, composed by `pages/index.astro`. |
+| `components/home/*.astro` | The six one-page sections, composed by `pages/index.astro`. |
 | `components/Reveal.astro` | `[data-reveal]` wrapper. |
 | `components/GearNav.astro` | Corner toggle (two rules that cross) + right-side drawer: paper panel, bare display-type links that zoom in, cursor-card descriptors, Lenis smooth anchors. Old filename, no gear. |
 | `components/Placeholder.astro` / `SectionLabel.astro` / `Footer.astro` | Invisible slot markers / label / the shared small print (blog + lab pages only; home ends on the finale's contact line). |
@@ -229,8 +239,10 @@ BaseLayout).
 
 - Content column: `mx-auto max-w-[88rem] px-5 sm:px-8` on the one-page
   sections; body copy caps its own measure (`ch`-based) inside the wide
-  column. Blog body stays `max-w-3xl`; the shared Footer defaults to 64rem
-  and takes the finale's measure via `--foot-measure`.
+  column. The blog is measured, not full-width: the post page runs a 44rem
+  column for header and body both, and the popup sheet is sized (58rem) so
+  its own margins hold the body near 72 characters. The shared Footer
+  defaults to 64rem and takes the finale's measure via `--foot-measure`.
 - Section rhythm varies on purpose; don't metronome identical sections.
 - No eyebrows: sections open with a display headline, plus the `.mark`
   grape bar on black bands. `.type-label` is for metadata only.

@@ -2,7 +2,7 @@
 /**
  * Home — the whole site on one scrolling page.
  *
- * Six sections ride inside an opaque curtain that scrolls up over the
+ * Five sections ride inside an opaque curtain that scrolls up over the
  * pinned finale: the finale's first viewport is revealed in place as the
  * curtain lifts, then its remainder scrolls normally (pure CSS: negative
  * pull, sticky child, one-viewport spacer). GearNav doubles as the scroll
@@ -12,7 +12,6 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Hero from '../components/home/Hero.astro';
 import Team from '../components/home/Team.astro';
-import Build from '../components/home/Build.astro';
 import Season from '../components/home/Season.astro';
 import Outreach from '../components/home/Outreach.astro';
 import Sponsors from '../components/home/Sponsors.astro';
@@ -32,7 +31,6 @@ import Finale from '../components/home/Finale.astro';
     <div class="under-wrap">
       <Team />
     </div>
-    <Build />
     <Season />
     <Outreach />
     <Sponsors />

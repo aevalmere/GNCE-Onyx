@@ -3,12 +3,14 @@
  * Hero — the opening viewport on the deep band, and the sheet that wipes
  * off it.
  *
- * Three registers inside one viewport instead of one centred stack: a
- * masthead (the script name at the left, the team's particulars at the
- * right, both hung off a single hairline), the headline cascading per
- * character as the intro cover lifts, and the two CTAs on the bottom edge.
- * The bottom right corner stays empty on purpose: the nav toggle lives
- * there.
+ * Two registers, not three: the headline sitting above the middle of the
+ * frame, and one line along the bottom edge with the team mark at the left
+ * and the two calls to action at the right. Nothing sits along the top, so
+ * the first thing on the page is the sentence.
+ *
+ * The bottom line stops short of the true corner: the nav toggle is a 56px
+ * square pinned flush to the bottom right of every page, and the foot's own
+ * bottom padding is what keeps the buttons clear of it at any width.
  *
  * Behind the headline the wordmark is set at viewport scale as an indigo
  * watermark and cut by the frame, so the line lands on something rather
@@ -17,31 +19,21 @@
  * left, and the wordmark travels only part of that distance, so the sheet's
  * own trailing edge crops it on the way out.
  *
- * The three entrances hang off one `data-reveal-group` rather than three
- * hand-set delays. That is not only tidier: a standalone reveal waits for
- * its own top to climb past 86% of the viewport, and the CTA row sits below
- * that line on a tall screen, so on its own it would sit clipped and never
- * open. The group fires off the group's box, which starts at the top of the
- * page, and staggers the three in DOM order.
+ * The entrances hang off one `data-reveal-group` rather than hand-set
+ * delays. That is not only tidier: a standalone reveal waits for its own top
+ * to climb past 86% of the viewport, and the foot sits below that line on a
+ * tall screen, so on its own it would sit clipped and never open. The group
+ * fires off the group's box, which starts at the top of the page.
  *
- * Both CTAs are in-page anchors: Lenis smooth-scrolls them.
+ * Both calls to action are in-page anchors: Lenis smooth-scrolls them.
  */
 import Reveal from '../Reveal.astro';
+
+const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
 ---
 
 <section class="hero band-deep" aria-label="GNCE Onyx">
   <div class="hero-inner mx-auto w-full max-w-[88rem] px-5 sm:px-8" data-reveal-group>
-    <div class="hero-mast">
-      <Reveal variant="up"><p class="hero-script type-script">GNCE Onyx</p></Reveal>
-      <Reveal variant="up">
-        <ul class="hero-facts type-label">
-          <li>FIRST Tech Challenge</li>
-          <li>Weston High School</li>
-          <li>2026-2027 BIOBUZZ</li>
-        </ul>
-      </Reveal>
-    </div>
-
     <div class="hero-stage">
       <div class="hero-deep" data-cover-deep aria-hidden="true">
         <span class="hero-deep-word">ONYX</span>
@@ -51,12 +43,31 @@ import Reveal from '../Reveal.astro';
       </h1>
     </div>
 
-    <Reveal variant="up">
-      <p class="hero-cta">
-        <a href="#sponsors" class="btn btn-solid">Sponsor the team</a>
-        <a href="#season" class="hero-link">Our first season</a>
-      </p>
-    </Reveal>
+    <!-- The reveals sit inside the two ends rather than being them: a
+         component's root element does not carry this file's style scope, so
+         anything the layout depends on is authored here. -->
+    <div class="hero-foot">
+      <div class="hero-logo">
+        <Reveal variant="up">
+          <img
+            src={`${base}/logo.svg`}
+            alt="GNCE Onyx"
+            width="512"
+            height="512"
+            data-placeholder="team-logo"
+          />
+        </Reveal>
+      </div>
+
+      <div class="hero-actions">
+        <Reveal variant="up">
+          <a href="#sponsors" class="btn btn-solid">Sponsor the team</a>
+        </Reveal>
+        <Reveal variant="up">
+          <a href="#season" class="hero-link">Our first season</a>
+        </Reveal>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -65,7 +76,9 @@ import Reveal from '../Reveal.astro';
     position: relative;
     display: grid;
     min-height: 100svh;
-    padding: clamp(3.5rem, 10svh, 6rem) 0 clamp(2.5rem, 6svh, 4rem);
+    /* The foot has to clear the nav toggle's 56px square in the corner at
+       every width, which is what sets the floor on the bottom padding. */
+    padding: clamp(3.5rem, 9svh, 6rem) 0 clamp(4.75rem, 8svh, 6.5rem);
     /* The wordmark runs wider than the frame by design, so the section is
        the aperture that cuts it. Under the wipe this is also what keeps the
        word from ever printing over the paper band beneath. */
@@ -74,56 +87,19 @@ import Reveal from '../Reveal.astro';
 
   .hero-inner {
     display: grid;
-    grid-template-rows: auto 1fr auto;
+    grid-template-rows: 1fr auto;
     row-gap: clamp(2rem, 5svh, 3.5rem);
   }
 
-  /* Name on one end, particulars on the other, one rule under both: the
-     masthead reads as a plate rather than as a label stack over a heading.
-     Below 48rem it folds into a single left-hung column. */
-  .hero-mast {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 1.25rem 2.5rem;
-    padding-bottom: 1.35rem;
-    border-bottom: 1px solid var(--color-line);
-  }
-
-  .hero-script {
-    font-size: clamp(2.5rem, 6vw, 4rem);
-    color: var(--color-accent);
-    line-height: 0.9;
-    /* Grey Qo hangs its tails a long way under the box. The pad puts the box
-       edge back on the ink, so the particulars bottom out level with the end
-       of the signature instead of level with nothing. */
-    padding-bottom: 0.18em;
-  }
-
-  .hero-facts {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.35rem 1.75rem;
-    color: var(--color-muted);
-  }
-
-  @media (min-width: 48rem) {
-    .hero-facts {
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 0.1rem;
-      text-align: right;
-    }
-  }
-
   /* The middle band: the headline and the word it sits on share one box, so
-     the two stay centred on each other at every viewport height instead of
-     drifting apart as the masthead above them grows a line. */
+     the two stay centred on each other at every viewport height. The margin
+     lifts that whole box, watermark included, off the middle of the frame:
+     the sentence reads higher than centre and the bottom line gets its air. */
   .hero-stage {
     position: relative;
     display: grid;
     align-content: center;
+    margin-bottom: clamp(1.5rem, 6svh, 4.5rem);
   }
 
   .hero-deep {
@@ -168,11 +144,50 @@ import Reveal from '../Reveal.astro';
     max-width: 25ch;
   }
 
-  .hero-cta {
+  /* The bottom line: mark at one end, controls at the other, bottoms level.
+     Aligned on the ends rather than centred, so the mark and the button sit
+     on one line however tall the mark turns out to be. Where the line cannot
+     hold both, the controls take the next line and stay on the right. */
+  .hero-foot {
     display: flex;
     flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1.5rem clamp(1.5rem, 4vw, 3rem);
+  }
+
+  .hero-logo {
+    display: block;
+    flex: none;
+  }
+
+  /* Height, not width: the mark keeps its own proportions and the line keeps
+     its measure whatever shape the file turns out to be. */
+  .hero-logo img {
+    display: block;
+    /* Sized off the button at the other end of the line, so the two ends
+       weigh the same instead of one being a dot opposite a block. */
+    height: clamp(3.25rem, 6.5svh, 4.75rem);
+    width: auto;
+  }
+
+  /* Grows into whatever the mark leaves, which is what keeps the two ends on
+     one line: asked for its own width instead, the pair of controls would
+     outrun a phone and take the mark with it onto a second row. Narrow
+     screens stack the two controls inside this box, still hard right, still
+     bottomed out on the mark's line. */
+  .hero-actions {
+    display: flex;
+    /* Basis, not auto: a flex line breaks on what an item asks for, and
+       asked for its content width this pair claims more than a phone has.
+       Twelve rems is one button, so the two ends stay on one line until the
+       mark itself is too wide for that, and only then do they stack. */
+    flex: 1 1 12rem;
+    min-width: 0;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 1.5rem;
+    justify-content: flex-end;
+    gap: 1rem clamp(1.25rem, 3vw, 2rem);
   }
 
   .hero-link {

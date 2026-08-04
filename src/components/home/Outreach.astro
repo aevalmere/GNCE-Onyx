@@ -1,7 +1,7 @@
 ---
 /**
- * Outreach — deep band. Headline, the blog posts as line-hover rows wiping
- * in from alternating sides, and a closing ask to be invited somewhere.
+ * Outreach — deep band, one screen. Headline, the blog posts as a ruled
+ * index, and a closing ask to be invited somewhere.
  *
  * A row opens its post as a paper popup over the band. The whole post is
  * already in the page (Astro renders the markdown at build time), so there
@@ -9,9 +9,8 @@
  * scroll position underneath. The rows stay real links to /outreach/<id>/,
  * which is where a modified click, a crawler and a visitor without JS go.
  *
- * Nothing in the band is ruled: what separates the posts is the date
- * column, the size of the display titles and four rems of paper between
- * them.
+ * The index is the only ruled thing in the band: a hairline over it, one
+ * under each entry, and three columns that repeat exactly down the list.
  */
 import { getCollection, render } from 'astro:content';
 import Reveal from '../Reveal.astro';
@@ -36,39 +35,34 @@ const longDate = (d: Date) =>
 ---
 
 <section id="outreach" class="band-deep">
-  <div class="mx-auto max-w-[88rem] px-5 pt-24 pb-14 sm:px-8 sm:pt-32 sm:pb-16">
+  <div class="outreach-frame mx-auto w-full max-w-[88rem] px-5 sm:px-8">
     <h2 class="type-display text-[clamp(2.5rem,7vw,6.5rem)]" data-split>Outreach</h2>
-  </div>
 
-  <!-- POSTS: line-hover rows, wiping in from alternating sides -->
-  <div class="mx-auto max-w-[88rem] px-5 py-20 sm:px-8 sm:py-24">
-    <div data-reveal-group>
+    <!-- POSTS: a ruled index. One entry per post, columns aligned across
+         every row, so a season with one post reads the same as a season
+         with ten. -->
+    <div class="posts" data-reveal-group>
       {
-        entries.map(({ post }, i) => (
-          <Reveal variant={i % 2 ? 'right' : 'left'}>
+        entries.map(({ post }) => (
+          <Reveal variant="up">
             <a
               class="post-row"
               href={`${base}/outreach/${post.id}/`}
               data-post-open={`pop-${post.id}`}
             >
-              <span class="post-marker" aria-hidden="true" />
-              <span class="post-date type-label text-muted">{shortDate(post.data.date)}</span>
-              <span class="post-body-col">
-                <span class="post-title type-display">{post.data.title}</span>
-                <span class="post-desc text-muted">{post.data.description}</span>
-              </span>
+              <span class="post-date type-label">{shortDate(post.data.date)}</span>
+              <span class="post-title type-display">{post.data.title}</span>
+              <span class="post-desc">{post.data.description}</span>
             </a>
           </Reveal>
         ))
       }
+      {posts.length === 0 && <p class="post-empty text-muted">No posts yet.</p>}
     </div>
-    {posts.length === 0 && <p class="text-muted">No posts yet.</p>}
-  </div>
 
-  <!-- THE ASK: we want to be at their event, not the other way round. The
-       button finishes the sentence rather than sitting under it, so the two
-       share one baseline and one line (see .ask). -->
-  <div class="mx-auto max-w-[88rem] px-5 pb-24 sm:px-8 sm:pb-32">
+    <!-- THE ASK: we want to be at their event, not the other way round. The
+         button finishes the sentence rather than sitting under it, so the two
+         share one baseline and one line (see .ask). -->
     <div class="ask">
       <h3 class="type-display text-[clamp(2rem,4.5vw,4.5rem)]" data-split>
         Got an event? We want in.
@@ -114,127 +108,96 @@ const longDate = (d: Date) =>
 </section>
 
 <style>
-  /* ---- Post rows -------------------------------------------------- */
-  /* No rules at all, not even one edge: a season's posts make a short
-     list, and a ruled short list reads as a table with rows missing. The
-     date column and four rems of paper between titles do the separating,
-     and the only line that ever appears is the grape marker, on intent.
+  /* ---- The frame -------------------------------------------------- */
+  /* One screen, three blocks, one gap between them: the headline, the index
+     and the ask, spaced off a single measure instead of off three stacked
+     paddings that happened to add up. */
+  .outreach-frame {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: clamp(2.5rem, 8svh, 5.5rem);
+    min-height: 100svh;
+    padding-top: clamp(4rem, 11svh, 8rem);
+    padding-bottom: clamp(4rem, 11svh, 8rem);
+  }
 
-     Text sits flush with the section margin at rest, so the list lines up
-     with the headlines above and below.
+  /* ---- Post index -------------------------------------------------- */
+  /* An index, which is what a short list of posts is: ruled top and bottom,
+     one rule between entries, and three columns set once on the row so the
+     dates stack, the titles stack and the lines about them stack. First
+     baselines level across all three, so the date reads as the title's
+     dateline rather than as a block beside it. */
+  .posts {
+    border-top: 1px solid var(--color-line);
+  }
 
-     Hover slides the two columns, not the anchor: the hit area stays put,
-     so a row can never slide out from under the pointer, and the movement
-     is a transform rather than the padding this used to animate. */
   .post-row {
-    --row-pad: 2rem;
-    position: relative;
     display: grid;
-    grid-template-columns: 9rem 1fr;
-    gap: 0 2rem;
-    align-items: baseline;
-    padding: var(--row-pad) 0;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.55rem 0;
+    padding: clamp(1.35rem, 3.2svh, 2.25rem) 0;
+    border-bottom: 1px solid var(--color-line);
     text-decoration: none;
     color: var(--color-ink);
+    transition: border-color 220ms ease;
   }
 
-  /* The mark the date uncovers when it steps aside. It scales rather than
-     growing its width, so the paint stays on the compositor, and it grows
-     off its own left end. It sits level with the top of the title's caps,
-     which barely moves across the title's clamp, and it stays inside the
-     row's box on purpose: the reveal wrapper keeps a clip-path once it has
-     played, so anything hung out in the margin would be clipped away. */
-  .post-marker {
-    position: absolute;
-    left: 0;
-    top: calc(var(--row-pad) + 0.35rem);
-    width: 1.25rem;
-    height: 2px;
-    background: var(--color-accent);
-    transform: scaleX(0);
-    transform-origin: 0 50%;
-    transition: transform 300ms var(--ease-out-strong);
-  }
-
-  .post-date,
-  .post-body-col {
-    transition: transform 300ms var(--ease-out-strong);
+  .post-date {
+    color: var(--color-faint);
+    transition: color 200ms ease;
   }
 
   .post-title {
-    display: block;
     font-size: clamp(1.5rem, 3vw, 2.5rem);
     line-height: 1.1;
     transition: color 200ms ease;
   }
 
   .post-desc {
-    display: block;
-    margin-top: 0.5rem;
-    max-width: 46ch;
+    max-width: 52ch;
     font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--color-muted);
   }
 
-  @media (max-width: 640px) {
-    .post-row {
-      grid-template-columns: 1fr;
-      gap: 0.5rem 0;
-    }
+  .post-empty {
+    padding: 1.5rem 0;
+    border-bottom: 1px solid var(--color-line);
   }
 
-  /* On the wide band the row stops stacking and reads across: date, title,
-     then the line about it, first baselines level, so a post is one entry in
-     a ledger instead of a block with a paragraph hanging under it. The extra
-     row padding buys back the height the side-by-side gives up. */
   @media (min-width: 64rem) {
     .post-row {
-      --row-pad: 2.5rem;
-      grid-template-columns: 10rem 1fr;
-      gap: 0 2.5rem;
-    }
-
-    .post-body-col {
-      display: grid;
-      grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+      grid-template-columns: 9rem minmax(0, 1.2fr) minmax(0, 1fr);
       gap: 0 clamp(2rem, 4vw, 4rem);
       align-items: baseline;
     }
 
     .post-desc {
-      margin-top: 0;
-      max-width: 52ch;
       font-size: 1rem;
     }
   }
 
-  /* Arriving by keyboard turns the title grape, on every machine and for
-     every motion preference: the ring says where you are, the colour says
-     what it is. No slide, since the ring already marks the row and the
-     content sliding inside a ring that stays put reads as a glitch. */
+  /* Nothing moves: the title turns grape and the rule under the entry turns
+     with it, so the whole row lights up without the list shifting under the
+     pointer. Keyboard gets the same colour on every machine and for every
+     motion preference; the ring says where you are, the colour says what it
+     is. */
   .post-row:focus-visible .post-title {
     color: var(--color-accent);
   }
 
   @media (hover: hover) and (pointer: fine) {
+    .post-row:hover {
+      border-bottom-color: var(--color-accent);
+    }
+
     .post-row:hover .post-title {
       color: var(--color-accent);
     }
-  }
 
-  /* The step aside, and the mark it uncovers. This is the only movement in
-     the row, so a visitor who asked for less gets the colour above and
-     nothing else: not a snapped slide, no slide. Dropping it also keeps
-     the marker off the date, which is only clear of it because the date
-     moved. Asking for the preference in the query rather than undoing the
-     rule further down means source order cannot get this wrong. */
-  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-    .post-row:hover .post-date,
-    .post-row:hover .post-body-col {
-      transform: translateX(2rem);
-    }
-
-    .post-row:hover .post-marker {
-      transform: scaleX(1);
+    .post-row:hover .post-date {
+      color: var(--color-ink);
     }
   }
 
@@ -256,8 +219,7 @@ const longDate = (d: Date) =>
      Centred, not baselined: on the text's own baseline the button's box
      hung below the sentence, and a control that sags off the line it
      finishes reads as misaligned. Centring sets the block on the line's
-     own band instead. (No transform nudges here: the button is magnetic,
-     and GSAP owns its transform.) */
+     own band instead. */
   .ask {
     display: flex;
     flex-wrap: wrap;
@@ -327,12 +289,16 @@ const longDate = (d: Date) =>
      long one fills the screen and scrolls inside. The three-term min keeps
      a margin around it at every size: 3vw of paper either side once the
      screen is wide enough to spare it, and below that the dialog's own
-     1.25rem of padding, which is the click-out zone. */
+     1.25rem of padding, which is the click-out zone.
+
+     The width is set by the reading column inside it, not the other way
+     round: 58rem of sheet less its own margins leaves the body a measure of
+     about 72 characters, which is what a paragraph is supposed to run. */
   .pop-panel {
     position: relative;
     display: flex;
     flex-direction: column;
-    width: min(68rem, 94vw, 100%);
+    width: min(58rem, 94vw, 100%);
     max-height: min(92svh, 100%);
     background: var(--color-paper);
     clip-path: inset(0 0 100% 0);
@@ -421,10 +387,11 @@ const longDate = (d: Date) =>
     outline-offset: -3px;
   }
 
-  /* Top padding clears the close button, and the margins grow with the
-     sheet so the wider paper reads as paper and not as a filled box. */
+  /* Top padding clears the close button, and the side margins are wide
+     enough to be margins: they are what hold the body to its measure while
+     the sheet keeps its width. */
   .pop-col {
-    padding: clamp(3.25rem, 4.5vw, 5rem) clamp(1.5rem, 4.5vw, 4.5rem) clamp(3rem, 4.5vw, 5rem);
+    padding: clamp(3.25rem, 4.5vw, 5rem) clamp(1.5rem, 5vw, 5.5rem) clamp(3rem, 4.5vw, 5rem);
   }
 
   /* Same size as the title on the post's own page, on purpose: the two
@@ -436,15 +403,15 @@ const longDate = (d: Date) =>
     font-size: clamp(2rem, 5vw, 3.75rem);
   }
 
-  /* The body takes the same measure the title does: one column, edge to
-     edge, so the sheet reads as a printed page instead of a wide header
-     over a narrow strip with bare paper down its right side. The size
-     steps up with the width (the text face needs the extra weight to hold a line
-     this long) and the leading opens with it. */
+  /* The body takes the same measure the title does: one column between the
+     sheet's own margins, so the post reads as a printed page instead of a
+     wide header over a narrow strip with bare paper down its right side.
+     Set large, with the leading opened to match, and the sheet sized around
+     it so the line still lands near 72 characters. */
   .pop-body {
     margin-top: 2rem;
-    font-size: clamp(1.1875rem, 1.05vw + 0.9rem, 1.375rem);
-    line-height: 1.78;
+    font-size: clamp(1.125rem, 0.55vw + 0.95rem, 1.3125rem);
+    line-height: 1.76;
     text-wrap: pretty;
   }
 

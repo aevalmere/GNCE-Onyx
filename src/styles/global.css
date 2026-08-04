@@ -14,7 +14,7 @@
    ================================================================== */
 @theme {
   /* Type */
-  --font-display: 'Uncial Antiqua', 'Ubuntu', serif;
+  --font-display: 'Uncial Antiqua', 'Ubuntu', sans-serif;
   --font-script: 'Grey Qo', 'Uncial Antiqua', cursive;
   --font-text: 'Ubuntu', system-ui, sans-serif;
   --font-code: ui-monospace, 'SFMono-Regular', Menlo, monospace;
@@ -54,6 +54,10 @@
   --color-line: color-mix(in srgb, #10254f 18%, transparent);
   /* One step deeper into the blue than paper: the alternate band. */
   --color-deep: color-mix(in srgb, #10254f 9%, #c9cfdd);
+  /* Media plates waiting on a picture: deeper again, so a plate reads as a
+     plate on either band. Shadow grey belonged to the black site and lands
+     on a light page as a hole in it. */
+  --color-slot: color-mix(in srgb, #10254f 20%, #c9cfdd);
 }
 
 html {
@@ -160,14 +164,15 @@ body {
   border: 1px solid var(--color-line);
 }
 
-/* Empty media frame awaiting real content (photos, video). No outline: a
-   flat steel field reads as a plate waiting for a picture, where an outlined
-   one reads as an empty box. */
+/* Empty media frame awaiting real content (photos, video). An indigo wash
+   with the band's own hairline around it: the fill says a picture belongs
+   here, and the edge is what keeps a grid of them reading as a grid. */
 .slot {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-steel);
+  background: var(--color-slot);
+  border: 1px solid var(--color-line);
 }
 
 .hairline {
@@ -391,12 +396,13 @@ html.no-js .cursor-card {
    ================================================================== */
 .post-body {
   color: var(--color-ink);
-  font-size: 1.125rem;
-  line-height: 1.75;
+  font-size: 1.1875rem;
+  line-height: 1.76;
+  text-wrap: pretty;
 }
 
 .post-body > * + * {
-  margin-top: 1.25em;
+  margin-top: 1.15em;
 }
 
 .post-body h2,
