@@ -2,8 +2,9 @@
 
 Astro 7 + Tailwind CSS 4 website for a rookie FIRST Tech Challenge (FTC)
 robotics team. The whole site is one scrollable page
-(`src/pages/index.astro` composing `src/components/home/`); blog posts and
-the parked `/lab/onyx/` page are the only separate routes. Copy is real;
+(`src/pages/index.astro` composing `src/components/home/`); blog posts, the
+`/drivetrain/` calculator, and the parked `/lab/onyx/` page are the only
+separate routes. Copy is real;
 media and a few identity facts (team number, email, Instagram, form link)
 are still placeholder slots.
 
@@ -47,6 +48,15 @@ Manage the background server with `astro dev stop`, `astro dev status`, and `ast
 - The WebGL ONYX word (`src/scripts/onyx3d.ts` + `src/data/onyx-glyphs.ts`)
   is parked on the unlinked page `/lab/onyx/`. Keep it building and usable;
   don't link it from nav/footer or re-import it on other pages.
+- The FTC drivetrain calculator (`src/pages/drivetrain.astro`, ported whole
+  from Ethan Zhang's personal site and re-skinned to this site's tokens) is
+  a self-contained tool page: every style is `.dt-` prefixed or declared in
+  the page, and it runs no motion-engine scenes. Its share links keep state
+  in the URL hash, so it passes `keepHash` to BaseLayout (which otherwise
+  strips fragments on reload). The announcement post
+  `src/content/blog/drivetrain-calculator.md` links to it; it is not in the
+  nav. E2E regression: `tests/drivetrain.e2e.mjs` (run steps in its header).
+  Research notes + third-party notices moved with it into `docs/`.
 - Navigation is `src/components/GearNav.astro` (corner toggle opening a
   right-side paper drawer; old filename, no gear), a scroll nav over the
   one-page home: section anchor changes go in its `links` array AND

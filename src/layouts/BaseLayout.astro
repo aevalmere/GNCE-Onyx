@@ -27,6 +27,12 @@ interface Props {
   light?: boolean;
   /** Run the intro cover and its load meter. Home page only. */
   intro?: boolean;
+  /**
+   * Keep the URL fragment across a reload. The default strip exists because
+   * the drawer writes #section anchors as you read; a page whose hash IS its
+   * state (the drivetrain calculator's #s= share links) opts out with this.
+   */
+  keepHash?: boolean;
 }
 const {
   title,
@@ -34,6 +40,7 @@ const {
   hideFooter = false,
   light = false,
   intro = false,
+  keepHash = false,
 } = Astro.props;
 const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
 ---
@@ -47,7 +54,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     <link rel="icon" type="image/svg+xml" href={`${base}/favicon.svg`} />
     <meta name="generator" content={Astro.generator} />
     <title>{title} · GNCE Onyx</title>
-    <script is:inline define:vars={{ intro }}>
+    <script is:inline define:vars={{ intro, keepHash }}>
       document.documentElement.classList.replace('no-js', 'js');
 
       // Every page opens at its own beginning. Reloads and returning
@@ -69,7 +76,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
       // ends the argument in their favour.
       try {
         var nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
-        var reloadHash = !!(location.hash && nav && nav.type === 'reload');
+        var reloadHash = !!(location.hash && !keepHash && nav && nav.type === 'reload');
         if (reloadHash) {
           history.replaceState(null, '', location.pathname + location.search);
         }
