@@ -4,15 +4,16 @@
  * scrolls the rest of the page off it like a curtain, so it has to read as
  * one still picture instead of a sequence: no reveals, no split headline,
  * nothing that arrives. The sponsor lockup holds the top edge and one
- * centred line closes the bottom: the "Get in touch" headline with the two
- * contact keys and the form button beside it. No footer and no small print;
+ * centred line closes the bottom: the "Get in touch" headline with three
+ * machined keys beside it (email, Instagram, the sponsor form). No footer
+ * and no small print;
  * the contact line IS the sign-off (the blog pages keep the shared Footer,
  * where it does navigation work). Sized to one viewport, so what the
  * curtain uncovers is the whole thing.
  *
  * At REACH only that contact line shows under the curtain, which is what
  * leaves the rest of the viewport to the sponsor pitch above it: the strip
- * is sized so the whole "Back the build." section stands in the black with
+ * is sized so the whole "Back the build." section stands in the field above with
  * the paper line beneath it, one composed screen.
  *
  * Two levels, not a range. The page rests at REACH: the curtain's bottom edge
@@ -29,7 +30,7 @@
 import Placeholder from '../Placeholder.astro';
 ---
 
-<section id="contact" class="finale band-light">
+<section id="contact" class="finale band-deep">
   <div class="finale-frame mx-auto w-full max-w-[88rem] px-5 sm:px-8">
     <!-- The shirt back: the names printed between the shoulders, biggest
          backer on top, the rest sharing the line under it. One list, one
@@ -50,10 +51,11 @@ import Placeholder from '../Placeholder.astro';
       <h2 class="reach-head type-display">Get in touch</h2>
 
       <div class="reach-row">
-        <!-- Two keys, values in the open: glyph then address, one block.
-             Envelope and Instagram are drawn here rather than pulled from a
-             set, on the same 24 grid at the same stroke weight. -->
-        <a class="pin" href="#" title="Email pending" data-magnetic="0.3">
+        <!-- Three keys, one type: glyph then value, one block each. Email,
+             Instagram and the sponsor form are the same control at the same
+             size, drawn here rather than pulled from a set, on the same 24
+             grid at the same stroke weight. -->
+        <a class="pin" href="#" title="Email pending">
           <span class="sr-only">Email</span>
           <svg
             class="pin-glyph"
@@ -73,7 +75,7 @@ import Placeholder from '../Placeholder.astro';
           </span>
         </a>
 
-        <a class="pin" href="#" title="Handle pending" data-magnetic="0.3">
+        <a class="pin" href="#" title="Handle pending">
           <span class="sr-only">Instagram</span>
           <svg
             class="pin-glyph"
@@ -94,8 +96,26 @@ import Placeholder from '../Placeholder.astro';
           </span>
         </a>
 
-        <a href="#" class="btn btn-solid stub cta" title="Form link pending" data-magnetic="0.35">
-          Open the form
+        <a class="pin" href="#" title="Form link pending">
+          <span class="sr-only">Sponsor form</span>
+          <svg
+            class="pin-glyph"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            aria-hidden="true"
+          >
+            <rect x="4.5" y="3" width="15" height="18"></rect>
+            <path d="M8 8 H 16"></path>
+            <path d="M8 12 H 16"></path>
+            <path d="M8 16 H 13"></path>
+          </svg>
+          <span class="pin-slot">
+            <span class="pin-clip">
+              <span class="pin-value stub" title="Form link pending">Form</span>
+            </span>
+          </span>
         </a>
       </div>
     </div>
@@ -192,6 +212,27 @@ import Placeholder from '../Placeholder.astro';
     text-align: center;
   }
 
+  /* The armed state, set by the script and only when it has PROVED the
+     geometry: a fine pointer, everything on one line, and room for the
+     widest drawer to open with the whole line still centred. Armed, the
+     line may not wrap, which is what killed the flicker: the old bug was
+     the grown row dropping under the headline and snapping back the moment
+     the pointer lost the key.
+
+     Wrapping is the only thing the armed state forbids. The line stays
+     centred, so an opening drawer spends half its width each way: the keys
+     step right, the headline steps left by the same amount, and the group
+     reads as evenly spaced at rest AND open. Anywhere the proof fails
+     (touch, a narrow window, no JS) the class never lands: the line wraps
+     calmly and the values simply stand open. */
+  .reach-live {
+    flex-wrap: nowrap;
+  }
+
+  .reach-live .reach-row {
+    flex-wrap: nowrap;
+  }
+
   /* The site's last headline, sized to share its line with the controls:
      the two together have to clear the 88rem frame with air to spare, and
      the svh cap keeps a short landscape screen from stacking them. */
@@ -199,8 +240,8 @@ import Placeholder from '../Placeholder.astro';
     font-size: clamp(2.25rem, min(5.2vw, 9svh), 4.75rem);
   }
 
-  /* One family, one gap. The keys and the form button share --key-h and the
-     same 14px on every side, so the row reads as one machined strip. */
+  /* One family, one gap. The three keys share --key-h and the same 14px on
+     every side, so the row reads as one machined strip. */
   .reach-row {
     --key-h: 3.375rem;
 
@@ -212,8 +253,7 @@ import Placeholder from '../Placeholder.astro';
   }
 
   /* Machined keys: a solid indigo block with the glyph centred in it, no
-     outline and no label. Square at rest, which is the hit area too, and
-     magnetic like every other control on the line. */
+     outline and no label. Square at rest, which is the hit area too. */
   .pin {
     position: relative;
     display: inline-flex;
@@ -222,20 +262,13 @@ import Placeholder from '../Placeholder.astro';
     padding-inline: 1rem;
     background: var(--color-surface);
     color: var(--color-paper);
-    transition: transform 160ms var(--ease-out-strong);
+    transition:
+      transform 160ms var(--ease-out-strong),
+      background-color 200ms ease;
   }
 
   .pin:active {
     transform: scale(0.97);
-  }
-
-  /* The grape block runs the same height as the keys instead of the .btn
-     padding's own, so the row has one silhouette. It stands offset to the
-     right of the keys, still on the line: the air marks it as the other
-     kind of ask, and it is also the room the email drawer opens into. */
-  .cta {
-    height: var(--key-h);
-    padding-block: 0;
   }
 
   .pin-glyph {
@@ -271,58 +304,45 @@ import Placeholder from '../Placeholder.astro';
     cursor: inherit;
   }
 
-  /* Where there is a pointer, the keys collapse to their glyphs and the
-     value becomes a drawer: parked out of the layout entirely (absolute,
-     off the key's right edge) and drawn OVER the line on hover or focus as
-     a clip wipe. Over, not into: this group is centred, and a control that
-     grew in flow would re-centre the whole line and slide out from under
-     the pointer that opened it. The drawer stays hoverable, so a hand
-     drifting onto the address keeps it open and the whole key stays one
-     click target; the raised z-index carries it over the neighbouring key
-     and the form button for as long as it is out. */
+  /* The keys take the same grape the buttons do: one hover vocabulary
+     across every control on the site. Color only; nothing moves on hover
+     except the drawer the armed state opens. */
   @media (hover: hover) and (pointer: fine) {
-    .pin-slot {
-      position: absolute;
-      left: 100%;
-      top: 0;
-      bottom: 0;
-      display: flex;
-      align-items: center;
-      padding-right: 1rem;
-      background: var(--color-surface);
-      clip-path: inset(0 100% 0 0);
-      transition: clip-path 360ms var(--ease-out-strong);
-    }
-
     .pin:hover,
     .pin:focus-visible {
-      z-index: 2;
-    }
-
-    .pin-value {
-      transform: translateX(-0.4rem);
-      transition: transform 360ms var(--ease-out-strong);
-    }
-
-    .pin:hover .pin-slot,
-    .pin:focus-visible .pin-slot {
-      clip-path: inset(0 0 0 0);
-    }
-
-    .pin:hover .pin-value,
-    .pin:focus-visible .pin-value {
-      transform: none;
-    }
-
-    /* The offset that separates the grape ask from the keys, and doubles as
-       the drawer's runway. Only where the drawer exists: the touch line
-       stays evenly gapped. */
-    .cta {
-      margin-left: clamp(1.25rem, 3vw, 2.75rem);
+      background: var(--color-accent);
     }
   }
 
-  /* Reduced motion: the drawer is simply out, and back. */
+  /* Armed, the keys rest collapsed to their glyphs and the value EXPLODES
+     outward on hover or focus: the block itself gets wider on a sprung
+     curve and everything to its right is physically shoved further right,
+     which is the point of the gesture. This is the one place on the site
+     that animates a layout property instead of a transform; the armed
+     state's no-wrap proof (above) is what makes that safe. The pointer
+     keeps its key: the box grows around the glyph, so the hand never loses
+     what it is holding. */
+  .reach-live .pin-slot {
+    grid-template-columns: 0fr;
+    transition: grid-template-columns 480ms var(--ease-spring);
+  }
+
+  .reach-live .pin-value {
+    transform: translateX(-0.4rem);
+    transition: transform 480ms var(--ease-spring);
+  }
+
+  .reach-live .pin:hover .pin-slot,
+  .reach-live .pin:focus-visible .pin-slot {
+    grid-template-columns: 1fr;
+  }
+
+  .reach-live .pin:hover .pin-value,
+  .reach-live .pin:focus-visible .pin-value {
+    transform: none;
+  }
+
+  /* Reduced motion: the value is simply there, and gone. */
   @media (prefers-reduced-motion: reduce) {
     .pin-slot,
     .pin-value {
@@ -350,17 +370,19 @@ import Placeholder from '../Placeholder.astro';
    * push is answered with a short tug that springs back; a second push, or
    * the same push simply kept up (trackpads pour one gesture out as a long
    * decaying stream, so enough swallowed travel counts as insistence), lifts
-   * the curtain in one animated move with the input locked. Touch pays once:
-   * a single swipe from REACH opens. From FULL a deliberate pull up plays
-   * the move in reverse; the stray counter-deltas inside a momentum tail do
-   * not, which is what kept yanking the page around. Scrolling up from REACH
+   * the curtain in one animated move with the input locked. From FULL a
+   * deliberate pull up plays the move in reverse; the stray counter-deltas
+   * inside a momentum tail do not, which is what kept yanking the page
+   * around. Scrolling up from REACH
    * is left free after at most a few swallowed pixels of noise, and if the
    * page is ever caught raw-scrolling between the levels under a live
    * gesture, the trip is finished toward whichever level it was headed for.
    *
-   * Wheel and touch only. Keyboard scrolling stays native and unlocked, and a
-   * page held still by the nav drawer or a post popup (both take Lenis down
-   * with `overflow: hidden`) is left to them. Reduced motion gets none of it:
+   * Fine pointers only: on touch the whole lock stands down and the page
+   * scrolls straight through the curtain reveal (which is plain sticky CSS
+   * and needs no help). Keyboard scrolling stays native and unlocked, and a
+   * page held still by the nav drawer (it takes Lenis down with
+   * `overflow: hidden`) is left to it. Reduced motion gets none of it:
    * plain scrolling, plus the anchor landing.
    */
   function initFinaleLock() {
@@ -370,13 +392,50 @@ import Placeholder from '../Placeholder.astro';
     if (!contact || !curtain || !head) return;
 
     const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+    const fine = matchMedia('(hover: hover) and (pointer: fine)');
     const engine = () => (window as any).__motion;
     const now = () => performance.now();
+
+    /* ---- arming the contact line ----------------------------------- */
+
+    // The key drawers must never wrap: a line that drops under the headline
+    // when a key grows and snaps back the moment the pointer loses it is a
+    // flicker loop. So the drawers only exist at all when the whole gesture
+    // is provable by arithmetic: fine pointer, and the headline plus the
+    // key row plus the WIDEST drawer fully open still fit one line. Then
+    // wrapping is forbidden and the line, still centred, simply grows about
+    // its middle: half the drawer's width to each side, so the group is
+    // evenly spaced closed and open alike. Anywhere the proof fails, the
+    // class stays off and the values stand open in a wrappable line.
+    const reachLine = contact.querySelector<HTMLElement>('.reach');
+    const row = contact.querySelector<HTMLElement>('.reach-row');
+    const armLine = () => {
+      if (!reachLine || !row) return;
+      // Never re-measure against an open drawer.
+      if (reachLine.querySelector('.pin:hover, .pin:focus-visible')) return;
+      if (!fine.matches) {
+        reachLine.classList.remove('reach-live');
+        return;
+      }
+      // Measure the armed geometry itself, drawers collapsed.
+      reachLine.classList.add('reach-live');
+      const width = reachLine.clientWidth;
+      const gap = parseFloat(getComputedStyle(reachLine).columnGap) || 0;
+      const rest = head.getBoundingClientRect().width + gap + row.getBoundingClientRect().width;
+      // The widest value, padding included, plus a hair of margin: what one
+      // open drawer adds to the line.
+      let drawer = 0;
+      row.querySelectorAll<HTMLElement>('.pin-value').forEach((v) => {
+        drawer = Math.max(drawer, v.offsetWidth);
+      });
+      if (rest + drawer + 12 > width) reachLine.classList.remove('reach-live');
+    };
+    fine.addEventListener?.('change', () => armLine());
 
     /* ---- the two levels ------------------------------------------- */
 
     // Bare paper left between the curtain's edge and the headline, so the
-    // black band does not sit on the type it uncovers.
+    // curtain's edge does not sit on the type it uncovers.
     const edge = () => Math.min(56, window.innerHeight * 0.06);
 
     // How far short of a full lift REACH sits, measured inside the pinned
@@ -431,10 +490,12 @@ import Placeholder from '../Placeholder.astro';
         queued = 0;
         const was = reach;
         measure();
+        armLine();
         if (Math.abs(was - reach) >= 1) moved(was);
       });
     };
     measure();
+    armLine();
     const sizes = new ResizeObserver(remeasure);
     sizes.observe(contact);
     sizes.observe(curtain);
@@ -469,6 +530,12 @@ import Placeholder from '../Placeholder.astro';
     }
 
     if (reduced.matches) return;
+
+    // Touch scrolls straight through: the curtain reveal above is plain
+    // sticky CSS and runs everywhere, but the gesture lock is a wheel-and-
+    // trackpad conversation, and on a phone it read as a broken page. The
+    // measuring and the deep-link landing above stay for everyone.
+    if (!fine.matches) return;
 
     /* ---- the lock -------------------------------------------------- */
 
@@ -524,9 +591,9 @@ import Placeholder from '../Placeholder.astro';
     let fingerAt = 0; // when the current drag started
     let crossedAt = 0; // when a reader's own gesture last landed on REACH
 
-    // The drawer and the post popups hold the page themselves (their
-    // holdPage takes Lenis down and puts `overflow: hidden` on the root).
-    // Whatever they are doing outranks this.
+    // The nav drawer holds the page itself (its holdPage takes Lenis down
+    // and puts `overflow: hidden` on the root). Whatever it is doing
+    // outranks this.
     const held = () => {
       const lenis = engine()?.lenis;
       return !!lenis?.isStopped || document.documentElement.style.overflow === 'hidden';
@@ -878,13 +945,19 @@ import Placeholder from '../Placeholder.astro';
     // trip arriving from below, a native anchor landing) still arms the lock.
     // It waits for the page to actually stop: taking hold of a reader who is
     // only passing back up through the level would put a wall in front of
-    // someone on their way out.
+    // someone on their way out. A stop a tug's width off the level is a tug
+    // or a catch that died mid-flight; nothing rests there, so it is set
+    // down properly rather than left hanging a few pixels shy.
+    const NEAR = 20;
     let resting: number | undefined;
     const onRest = () => {
       resting = undefined;
-      if (state === 'free' && live() && Math.abs(window.scrollY - reach) <= EPS) {
-        hold('locked', null);
-      }
+      if (state !== 'free' || !live()) return;
+      const off = Math.abs(window.scrollY - reach);
+      if (off <= EPS) hold('locked', null);
+      // Only from the dead-zone side: a reader paused just ABOVE the level
+      // is on their way out, and the magnet has no business with them.
+      else if (off <= NEAR && window.scrollY > reach) grab();
     };
 
     // Undo an overrun a drag could not be stopped from making. Never while
@@ -941,9 +1014,14 @@ import Placeholder from '../Placeholder.astro';
         // Touch momentum runs on after the finger is gone and no gesture can
         // be prevented: catch it again. Anything moving the page a beat after
         // the last gesture is somebody else (a keyboard, a find-in-page jump)
-        // and gets the level back.
+        // and gets the level back — but the rest watcher stays armed, so a
+        // move that dies a tug's width into the dead zone is still set down
+        // on the level instead of resting there.
         if (y > reach + EPS && now() - touchedAt < 800) grab();
-        else enter('free');
+        else {
+          enter('free');
+          if (Math.abs(y - reach) <= NEAR) resting = window.setTimeout(onRest, 140);
+        }
         return;
       }
 
@@ -962,7 +1040,7 @@ import Placeholder from '../Placeholder.astro';
         // Keyboard scrolling never lands in this branch: it stamps no
         // touchedAt, and stays native the whole way.
         run(y > prev ? 'full' : 'reach');
-      } else if (Math.abs(y - reach) <= EPS) resting = window.setTimeout(onRest, 140);
+      } else if (Math.abs(y - reach) <= NEAR) resting = window.setTimeout(onRest, 140);
     };
 
     // Lenis emits inside its own rAF, right after it has written the scroll

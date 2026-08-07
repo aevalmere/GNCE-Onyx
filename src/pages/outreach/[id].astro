@@ -1,14 +1,12 @@
 ---
 /**
  * Blog post page. One route per markdown file in src/content/blog/.
- * A paper page: back button, date, title, body. The shared Footer is the
- * small-print bar.
+ * A paper page: back button, date, title, rule, body, all on one 44rem
+ * reading column. The shared Footer is the small-print bar.
  *
- * This is the deep link and the no-JS route; on the home page the same
- * post opens as a popup instead (Outreach.astro). The two share a header,
- * down to the long dateline and the title's size, so arriving either way
- * looks like arriving at the same post. Only the way out differs: a back
- * button here, a close control there.
+ * This is THE way a post is read: the home Outreach index links straight
+ * here, and the shared view transition (BaseLayout) carries the reader
+ * over and back.
  */
 import { getCollection, render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
@@ -34,11 +32,11 @@ const dateStr = post.data.date.toLocaleDateString('en-US', {
 
   <article>
     <!-- POST HEADER -->
-    <header class="pt-32 pb-12 sm:pt-40">
-      <div class="mx-auto max-w-3xl px-5 sm:px-8">
+    <header class="pt-32 pb-10 sm:pt-40">
+      <div class="post-col mx-auto px-5 sm:px-8">
         <Reveal>
           <p>
-            <a class="back" href={`${base}/#outreach`} data-magnetic="0.25">
+            <a class="back" href={`${base}/#outreach`}>
               <span class="back-arrow" aria-hidden="true">&larr;</span>
               <span class="back-label type-label">Outreach</span>
             </a>
@@ -46,18 +44,22 @@ const dateStr = post.data.date.toLocaleDateString('en-US', {
         </Reveal>
 
         <Reveal delay={90} class="mt-10">
-          <p class="type-label text-muted">{dateStr}</p>
+          <p class="type-label text-faint">{dateStr}</p>
         </Reveal>
 
-        <h1 class="type-display mt-4 text-[clamp(2rem,5vw,3.75rem)]" data-split>
+        <h1 class="type-display mt-4 text-[clamp(2rem,5vw,3.5rem)]" data-split>
           {post.data.title}
         </h1>
+
+        <!-- The rule seats the post under its own masthead: the title above
+             it, the reading column below, both on the same margins. -->
+        <hr class="post-rule" />
       </div>
     </header>
 
     <!-- POST BODY -->
     <div class="pb-24 sm:pb-32">
-      <div class="post-body mx-auto max-w-3xl px-5 sm:px-8">
+      <div class="post-body post-col mx-auto px-5 sm:px-8">
         <Content />
       </div>
     </div>
@@ -65,6 +67,20 @@ const dateStr = post.data.date.toLocaleDateString('en-US', {
 </BaseLayout>
 
 <style>
+  /* One reading column for the header and the body both, so the dateline,
+     the title and the first paragraph hang off the same margin. Sized off
+     the body: the text inside the padding runs near seventy characters,
+     which is the whole reason the column is not simply as wide as the page. */
+  .post-col {
+    max-width: 44rem;
+  }
+
+  .post-rule {
+    margin-top: clamp(2.25rem, 4.5vw, 3.25rem);
+    border: 0;
+    border-top: 1px solid var(--color-line);
+  }
+
   .read-progress {
     position: fixed;
     top: 0;
@@ -77,8 +93,8 @@ const dateStr = post.data.date.toLocaleDateString('en-US', {
     transform-origin: 0 0;
   }
 
-  /* Back button: the arrow leads, the word follows. Magnetic pull comes
-     from motion.ts; the arrow slide is the hover's own beat. */
+  /* Back button: the arrow leads, the word follows; the arrow's short
+     slide is the whole hover. */
   .back {
     display: inline-flex;
     align-items: center;

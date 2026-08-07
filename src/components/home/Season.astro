@@ -46,14 +46,14 @@ const galleryCols = [
 ---
 
 <section id="season" class="season" aria-labelledby="season-title">
-  <div class="mx-auto max-w-[88rem] px-5 pt-28 pb-32 sm:px-8 sm:pt-40 sm:pb-44">
+  <div class="season-frame mx-auto max-w-[88rem] px-5 sm:px-8">
     <span class="mark" aria-hidden="true"></span>
     <h2 id="season-title" class="season-title type-display" data-split>Biobuzz</h2>
     <Reveal variant="up" class="mt-6">
       <p class="season-line text-muted">Our rookie season: 2026-2027, presented by RTX.</p>
     </Reveal>
 
-    <div class="events mt-16 sm:mt-20">
+    <div class="events mt-[clamp(2.5rem,7svh,5rem)]">
       {
         events.map((e) => (
           <div class="event">
@@ -118,7 +118,7 @@ const galleryCols = [
        row hover; the accordion script flies it into the panel on open. -->
   {
     events.map((e) => (
-      <div class="cursor-card season-card" id={`season-card-${e.key}`} aria-hidden="true">
+      <div class="cursor-card season-card" id={`season-card-${e.key}`} data-cursor-cut aria-hidden="true">
         <span class="poster poster-sm">
           <span class="poster-rule" />
           <span class="poster-name type-display">{e.name}</span>
@@ -129,11 +129,19 @@ const galleryCols = [
 </section>
 
 <style>
-  .season {
-    background: var(--color-bg);
+  /* One screen with everything shut, and taller than one the moment a panel
+     opens: min-height sets the resting frame, and the section grows past it
+     rather than clipping. */
+  .season-frame {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 100svh;
+    padding-top: clamp(4rem, 11svh, 8rem);
+    padding-bottom: clamp(4rem, 11svh, 8rem);
   }
 
-  /* Grape bar above the headline: the only garnish black sections get. */
+  /* Grape bar above the headline: a small true highlight. */
   .mark {
     display: block;
     width: 2.75rem;
@@ -231,11 +239,9 @@ const galleryCols = [
     cursor: default;
   }
 
+  /* Hover moves nothing, here as everywhere: the plus turning grape is the
+     whole hover, and the small nudge is saved for the press itself. */
   @media (hover: hover) and (pointer: fine) {
-    button.event-row:hover .event-name {
-      transform: translateX(0.6rem);
-    }
-
     button.event-row:hover .event-mark {
       color: var(--color-accent);
     }
@@ -288,10 +294,17 @@ const galleryCols = [
      same artwork at two scales. Both boxes are 16:9 for the same reason:
      the flight between them is then a single uniform scale with nothing to
      stretch and nothing to reflow.
-     No outline: like every media slot it is a flat steel plate waiting for a
-     picture, and a 1px rule is the one thing that cannot survive a scale. */
+     The edge is the one thing NOT in em: an em rule works out sub-pixel on
+     the card and heavy in the panel, where a hairline reads correctly at
+     both sizes. It is the flier that pays, and only while it flies (its
+     border scales with the transform, thin at takeoff, true at landing),
+     which is nothing the eye can catch inside a 0.7s scaling move. */
   .poster {
     --poster-em: 3.6cqw;
+    /* Solid space indigo, the site's working colour, so the artwork plate
+       reads as the one filled block in the section. It carries pale ink of
+       its own against that fill. */
+    --color-ink: var(--color-paper);
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -299,7 +312,8 @@ const galleryCols = [
     gap: 0.9em;
     padding: 1.25em;
     font-size: var(--poster-em);
-    background: var(--color-steel);
+    background: var(--color-surface);
+    border: 1px solid color-mix(in srgb, var(--color-paper) 26%, transparent);
   }
 
   .poster-rule {
@@ -897,8 +911,14 @@ const galleryCols = [
         // gives its height back below the row. Anything still tweening up
         // there counts as well, open or not, since a row caught mid-collapse
         // is holding height that is on its way out.
+        //
+        // Fine pointers only: the corrector writes the scroll position every
+        // frame, and on touch that fights the browser's own momentum
+        // scrolling (the panels visibly stuttered). A phone taps a header it
+        // can see, so the ride-up the corrector prevents barely exists
+        // there, and native scrolling matters more.
         const above = rows.some((o, i) => i < index && (o.isOpen() || gsap.isTweening(o.panel)));
-        const start = above ? hold(row.btn) : null;
+        const start = above && fine.matches ? hold(row.btn) : null;
         rows.forEach((other) => {
           if (other !== row && other.isOpen()) other.collapse(true);
         });

@@ -11,15 +11,16 @@
  */
 import '@fontsource/uncial-antiqua';
 import '@fontsource/grey-qo';
-import '@fontsource/cardo/400.css';
-import '@fontsource/cardo/700.css';
-import '@fontsource/cardo/400-italic.css';
+import '@fontsource/ubuntu/400.css';
+import '@fontsource/ubuntu/700.css';
+import '@fontsource/ubuntu/400-italic.css';
 import '../styles/global.css';
 import Footer from '../components/Footer.astro';
 import GearNav from '../components/GearNav.astro';
 
 interface Props {
-  title: string;
+  /** Page name for the tab. Omit on the home page: the site is the title. */
+  title?: string;
   description?: string;
   /** The home page ends in its own contact section, so it skips the Footer. */
   hideFooter?: boolean;
@@ -51,9 +52,15 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
+    <!-- The icon three ways: SVG for the browsers that take it, a real PNG
+         for the ones that quietly drop SVG and fall back to a dark default
+         (the "black favicon"), and the opaque apple-touch square. All three
+         carry their own paper tile, so no tab bar can swallow the mark. -->
     <link rel="icon" type="image/svg+xml" href={`${base}/favicon.svg`} />
+    <link rel="icon" type="image/png" sizes="32x32" href={`${base}/favicon-32.png`} />
+    <link rel="apple-touch-icon" sizes="180x180" href={`${base}/apple-touch-icon.png`} />
     <meta name="generator" content={Astro.generator} />
-    <title>{title} · GNCE Onyx</title>
+    <title>{title ? `${title} · GNCE Onyx` : 'GNCE Onyx'}</title>
     <script is:inline define:vars={{ intro, keepHash }}>
       document.documentElement.classList.replace('no-js', 'js');
 
@@ -122,7 +129,13 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
           // loading and lifts the cover itself; this timeout is only a
           // last resort so the cover can never get stuck if that script
           // fails to run.
-          if (intro) {
+          //
+          // Only for arrivals at the top: a deep link (coming back from a
+          // blog post lands on /#outreach) goes straight to its section
+          // with no loading screen in the way. A reload with a fragment
+          // was already stripped above, so a plain reload still plays the
+          // intro over the hero, which is always what sits under the lift.
+          if (intro && !location.hash) {
             document.documentElement.classList.add('loading');
             setTimeout(function () {
               document.documentElement.classList.remove('loading');
@@ -134,15 +147,29 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
       }
     </script>
   </head>
-  <body class:list={['min-h-svh antialiased', light ? 'band-light' : 'bg-bg text-ink']}>
+  <body class:list={['min-h-svh antialiased', light ? 'band-light' : 'bg-paper text-ink']}>
     <a class="skip-link" href="#main">Skip to content</a>
 
     {
       intro && (
         <Fragment>
-          <!-- Intro cover: one centered count that climbs in time with the
-               fonts, then the cover lifts into the hero's entrance. -->
+          <!-- Intro cover: the team mark drawing itself over one centered
+               count, both climbing in time with the fonts, then the cover
+               lifts into the hero's entrance. The path here is the same
+               unicursal line as public/logo.svg; the meter script below
+               plays its stroke out to match the counted progress, so the
+               ring closes exactly as the count lands on 100. -->
           <div class="intro" data-intro aria-hidden="true">
+            <svg class="intro-mark" viewBox="0 0 64 64" aria-hidden="true">
+              <path
+                data-intro-path
+                d="M32.0,9.0 C30.8,9.0 29.7,9.7 28.9,10.9 C28.0,12.1 27.6,13.9 27.7,15.9 C27.8,18.0 28.5,20.2 29.7,22.4 C30.9,24.5 32.7,26.5 34.9,28.1 C37.0,29.6 39.4,30.7 41.9,31.2 C44.3,31.7 46.6,31.7 48.6,31.1 C50.6,30.6 52.1,29.6 53.0,28.5 C54.0,27.3 54.2,26.0 53.9,24.9 C53.5,23.8 52.5,22.9 51.1,22.5 C49.7,22.1 47.8,22.2 45.9,22.9 C44.0,23.7 42.1,25.0 40.4,26.9 C38.8,28.7 37.5,31.0 36.6,33.5 C35.8,36.0 35.5,38.7 35.8,41.1 C36.1,43.6 36.8,45.8 38.0,47.5 C39.1,49.2 40.5,50.4 41.9,50.9 C43.2,51.4 44.6,51.3 45.5,50.6 C46.5,49.9 47.0,48.7 46.9,47.2 C46.9,45.7 46.2,44.0 44.9,42.5 C43.6,40.9 41.8,39.4 39.5,38.4 C37.3,37.4 34.6,36.9 32.0,36.9 C29.4,36.9 26.7,37.4 24.5,38.4 C22.2,39.4 20.4,40.9 19.1,42.5 C17.8,44.0 17.1,45.7 17.1,47.2 C17.0,48.7 17.5,49.9 18.5,50.6 C19.4,51.3 20.8,51.4 22.1,50.9 C23.5,50.4 24.9,49.2 26.0,47.5 C27.2,45.8 27.9,43.6 28.2,41.1 C28.5,38.7 28.2,36.0 27.4,33.5 C26.5,31.0 25.2,28.7 23.6,26.9 C21.9,25.0 20.0,23.7 18.1,22.9 C16.2,22.2 14.3,22.1 12.9,22.5 C11.5,22.9 10.5,23.8 10.1,24.9 C9.8,26.0 10.0,27.3 11.0,28.5 C11.9,29.6 13.4,30.6 15.4,31.1 C17.4,31.7 19.7,31.7 22.1,31.2 C24.6,30.7 27.0,29.6 29.1,28.1 C31.3,26.5 33.1,24.5 34.3,22.4 C35.5,20.2 36.2,18.0 36.3,15.9 C36.4,13.9 36.0,12.1 35.1,10.9 C34.3,9.7 33.2,9.0 32.0,9.0 Z"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="4.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
+            </svg>
             <p class="intro-count">
               <span class="intro-line">
                 <span class="intro-num" data-intro-num>0</span><span class="intro-pct">%</span>
@@ -162,6 +189,26 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
               var numEl = document.querySelector('[data-intro-num]');
               if (!numEl) return;
 
+              // The mark draws itself in step with the count: the stroke is
+              // one continuous line, so playing its dash out to `shown` is
+              // literally drawing the ring, and it closes on 100. A round
+              // cap paints a dot at the start before any length shows,
+              // which reads as the pen touching down.
+              var mark = document.querySelector('[data-intro-path]');
+              var markLen = 0;
+              try {
+                if (mark && mark.getTotalLength) markLen = mark.getTotalLength();
+              } catch (e) {
+                mark = null;
+              }
+              if (mark && markLen) {
+                mark.style.strokeDasharray = String(markLen);
+                mark.style.strokeDashoffset = String(markLen);
+              }
+              var draw = function (t) {
+                if (mark && markLen) mark.style.strokeDashoffset = String(markLen * (1 - t));
+              };
+
               // Real progress: the fraction of the site's font faces that
               // have loaded. document.fonts.ready is the definitive
               // "text is ready".
@@ -171,9 +218,9 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
                 var specs = [
                   '1em "Uncial Antiqua"',
                   '1em "Grey Qo"',
-                  '1em "Cardo"',
-                  '700 1em "Cardo"',
-                  'italic 1em "Cardo"',
+                  '1em "Ubuntu"',
+                  '700 1em "Ubuntu"',
+                  'italic 1em "Ubuntu"',
                 ];
                 var loaded = 0;
                 var step = function () {
@@ -222,10 +269,12 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
                 if (shown < 0) shown = 0;
                 if (shown >= 1) {
                   numEl.textContent = '100';
+                  draw(1);
                   lift();
                   return;
                 }
                 numEl.textContent = String(Math.max(0, Math.round(shown * 100)));
+                draw(shown);
                 requestAnimationFrame(frame);
               }
               requestAnimationFrame(frame);
@@ -245,8 +294,8 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     <GearNav />
 
     <!-- The motion engine: GSAP + ScrollTrigger + Lenis, the pinned hero
-         and roster, masked split-text, clip-wipe reveals, parallax, and
-         magnetic pull. Bows out under reduced motion (static CSS stands in). -->
+         and roster, masked split-text, and clip-wipe reveals. Bows out
+         under reduced motion (static CSS stands in). -->
     <script>
       import '../scripts/motion';
     </script>
@@ -260,12 +309,24 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
         inset: 0;
         z-index: 120;
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
-        background: var(--color-bg);
+        gap: clamp(1.25rem, 3svh, 2rem);
+        /* Space indigo, not black: the cover lifts into a light page, and
+           the blue is the site's main color now. */
+        background: var(--color-surface);
         transform: translateY(-101%);
         transition: transform 560ms var(--ease-in-out-strong);
         pointer-events: none;
+      }
+
+      /* The mark, drawing itself above the count in pale slate. The dash
+         play comes from the meter script; here it only gets a size. */
+      .intro-mark {
+        width: clamp(6rem, 15vw, 9.5rem);
+        height: auto;
+        color: var(--color-paper);
       }
 
       :global(html.loading) .intro {
@@ -280,7 +341,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
 
       /* The mask. Full leading plus padding is real headroom: the clip
          edge stands clear of the glyphs on every side, so the digits and
-         the % print whole. Tabular Cardo so the digits hold their box
+         the % print whole. Tabular figures so the digits hold their box
          while the number climbs. */
       .intro-count {
         overflow: clip;
@@ -289,7 +350,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
         font-weight: 700;
         font-size: clamp(3rem, 11vw, 7rem);
         line-height: 1;
-        color: var(--color-paper); /* pinned: the cover is black even on paper pages */
+        color: var(--color-paper);
         font-variant-numeric: tabular-nums lining-nums;
         font-feature-settings: 'tnum' 1, 'lnum' 1;
       }

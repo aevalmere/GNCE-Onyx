@@ -1,20 +1,31 @@
 ---
 /**
- * Team — ten names on black, wiping in from alternating sides.
+ * Team — the roster as a grid of portraits under one small title, the
+ * section the hero uncovers: index.astro pins it under the cover wipe on
+ * fine pointers, so this is the first thing the page opens onto. On touch
+ * it sits in plain flow and the page scrolls straight into it.
  *
- * Hovering a row rides a cursor card carrying that member's previous GNCE
- * teams (motion.ts `initCursorCards`, pointer-fine only). The same lineage
- * is always in the accessibility tree as sr-only text, and drops into the
- * layout as a static line wherever hover is not available: coarse pointers,
- * reduced motion, no JS.
+ * Five across and two down at full width, so the grid always ends on a full
+ * row; three across on a phone, everything centred. The plates are sized by
+ * height rather than by ratio, which is what keeps every row the same depth
+ * and every name on the same line, and what lets the whole block shrink
+ * with a short viewport instead of overrunning it. Photos drop straight
+ * into the plates.
+ *
+ * Each member's previous GNCE teams sit under the name as a permanent line:
+ * it is the whole point of a rookie team of veterans, so it reads on every
+ * machine rather than waiting for a hover. The names never answer the
+ * pointer; the portraits do: the hovered face zooms in a touch and its
+ * grid neighbours follow at half the step (script at the end of the file),
+ * attention falling off with distance.
  */
 import Reveal from '../Reveal.astro';
 
-// Previous GNCE team numbers only; the Lineage section carries the record.
+// Previous GNCE team numbers only; the record lives in git history.
 // Both orders below are the team's own and neither is a ranking: the roster
 // runs in the order the team set, and each member's numbers run the way that
-// member lists them. Editing this array is the whole job; the rows, the
-// cursor cards and the static fallback lines all read from it.
+// member lists them. Editing this array is the whole job; the cells and the
+// photo slots all read from it.
 const roster: { name: string; teams: string[] }[] = [
   { name: 'Ethan Zhang', teams: ['22489', '26111'] },
   { name: 'Anson Su', teams: ['22489', '26111'] },
@@ -31,151 +42,174 @@ const roster: { name: string; teams: string[] }[] = [
 const slug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 ---
 
-<section id="team">
-  <div class="mx-auto max-w-[88rem] px-5 py-24 sm:px-8 sm:py-32">
-    <span class="mark" aria-hidden="true"></span>
-    <h2 class="type-display text-[clamp(1.75rem,4vw,3rem)]" data-split>Our team</h2>
+<section id="team" aria-labelledby="team-title">
+  <div class="team-frame mx-auto w-full max-w-[88rem] px-5 sm:px-8">
+    <h2 id="team-title" class="team-head type-display" data-split>Team members</h2>
 
-    <ul class="hairline mt-12 border-b" data-reveal-group>
+    <ul class="roster" data-reveal-group>
       {
-        roster.map((member, i) => (
-          <li>
-            <Reveal variant={i % 2 ? 'left' : 'right'} class="hairline border-t">
-              <div class="roster-row" data-cursor-card={`member-${slug(member.name)}`}>
-                <span class="roster-marker" aria-hidden="true" />
-                <p class="roster-name">{member.name}</p>
+        roster.map((member) => (
+          <li class="member">
+            <Reveal variant="up">
+              <div class="member-plate" data-placeholder={`member-photo-${slug(member.name)}`} />
+              <p class="member-name">{member.name}</p>
+              <p class="member-teams">
+                {member.teams.length ? member.teams.join(' · ') : 'Rookie'}
                 <span class="sr-only">
-                  {member.teams.length
-                    ? `Previous teams: ${member.teams.join(', ')}.`
-                    : 'Rookie season, no previous teams.'}
+                  {member.teams.length ? ' previous GNCE teams' : ', no previous teams'}
                 </span>
-                <p class="roster-teams" aria-hidden="true">
-                  {member.teams.length ? member.teams.join(' · ') : 'Rookie'}
-                </p>
-              </div>
+              </p>
             </Reveal>
           </li>
         ))
       }
     </ul>
   </div>
-
-  <!-- Parked outside the reveals: a clipped ancestor would clip the fixed card. -->
-  {
-    roster.map((member) => (
-      <div class="cursor-card member-card" id={`member-${slug(member.name)}`} aria-hidden="true">
-        {member.teams.length ? (
-          member.teams.map((num) => (
-            <p class="card-team">
-              <span class="card-num">{num}</span>
-            </p>
-          ))
-        ) : (
-          <p class="card-rookie">Rookie</p>
-        )}
-      </div>
-    ))
-  }
 </section>
 
 <style>
-  /* Grape mark above the headline: the only garnish black sections get. */
-  .mark {
-    display: block;
-    width: 2.75rem;
-    height: 3px;
-    margin-bottom: 1.75rem;
-    background: var(--color-accent);
+  /* One screen, the title and the grid centred in it. */
+  .team-frame {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 100svh;
+    padding-top: clamp(3.5rem, 8svh, 5.5rem);
+    padding-bottom: clamp(3.5rem, 8svh, 5.5rem);
   }
 
-  .roster-row {
+  .team-head {
+    margin-bottom: clamp(1.5rem, 4svh, 2.75rem);
+    font-size: clamp(1.75rem, 4vw, 3rem);
+  }
+
+  /* One gap value drives both axes, so the columns and the rows are spaced
+     by the same measure and the block reads as a grid rather than as rows
+     that happen to line up. */
+  .roster {
+    --grid-gap: clamp(0.85rem, 1.8vw, 1.75rem);
+    display: grid;
+    /* Two across on a phone: ten faces in five even rows, portraits big
+       enough to be faces. Five across from the tablet breakpoint up, where
+       the grid ends on two full rows. */
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(1.25rem, 3svh, 2.5rem) var(--grid-gap);
+  }
+
+  /* Square, always: one ratio for every portrait means a row of faces is a
+     row of faces, and a photo dropped in crops to the same shape for
+     everyone. The cell width sets the size, so the names below sit on one
+     line across the whole grid. */
+  .member-plate {
     position: relative;
-    padding: 1rem 0;
-    transition: padding-left 300ms var(--ease-out-strong);
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background: var(--color-slot);
+    border: 1px solid var(--color-slot-edge);
   }
 
-  .roster-marker {
-    position: absolute;
-    left: 0;
-    top: 1.75rem;
-    width: 0;
-    height: 2px;
-    background: var(--color-accent);
-    transition: width 300ms var(--ease-out-strong);
+  @media (min-width: 40rem) {
+    .roster {
+      /* Squares cannot be told to fit a short screen by trimming their
+         height, so the CELL is what gets capped: the smaller of the column
+         width and the height two rows may have, with the grid centring
+         itself whenever the height is what binds. The 28rem reserve is this
+         section's other furniture (both paddings, the title, the two name
+         blocks, the row gap) measured at its largest. */
+      --cell: min((100% - 4 * var(--grid-gap)) / 5, (100svh - 28rem) / 2);
+      grid-template-columns: repeat(5, var(--cell));
+      justify-content: center;
+      gap: clamp(1.75rem, 4svh, 3rem) var(--grid-gap);
+    }
   }
 
-  /* Body serif, not the distressed display face: ten names read cleanly. */
-  .roster-name {
-    font-family: var(--font-text);
+  .member-name {
+    margin-top: 0.85rem;
     font-weight: 700;
-    font-size: clamp(1.4rem, 3vw, 2rem);
-    line-height: 1.2;
-    transition: color 200ms ease;
+    font-size: clamp(0.9375rem, 1.05vw, 1.125rem);
+    line-height: 1.25;
   }
 
-  /* The no-pointer twin of the cursor card. Hidden wherever hover works. */
-  .roster-teams {
-    display: none;
-    margin-top: 0.35rem;
+  .member-teams {
+    margin-top: 0.15rem;
     font-size: 0.8125rem;
     line-height: 1.4;
-    color: var(--color-muted);
+    color: var(--color-faint);
     font-variant-numeric: tabular-nums lining-nums;
   }
 
-  @media (hover: none) {
-    .roster-teams {
-      display: block;
-    }
-  }
-
-  /* Reduced motion and no-JS never get the card, so the line stands in. */
-  @media (prefers-reduced-motion: reduce) {
-    .roster-teams {
-      display: block;
-    }
-  }
-
-  :global(html.no-js) .roster-teams {
-    display: block;
-  }
-
+  /* The one hover in the grid, and it belongs to the pictures: the portrait
+     under the pointer zooms in a touch, and its grid neighbours (the cell
+     either side plus the one above or below, marked data-near by the script
+     at the end of this file) come along at half the step. The attention
+     falls off with distance, like leaning in toward one face in a team
+     photo. Transform only, so the grid itself never moves a pixel. */
   @media (hover: hover) and (pointer: fine) {
-    .roster-row:hover {
-      padding-left: 2.75rem;
+    .member-plate {
+      transition: transform 340ms var(--ease-out-strong);
     }
-    .roster-row:hover .roster-marker {
-      width: 1.75rem;
+
+    .member:hover .member-plate {
+      transform: scale(1.045);
     }
-    .roster-row:hover .roster-name {
-      color: var(--color-accent);
+
+    .member[data-near] .member-plate {
+      transform: scale(1.022);
     }
   }
 
-  /* Cursor card: compact stack of previous teams. Panel background, border
-     and hidden resting state all come from the base .cursor-card class. */
-  .member-card {
-    min-width: 8.5rem;
+  @media (prefers-reduced-motion: reduce) {
+    .member-plate {
+      transition: none;
+    }
+
+    .member:hover .member-plate,
+    .member[data-near] .member-plate {
+      transform: none;
+    }
   }
 
-  .card-team + .card-team {
-    margin-top: 0.55rem;
-  }
+  /* The phone grid centres: plates, names and the title on one axis. */
+  @media (max-width: 40rem) {
+    .team-head {
+      text-align: center;
+    }
 
-  .card-num {
-    display: block;
-    font-family: var(--font-text);
-    font-weight: 700;
-    font-size: 1.5rem;
-    line-height: 1;
-    font-variant-numeric: tabular-nums lining-nums;
-  }
-
-  .card-rookie {
-    font-family: var(--font-text);
-    font-weight: 700;
-    font-size: 1.125rem;
-    line-height: 1.2;
-    white-space: nowrap;
+    .member {
+      text-align: center;
+    }
   }
 </style>
+
+<script>
+  // The neighbour half of the roster zoom. CSS carries the hovered cell
+  // (:hover) and this marks the cells adjacent to it in the GRID, not the
+  // DOM: either side on the same row, plus the one directly above or below,
+  // read off the grid's live column count so the 5-across and 2-across
+  // layouts both get their true neighbours. Fine pointers only; a phone
+  // has no hover and gets nothing to clean up.
+  function initRosterZoom() {
+    const grid = document.querySelector<HTMLElement>('#team .roster');
+    if (!grid || !matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+    const cells = [...grid.querySelectorAll<HTMLElement>('.member')];
+
+    const clear = () => cells.forEach((c) => delete c.dataset.near);
+
+    cells.forEach((cell, i) => {
+      cell.addEventListener('pointerenter', () => {
+        clear();
+        const cols = getComputedStyle(grid).gridTemplateColumns.split(' ').length || 1;
+        const col = i % cols;
+        const near = [i - cols, i + cols];
+        if (col > 0) near.push(i - 1);
+        if (col < cols - 1) near.push(i + 1);
+        near.forEach((n) => {
+          if (n >= 0 && n < cells.length) cells[n].dataset.near = '';
+        });
+      });
+      cell.addEventListener('pointerleave', clear);
+    });
+  }
+
+  initRosterZoom();
+</script>

@@ -33,18 +33,22 @@ Manage the background server with `astro dev stop`, `astro dev status`, and `ast
 
 ## Architecture notes
 
-- Fonts: Uncial Antiqua (display), Grey Qo (script accent), Cardo (body).
-  Palette is the four colors with two purple steps; no idle glows, no
+- Fonts: Uncial Antiqua (display), Grey Qo (script accent), Ubuntu (body).
+  Light site: pale slate paper, space indigo as the main color, deep-tinted
+  alternate bands, grape for true highlights only; no idle glows, no
   gradient fills. See `DESIGN.md`.
 - One shared shell: `src/layouts/BaseLayout.astro` (fonts, GearNav, Footer,
   intro cover, heat rail). It imports the motion engine
   `src/scripts/motion.ts` (GSAP + ScrollTrigger + Lenis): generic
   primitives (`[data-split]` masked lines, `[data-reveal]`/
-  `[data-reveal-scrub]` clip wipes, `[data-parallax]`, `[data-count]`,
-  `[data-magnetic]`, `[data-hover-preview]`) plus named scenes
-  (`[data-stack]` card stack, `[data-hscroll]` horizontal pan,
-  `[data-coverflow]` Swiper, `[data-flip]`, `[data-ladder]`,
-  `[data-progress]`). All reduced-motion safe. No opacity cross-fades.
+  `[data-reveal-scrub]` clip wipes, `[data-parallax]`,
+  `[data-hover-preview]`, `[data-cursor-card]`) plus named scenes
+  (`[data-cover-wipe]`, `[data-hscroll]` horizontal pan,
+  `[data-ladder]`, `[data-progress]`). The cover wipe and the finale
+  gesture lock run on fine pointers only; touch scrolls the page straight
+  through, with just the finale's sticky curtain reveal. Nothing follows
+  the cursor on buttons and display type never answers the pointer. All reduced-motion
+  safe. No opacity cross-fades.
 - The WebGL ONYX word (`src/scripts/onyx3d.ts` + `src/data/onyx-glyphs.ts`)
   is parked on the unlinked page `/lab/onyx/`. Keep it building and usable;
   don't link it from nav/footer or re-import it on other pages.
@@ -68,6 +72,10 @@ Manage the background server with `astro dev stop`, `astro dev status`, and `ast
   siblings by putting `data-reveal-group` on their parent. For a heading
   that should fly in per character, add `data-split` to it instead (plain
   text only, no inner markup). See `DESIGN.md` "Motion engine".
+  A component's own root element does NOT inherit the calling file's style
+  scope, so a scoped rule can never target a class passed to `<Reveal>`
+  (only Tailwind utilities work there). Put the reveal inside the element
+  the layout depends on, not around it.
 - Blog: posts are markdown in `src/content/blog/` (collection defined in
   `src/content.config.ts`), rendered by `src/pages/outreach/[id].astro`.
 
