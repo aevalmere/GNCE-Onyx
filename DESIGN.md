@@ -24,10 +24,10 @@ touching UI.
    and solid color; content is sharp from its first painted frame (reveals
    are clip wipes and drift, never a blur-in), and nothing frosted sits
    over anything. Texture is film grain alone, used sparingly.
-3. **Type is the imagery.** Uncial Antiqua (display), Grey Qo (one script
-   flourish per page), Ubuntu (body). Push display scale hard; keep body
-   readable (Ubuntu is a plain modern sans; the fancy faces stay on the
-   titles alone).
+3. **Type is the imagery.** LEMON MILK Medium (display; the italic exists
+   for rare emphasis), Grey Qo (one script flourish per page), Ubuntu
+   (body). Push display scale hard; keep body readable (Ubuntu is a plain
+   modern sans; the display face stays on the titles alone).
 3b. **The mark.** The team logo is the "circle of hands": one unbroken
    indigo line looping five times around a shared centre and closing where
    it began (`public/logo.svg`, viewBox 64). It sits in the hero's foot,
@@ -55,7 +55,7 @@ touching UI.
 
 | Token | Value | Use |
 | --- | --- | --- |
-| `--font-display` | Uncial Antiqua | Headlines, the ONYX wordmark |
+| `--font-display` | LEMON MILK Medium | Headlines, the ONYX wordmark |
 | `--font-script` | Grey Qo | One script flourish per page |
 | `--font-text` | Ubuntu | Body, labels (`.type-label` = spaced caps) |
 | `--color-bg` | `#000000` | Black, veils only: the nav drawer's scrim |
@@ -108,17 +108,15 @@ Under reduced motion the module bows out and static CSS stands in.
   on the script flourish. Titles and subtitles hold still.
 
 **Scenes** (named, run only when their element exists):
-- The WebGL ONYX journey (`src/scripts/onyx3d.ts` + `src/data/onyx-glyphs.ts`)
-  is parked, fully working, on the unlinked page `/lab/onyx/`
-  (`src/pages/lab/onyx.astro`). Home no longer uses it; keep it building,
-  don't link it.
 - `[data-cover-wipe]` — the hero cover: the whole opening viewport slides
   off to the left over 1.6 viewports of scroll (geometry in index.astro;
   the same 1.6 lives in motion.ts and GearNav's #team trip), uncovering
   the Team roster pinned beneath. Fine pointers only; touch scrolls
   straight through. `[data-cover-deep]` inside it gives up almost half the
-  distance on the same timeline, so the sheet's trailing edge crops it and
-  the exit visibly shears into two planes.
+  distance on the same timeline, so the sheet's trailing edge crops it,
+  and `[data-cover-fast]` (the team number, top right) spends most of a
+  viewport of extra travel, first thing fully off: the exit shears into
+  three planes at three speeds.
 - `[data-hscroll]` / `[data-hscroll-track]` — diagonal scroll-hijack
   (season build log): the track pans sideways while climbing, panels
   counter-drift past each other, and the track skews with scroll velocity.
@@ -144,7 +142,7 @@ drawer nav doubles as the scroll nav (anchor ids in parentheses); `Finale`
 carries the contact line, so BaseLayout gets `hideFooter` on home. The five
 sections above the finale ride in an opaque `.curtain`; the finale sits under it and
 is revealed by the page's last scroll (mechanics in `index.astro`). Blog
-posts keep their own pages; `/lab/onyx/` stays parked and unlinked.
+posts keep their own pages.
 Touch gets none of the scroll choreography: the cover wipe and the finale
 gesture lock are gated to `(hover: hover) and (pointer: fine)` (the same
 media query in index.astro's geometry, motion.ts and Finale's script, so
@@ -234,7 +232,7 @@ word goes grape, because a link that grew would shove its neighbours and
 make the cursor card flicker. Each link keeps its cursor-card descriptor
 and its sr-only line. Section changes go in the
 `links` array here and in `Footer.astro`, which carries the plain-text
-fallback on blog and lab pages. Under reduced motion the panel and its
+fallback on blog pages. Under reduced motion the panel and its
 boxes just appear.
 
 ## The blog (Outreach)
@@ -258,7 +256,7 @@ BaseLayout).
 | `components/home/*.astro` | The six one-page sections, composed by `pages/index.astro`. |
 | `components/Reveal.astro` | `[data-reveal]` wrapper. |
 | `components/GearNav.astro` | Corner toggle (two rules that cross) + right-side drawer: paper panel, bare display-type links that zoom in (hover turns them grape, nothing floats), Lenis smooth anchors. Old filename, no gear. |
-| `components/Placeholder.astro` / `SectionLabel.astro` / `Footer.astro` | Invisible slot markers / label / the shared small print (blog + lab pages only; home ends on the finale's contact line). |
+| `components/Placeholder.astro` / `Footer.astro` | Invisible slot markers / the shared small print (blog pages only; home ends on the finale's contact line). |
 
 ## Conventions
 

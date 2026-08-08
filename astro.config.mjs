@@ -2,6 +2,7 @@
 import { defineConfig } from 'astro/config';
 
 import tailwindcss from '@tailwindcss/vite';
+import rehypeExternalLinks from 'rehype-external-links';
 
 // https://astro.build/config
 export default defineConfig({
@@ -13,6 +14,10 @@ export default defineConfig({
     '/season': '/GNCE-Onyx/#season',
     '/contact': '/GNCE-Onyx/#contact',
     '/outreach': '/GNCE-Onyx/#outreach',
+  },
+  // External links in post bodies leave the site, so they open their own tab.
+  markdown: {
+    rehypePlugins: [[rehypeExternalLinks, { target: '_blank', rel: ['noopener'] }]],
   },
   vite: {
     plugins: [tailwindcss()]

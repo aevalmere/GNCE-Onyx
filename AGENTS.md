@@ -1,12 +1,11 @@
 # Agent guide
 
-Astro 7 + Tailwind CSS 4 website for a rookie FIRST Tech Challenge (FTC)
-robotics team. The whole site is one scrollable page
-(`src/pages/index.astro` composing `src/components/home/`); blog posts, the
-`/drivetrain/` calculator, and the parked `/lab/onyx/` page are the only
-separate routes. Copy is real;
-media and a few identity facts (team number, email, Instagram, form link)
-are still placeholder slots.
+Astro 7 + Tailwind CSS 4 website for FTC team 37122, GNCE Onyx. The whole
+site is one scrollable page
+(`src/pages/index.astro` composing `src/components/home/`); blog posts and
+the `/drivetrain/` calculator are the only separate routes. Copy and
+identity facts are real (team 37122, gnceonyx@gmail.com, @gnceonyx);
+media and the sponsor form link are still placeholder slots.
 
 ## Development
 
@@ -33,7 +32,8 @@ Manage the background server with `astro dev stop`, `astro dev status`, and `ast
 
 ## Architecture notes
 
-- Fonts: Uncial Antiqua (display), Grey Qo (script accent), Ubuntu (body).
+- Fonts: LEMON MILK Medium (display, self-hosted in `src/assets/fonts/`),
+  Grey Qo (script accent), Ubuntu (body).
   Light site: pale slate paper, space indigo as the main color, deep-tinted
   alternate bands, grape for true highlights only; no idle glows, no
   gradient fills. See `DESIGN.md`.
@@ -49,9 +49,6 @@ Manage the background server with `astro dev stop`, `astro dev status`, and `ast
   through, with just the finale's sticky curtain reveal. Nothing follows
   the cursor on buttons and display type never answers the pointer. All reduced-motion
   safe. No opacity cross-fades.
-- The WebGL ONYX word (`src/scripts/onyx3d.ts` + `src/data/onyx-glyphs.ts`)
-  is parked on the unlinked page `/lab/onyx/`. Keep it building and usable;
-  don't link it from nav/footer or re-import it on other pages.
 - The FTC drivetrain calculator (`src/pages/drivetrain.astro`, ported whole
   from Ethan Zhang's personal site and re-skinned to this site's tokens) is
   a self-contained tool page: every style is `.dt-` prefixed or declared in
@@ -59,12 +56,19 @@ Manage the background server with `astro dev stop`, `astro dev status`, and `ast
   in the URL hash, so it passes `keepHash` to BaseLayout (which otherwise
   strips fragments on reload). The announcement post
   `src/content/blog/drivetrain-calculator.md` links to it; it is not in the
-  nav. E2E regression: `tests/drivetrain.e2e.mjs` (run steps in its header).
-  Research notes + third-party notices moved with it into `docs/`.
+  nav. Research notes + third-party notices moved with it into `docs/`.
+- The calculator was deliberately stripped to bare inputs: every field is a
+  plain `<label>` plus one control, with no hint text, no disclosure drawers,
+  no preset chips and no live unit echoes. Keep it that way when adding to
+  it. The pit-protocol section (measured grip, coast-down, sag) and its CSV
+  encoder-log overlay were removed in that pass; `readMeasured()` remains as
+  an all-null stub so the model runs on published constants and the branches
+  downstream still compile. Chart summaries (`.dt-srsum`) are visually hidden
+  on purpose: they exist for screen readers, since a canvas cannot be read.
 - Navigation is `src/components/GearNav.astro` (corner toggle opening a
   right-side paper drawer; old filename, no gear), a scroll nav over the
   one-page home: section anchor changes go in its `links` array AND
-  `Footer.astro` (blog/lab pages).
+  `Footer.astro` (blog pages).
 - Design tokens live in the `@theme` block of `src/styles/global.css`;
   Tailwind v4 derives utilities from them (`bg-bg`, `text-accent`,
   `ease-out-strong`, ...). There is no `tailwind.config.*`.

@@ -5,12 +5,18 @@ description: A free afternoon at the Weston Public Library built around ninety m
 author: GNCE Onyx
 ---
 
-Our summer robotics seminar is Saturday, August 15, from noon to 3 PM at the Weston Public Library. Free, and no robotics experience needed.
+Our summer robotics seminar ran Saturday, August 15, from noon to 3 PM at the Weston Public Library. Free, and no robotics experience needed: you showed up and had fun.
 
-We open with what FTC actually is and how a season runs. Then we put the engineering design process on a paper tower challenge: build the tallest one you can, watch it fall over, fix it.
+We opened with what FTC is about and the gist of how a season runs through the year, then got into a small activity that introduces the engineering design process: a paper tower challenge. The objective was to build the tallest structure, watch as it (inevitably) falls over, then work the steps toward fixing it to make it even better.
 
-Most of the afternoon is CAD. You get about ninety minutes in Onshape, starting with a part we walk everyone through, then going at your own speed while we come around the room. It saves to your own account, so the file is still there Sunday morning.
+Most of the time went to CAD. We gave about ninety minutes on Onshape, a website where our ideas take shape. We started by walking everyone through the introduction and getting used to the site, then let students go at their own pace while we offered help and encouragement. Students signed up with their own Onshape accounts, so their files are saved and still theirs.
 
-Then the competition robot comes out, close enough to see what every part does and ask why it is there. We stay past 3 for anything else.
+At the end, we brought out the competition robot for everyone to see. We got close up, inspected every part, and discussed the whats and the whys. Everything was interactive, and students got plenty of chances to explain, wonder, and ask questions all through the seminar. Many stayed after 3 for more questions, comments, and the extra information we had.
 
-The GNCE Onyx students teaching it all came up through FTC teams that reached Worlds.
+The seminar was taught by our very own GNCE Onyx students, who came up through FTC teams that reached Worlds (the big goal) and other premier events with internationally recognized awards.
+
+<div class="seminar-gallery" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(12rem,1fr));gap:1rem;margin-top:2.5rem">
+  <div class="slot" data-placeholder="seminar-onshape-logo" style="aspect-ratio:16/9"></div>
+  <div class="slot" data-placeholder="seminar-awards" style="aspect-ratio:16/9"></div>
+  <div class="slot" data-placeholder="seminar-event-photo" style="aspect-ratio:16/9"></div>
+</div>

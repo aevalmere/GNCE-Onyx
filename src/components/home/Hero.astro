@@ -40,6 +40,12 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
       <div class="hero-deep" data-cover-deep aria-hidden="true">
         <span class="hero-deep-word">ONYX</span>
       </div>
+      <!-- The team number holds the frame's top right corner, the third
+           anchor of the composition. On the wipe it is the NEAR plane: it
+           carries extra travel of its own on top of the sheet's, so it
+           launches from the far right and is the first thing fully off,
+           three planes at three speeds. -->
+      <p class="hero-team type-display" data-cover-fast>Team 37122</p>
       <h1 class="hero-title type-display" data-split="intro">
         A rookie team of championship veterans.
       </h1>
@@ -130,6 +136,19 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     color: color-mix(in srgb, var(--color-surface) 16%, transparent);
   }
 
+  /* Pinned to the stage's top right: the headline reads high-left, the foot
+     holds the bottom line, and the number squares the frame's empty corner. */
+  .hero-team {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 1;
+    font-size: clamp(1.25rem, 2.4vw, 2.25rem);
+    letter-spacing: 0.04em;
+    color: var(--color-ink);
+    will-change: transform;
+  }
+
   /* An absolutely positioned sibling paints over a static block whatever the
      source order says, so the headline has to be positioned to stay on top
      of the word. */
@@ -210,6 +229,16 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
   @media (max-width: 40rem) {
     .hero-stage {
       justify-items: center;
+    }
+
+    /* The phone hero is one centred column, so the number joins its axis
+       above the headline instead of floating in a corner. Margin centring,
+       not a transform: the wipe owns this element's transform. */
+    .hero-team {
+      left: 0;
+      right: 0;
+      width: fit-content;
+      margin-inline: auto;
     }
 
     .hero-title {

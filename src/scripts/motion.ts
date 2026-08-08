@@ -86,7 +86,6 @@ function boot() {
       // scenes (each no-ops if its element is absent)
       initCoverWipe();
       initHashLand();
-      initJourney();
       initHorizontalReveal();
       initHScroll();
       initScreens();
@@ -772,6 +771,12 @@ function initCoverWipe() {
   // 42, not a subtle lag: the word gives up almost half the sheet's travel,
   // so the two planes visibly shear apart while the wipe runs.
   if (deep) tl.to(deep, { xPercent: 42, ease: 'none' }, 0);
+  // [data-cover-fast] is the near plane (the team number): on top of the
+  // sheet's travel it spends most of a viewport of its own, so it launches
+  // off the far right edge and is fully gone before the sheet is halfway.
+  // Three planes, three speeds.
+  const fast = cover.querySelector<HTMLElement>('[data-cover-fast]');
+  if (fast) tl.to(fast, { x: () => -window.innerWidth, ease: 'none' }, 0);
 
   // A /#team deep link was resolved by the browser before html.gsap pulled
   // the roster to the document top, which leaves the page parked mid-wipe.
@@ -831,198 +836,6 @@ function initHashLand() {
   requestAnimationFrame(land);
   addEventListener('load', land, { once: true });
   setTimeout(stop, 1400);
-}
-
-/* ================================================================== */
-/* SCENE: the immersive ONYX journey (home). One continuous take: the   */
-/* camera tracks across the big 3D word left to right, and as each       */
-/* letter fills the frame its content is born from inside it and runs    */
-/* around it. The word is rendered large and only ever scaled DOWN, so   */
-/* the letters stay razor-crisp at every step (no upscaled-texture blur).*/
-/* ================================================================== */
-/**
- * Per-letter personality.
- *   dx/dy   — assemble scatter, as a fraction of the word's own size
- *   iz..isc — assemble depth / rotation / scale
- *   iy..izF — idle float amplitudes (px, or degrees for rotation)
- *   depth/tilt — cursor-lean strength (px of slide, deg of turn)
- */
-type LetterProfile = {
-  dx: number; dy: number; iz: number; iry: number; irz: number; irx: number; isc: number;
-  iy: number; irzF: number; irxF: number; izF: number; dur: number;
-  depth: number; tilt: number;
-};
-
-// Direction each letter's content flows: in from `i*`, out toward `o*`.
-// Echoes the letter's geometry (N diagonal, Y vertical, X cross, O bloom).
-const FLOW = [
-  { ix: 0, iy: 34, ox: 0, oy: -48 },
-  { ix: -60, iy: 54, ox: 84, oy: -70 },
-  { ix: 0, iy: -52, ox: 0, oy: 66 },
-  { ix: -64, iy: -46, ox: 82, oy: 58 },
-];
-
-const SHOWN = 'inset(-6% -6% -12% -6%)'; // fully revealed, room for descenders
-const HID_BELOW = 'inset(100% -6% -12% -6%)'; // clipped from the top: rises up
-const HID_ABOVE = 'inset(-6% -6% 100% -6%)'; // clipped from the bottom: exits up
-
-function initJourney() {
-  const journey = document.querySelector<HTMLElement>('.journey');
-  const stage = journey?.querySelector<HTMLElement>('.journey-stage');
-  const world = document.querySelector<HTMLElement>('[data-world]');
-  if (!journey || !stage || !world) return;
-  const letters = gsap.utils.toArray<HTMLElement>('.station-letter', world);
-  const groups = gsap.utils.toArray<HTMLElement>('[data-flow]');
-  const cue = document.querySelector<HTMLElement>('[data-journey-cue]');
-  if (!letters.length) return;
-
-  const SF = 1; // focus scale: never above 1, so text is never upscaled
-  const Ww = world.scrollWidth;
-  const Wh = world.offsetHeight;
-
-  // Overview: the whole word, scaled DOWN to fit with margins.
-  const fit = Math.min((window.innerWidth * 0.9) / Ww, (window.innerHeight * 0.82) / Wh);
-  const overX = () => window.innerWidth / 2 - fit * (Ww / 2);
-  const overY = () => window.innerHeight / 2 - fit * (Wh / 2);
-
-  gsap.set(world, { transformOrigin: '0 0', x: overX(), y: overY(), scale: fit, force3D: true });
-  gsap.set(letters, { opacity: 1 }); // inline beats html.will-animate pre-hide
-
-  const lines = groups.flatMap((g) => gsap.utils.toArray<HTMLElement>('.flow-line', g));
-  gsap.set(groups, { opacity: 1, visibility: 'hidden' });
-  gsap.set(lines, { clipPath: HID_BELOW });
-
-  const P: LetterProfile[] = [
-    { dx: -1, dy: -0.18, iz: -600, iry: 120, irz: -16, irx: 0, isc: 0.5,
-      iy: -10, irzF: 2.2, irxF: 0, izF: 30, dur: 5.4, depth: 22, tilt: 8 },
-    { dx: 0, dy: -1, iz: -320, iry: 0, irz: 0, irx: -80, isc: 0.6,
-      iy: 9, irzF: 0, irxF: 4, izF: 22, dur: 4.7, depth: 14, tilt: 6 },
-    { dx: 0, dy: 1, iz: -560, iry: 0, irz: 90, irx: 0, isc: 0.5,
-      iy: -12, irzF: -3, irxF: 0, izF: 44, dur: 6.1, depth: 18, tilt: 7 },
-    { dx: 1, dy: 0.18, iz: -820, iry: -120, irz: 24, irx: 0, isc: 0.5,
-      iy: 8, irzF: 3.2, irxF: 3, izF: 26, dur: 5.0, depth: 26, tilt: 9 },
-  ];
-
-  let calm = 0; // 0 at the top, -> 1 once the camera starts tracking
-  let alive = false; // idle float + cursor lean run only after the assemble
-
-  // Center letter i at scale s. Measured from the letter's untransformed box
-  // (world transform-origin 0 0 => screen = translate + scale*pos); the idle /
-  // lean transforms don't move offsetLeft, so this stays exact.
-  const camFor = (i: number) => {
-    const L = letters[i];
-    const cx = L.offsetLeft + L.offsetWidth / 2;
-    const cy = L.offsetTop + L.offsetHeight / 2;
-    return { x: window.innerWidth / 2 - SF * cx, y: window.innerHeight / 2 - SF * cy };
-  };
-
-  // Idle float: desynced sine oscillations; y/rz/rx/z belong to the letter,
-  // cursor owns x + rotationY, so nothing fights over a property.
-  const startIdle = (L: HTMLElement, p: LetterProfile, i: number) => {
-    const f = (prop: string, amp: number, mult: number) =>
-      gsap.to(L, { [prop]: amp, duration: p.dur * mult, ease: 'sine.inOut', repeat: -1, yoyo: true, delay: i * 0.18 });
-    if (p.iy) f('y', p.iy, 1);
-    if (p.irzF) f('rotationZ', p.irzF, 1.35);
-    if (p.irxF) f('rotationX', p.irxF, 1.1);
-    if (p.izF) f('z', p.izF, 0.85);
-  };
-
-  const startAlive = () => {
-    if (alive) return;
-    alive = true;
-    letters.forEach((L, i) => startIdle(L, P[i], i));
-  };
-
-  // Assemble: the letters fly in from their scattered starts to build the
-  // word. Only at the very top; a mid-page reload skips it.
-  if (window.scrollY < 12) {
-    const intro = gsap.timeline({ delay: 0.15, onComplete: startAlive });
-    letters.forEach((L, i) => {
-      const p = P[i];
-      intro.from(
-        L,
-        { opacity: 0, x: p.dx * Ww * 0.55, y: p.dy * Wh * 0.55, z: p.iz, rotationY: p.iry, rotationZ: p.irz, rotationX: p.irx, scale: p.isc, ease: 'expo.out', duration: 1.5 },
-        i * 0.13
-      );
-    });
-  } else {
-    startAlive();
-  }
-
-  // Cursor lean: each letter turns and slides toward the pointer by its own
-  // depth, fading out (k = 1 - calm) as tracking begins. Pointer-fine only.
-  if (FINE) {
-    let px = 0;
-    const setX = letters.map((L) => gsap.quickTo(L, 'x', { duration: 0.7, ease: 'power3.out' }));
-    const setRY = letters.map((L) => gsap.quickTo(L, 'rotationY', { duration: 0.7, ease: 'power3.out' }));
-    stage.addEventListener('pointermove', (e) => {
-      const r = stage.getBoundingClientRect();
-      px = ((e.clientX - r.left) / r.width - 0.5) * 2;
-    });
-    stage.addEventListener('pointerleave', () => (px = 0));
-    gsap.ticker.add(() => {
-      if (!alive) return;
-      const k = 1 - calm;
-      for (let i = 0; i < letters.length; i++) {
-        setX[i](px * P[i].depth * k);
-        setRY[i](px * P[i].tilt * k);
-      }
-    });
-  }
-
-  // Content born from a letter: lines rise out of it, staggered, drifting in
-  // from the letter's flow direction. Crisp clip reveal, opacity stays 1.
-  const flowIn = (i: number) => {
-    const t = gsap.timeline();
-    const ln = gsap.utils.toArray<HTMLElement>('.flow-line', groups[i]);
-    t.set(groups[i], { visibility: 'visible' });
-    t.fromTo(
-      ln,
-      { clipPath: HID_BELOW, x: FLOW[i].ix, y: FLOW[i].iy },
-      { clipPath: SHOWN, x: 0, y: 0, ease: 'power3.out', duration: 0.85, stagger: 0.08 }
-    );
-    return t;
-  };
-
-  // Content clears out, sweeping along the letter's flow direction.
-  const flowOut = (i: number) => {
-    const t = gsap.timeline();
-    const ln = gsap.utils.toArray<HTMLElement>('.flow-line', groups[i]);
-    t.to(ln, { clipPath: HID_ABOVE, x: FLOW[i].ox, y: FLOW[i].oy, ease: 'power2.in', duration: 0.6, stagger: 0.05 });
-    t.set(groups[i], { visibility: 'hidden' });
-    return t;
-  };
-
-  const tl = gsap.timeline({
-    scrollTrigger: {
-      trigger: journey,
-      start: 'top top',
-      end: '+=720%',
-      pin: true,
-      scrub: 0.9,
-      anticipatePin: 1,
-      invalidateOnRefresh: true,
-      onUpdate: (self) => (calm = Math.min(1, self.progress / 0.05)),
-    },
-  });
-
-  if (cue) tl.to(cue, { autoAlpha: 0, duration: 0.3 }, 0);
-
-  groups.forEach((_, i) => {
-    tl.to(world, {
-      x: () => camFor(i).x,
-      y: () => camFor(i).y,
-      scale: SF,
-      ease: 'power1.inOut',
-      duration: 1.5,
-    });
-    tl.add(flowIn(i), '<0.55'); // content arrives as the letter settles
-    tl.to({}, { duration: 0.95 }); // read
-    if (i < groups.length - 1) tl.add(flowOut(i));
-  });
-
-  // Close: pull back to the whole word as a sign-off.
-  tl.to(world, { x: () => overX(), y: () => overY(), scale: fit, ease: 'power1.inOut', duration: 1.6 });
 }
 
 /* SCENE: horizontal text reveal (mission). [data-hreveal] chars wipe   */

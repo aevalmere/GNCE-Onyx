@@ -19,7 +19,7 @@
  * reloading. Hover is the word turning grape, nothing more; each link's
  * one-line description stays in the accessibility tree as sr-only text.
  *
- * Blog posts and the lab page carry the Footer's plain-text links, which is
+ * Blog posts carry the Footer's plain-text links, which is
  * also where navigation goes when there is no JS: a button that cannot open
  * anything is hidden rather than left sitting there dead.
  */
@@ -32,11 +32,11 @@ type NavLink = {
 };
 const links: NavLink[] = [
   { href: `${base}/`, label: 'Home', note: 'Back to the top' },
-  { href: `${base}/#team`, label: 'Team', note: 'Ten students' },
+  { href: `${base}/#team`, label: 'Team', note: 'Nine students' },
   { href: `${base}/#season`, label: 'Season', note: 'Qualifiers and States' },
   { href: `${base}/#outreach`, label: 'Outreach', note: 'Posts and events we show up to' },
   { href: `${base}/#sponsors`, label: 'Sponsors', note: 'Recognition, low to high' },
-  { href: `${base}/#contact`, label: 'Contact', note: 'Email or Instagram' },
+  { href: `${base}/#contact`, label: 'Contact', note: 'Email, Instagram, or the sponsor form' },
 ];
 ---
 

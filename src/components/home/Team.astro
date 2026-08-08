@@ -5,8 +5,8 @@
  * fine pointers, so this is the first thing the page opens onto. On touch
  * it sits in plain flow and the page scrolls straight into it.
  *
- * Five across and two down at full width, so the grid always ends on a full
- * row; three across on a phone, everything centred. The plates are sized by
+ * Five across at full width, the last row ragging left like type does;
+ * two across on a phone. The plates are sized by
  * height rather than by ratio, which is what keeps every row the same depth
  * and every name on the same line, and what lets the whole block shrink
  * with a short viewport instead of overrunning it. Photos drop straight
@@ -31,7 +31,6 @@ const roster: { name: string; teams: string[] }[] = [
   { name: 'Anson Su', teams: ['22489', '26111'] },
   { name: 'Adrian Chang', teams: ['22489', '26111'] },
   { name: 'Elisa Peng', teams: ['22489', '26413'] },
-  { name: 'Arnie Sreeram', teams: ['22489', '26413'] },
   { name: 'Nicholas Colli', teams: ['26413', '26112'] },
   { name: 'Ethan Zhuang', teams: ['26112', '26111'] },
   { name: 'Leo Li', teams: ['26111'] },
@@ -51,7 +50,17 @@ const slug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
         roster.map((member) => (
           <li class="member">
             <Reveal variant="up">
-              <div class="member-plate" data-placeholder={`member-photo-${slug(member.name)}`} />
+              <div class="member-plate" data-placeholder={`member-photo-${slug(member.name)}`}>
+                <!-- Stand-in portrait until the photo lands: head and
+                     shoulders in the plate's own edge tone, the shoulders
+                     running off the bottom the way every default avatar
+                     does. Replaced, not kept, when the real picture
+                     arrives. -->
+                <svg class="member-avatar" viewBox="0 0 64 64" aria-hidden="true">
+                  <circle cx="32" cy="25" r="11"></circle>
+                  <path d="M8 68 C8 49 18 41 32 41 C46 41 56 49 56 68 Z"></path>
+                </svg>
+              </div>
               <p class="member-name">{member.name}</p>
               <p class="member-teams">
                 {member.teams.length ? member.teams.join(' · ') : 'Rookie'}
@@ -89,9 +98,8 @@ const slug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
   .roster {
     --grid-gap: clamp(0.85rem, 1.8vw, 1.75rem);
     display: grid;
-    /* Two across on a phone: ten faces in five even rows, portraits big
-       enough to be faces. Five across from the tablet breakpoint up, where
-       the grid ends on two full rows. */
+    /* Two across on a phone, portraits big enough to be faces. Five across
+       from the tablet breakpoint up. */
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: clamp(1.25rem, 3svh, 2.5rem) var(--grid-gap);
   }
@@ -106,6 +114,16 @@ const slug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     aspect-ratio: 1 / 1;
     background: var(--color-slot);
     border: 1px solid var(--color-slot-edge);
+  }
+
+  /* The silhouette fills the plate; anything past the viewBox (the
+     shoulders' base) is clipped by the svg itself. */
+  .member-avatar {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    fill: var(--color-slot-edge);
   }
 
   @media (min-width: 40rem) {
