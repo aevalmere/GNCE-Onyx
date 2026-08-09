@@ -22,7 +22,13 @@ export default defineConfig({
   image: {
     service: {
       entrypoint: './src/lib/sharpen-image-service.mjs',
-      config: { sharpen: { sigma: 0.75 } },
+      config: {
+        sharpen: { sigma: 0.75 },
+        // sharp defaults WebP to 80, which blocks up in fine detail: the
+        // pine needles behind Ethan Zhang go crunchy and skin goes waxy.
+        // 90 clears both. 95 costs another 30% for almost nothing.
+        webp: { quality: 90 },
+      },
     },
   },
   // External links in post bodies leave the site, so they open their own tab.
