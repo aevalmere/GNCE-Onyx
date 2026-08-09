@@ -4,8 +4,9 @@ Astro 7 + Tailwind CSS 4 website for FTC team 37122, GNCE Onyx. The whole
 site is one scrollable page
 (`src/pages/index.astro` composing `src/components/home/`); blog posts and
 the `/drivetrain/` calculator are the only separate routes. Copy and
-identity facts are real (team 37122, gnceonyx@gmail.com, @gnceonyx);
-media and the sponsor form link are still placeholder slots.
+identity facts are real (team 37122, gnceonyx@gmail.com, @gnceonyx). Four of
+the nine roster portraits are real photos; the rest of the media and the
+sponsor form link are still placeholder slots.
 
 ## Development
 
@@ -65,6 +66,31 @@ Manage the background server with `astro dev stop`, `astro dev status`, and `ast
   an all-null stub so the model runs on published constants and the branches
   downstream still compile. Chart summaries (`.dt-srsum`) are visually hidden
   on purpose: they exist for screen readers, since a canvas cannot be read.
+- Roster portraits are matched by filename, not by a list: save a square
+  photo as `src/assets/team/<slug>.<ext>` (slug of the member's name in
+  `Team.astro`'s `roster`) and it replaces that member's silhouette and
+  drops its `data-placeholder`. Crop to square before saving, and keep one
+  file per member: two extensions for the same slug and the lookup picks
+  whichever the glob lists first. Members without a file stay on the
+  silhouette, so faces can land one at a time.
+  The plate is a 260px column, so a source under 520px is soft on a 2x
+  screen. Vera's original was only 272px and is upscaled to 544; if a
+  higher-resolution file ever turns up, prefer it over the upscale. The
+  pass was `magick in.jpg -filter Lanczos -resize 544x544 -unsharp 0x1
+  -strip -quality 92 out.webp` (the project's own `sharp` gives the same
+  result with `lanczos3` + `sharpen({sigma:1})`). That master sharpen is
+  deliberate and separate from the output sharpen below: an upscale needs
+  correcting at its own size, and dropping it leaves her visibly soft.
+  No contrast or colour correction: portraits stay as shot, per `DESIGN.md`.
+- Images are built by a custom image service,
+  `src/lib/sharpen-image-service.mjs`, wired up in `astro.config.mjs`.
+  Astro's stock sharp service resizes straight into the encoder with no
+  sharpening, so every rendition ships softer than its source; this is that
+  service with one unsharp pass added after the resize, and it applies to
+  every image on the site, not just portraits. It changes sharpness only.
+  Tune or disable it with `image.service.config.sharpen` (`false` gives
+  stock Astro back). Renditions run 20-40% larger, which is the sharpened
+  detail refusing to compress away.
 - Navigation is `src/components/GearNav.astro` (corner toggle opening a
   right-side paper drawer; old filename, no gear), a scroll nav over the
   one-page home: section anchor changes go in its `links` array AND

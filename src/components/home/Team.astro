@@ -10,7 +10,8 @@
  * height rather than by ratio, which is what keeps every row the same depth
  * and every name on the same line, and what lets the whole block shrink
  * with a short viewport instead of overrunning it. Photos drop straight
- * into the plates.
+ * into the plates: a square file at `src/assets/team/<slug>.<ext>` replaces
+ * that member's silhouette, so faces can land one at a time.
  *
  * Each member's previous GNCE teams sit under the name as a permanent line:
  * it is the whole point of a rookie team of veterans, so it reads on every
@@ -19,6 +20,7 @@
  * grid neighbours follow at half the step (script at the end of the file),
  * attention falling off with distance.
  */
+import { Image } from 'astro:assets';
 import Reveal from '../Reveal.astro';
 
 // Previous GNCE team numbers only; the record lives in git history.
@@ -39,6 +41,22 @@ const roster: { name: string; teams: string[] }[] = [
 ];
 
 const slug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
+// Portraits are matched to the roster by filename rather than by a second
+// list to keep in sync: a square photo saved as the member's slug is picked
+// up here, and a member without one stays on the silhouette. Crop to square
+// before saving; the plate only ever shows a centred square of the file.
+const photos = import.meta.glob<{ default: ImageMetadata }>(
+  '../../assets/team/*.{jpg,jpeg,png,webp}',
+  { eager: true },
+);
+
+const photoFor = (name: string) => {
+  const path = Object.keys(photos).find(
+    (p) => p.slice(p.lastIndexOf('/') + 1).replace(/\.\w+$/, '') === slug(name),
+  );
+  return path ? photos[path].default : undefined;
+};
 ---
 
 <section id="team" aria-labelledby="team-title">
@@ -47,30 +65,52 @@ const slug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
     <ul class="roster" data-reveal-group>
       {
-        roster.map((member) => (
-          <li class="member">
-            <Reveal variant="up">
-              <div class="member-plate" data-placeholder={`member-photo-${slug(member.name)}`}>
-                <!-- Stand-in portrait until the photo lands: head and
-                     shoulders in the plate's own edge tone, the shoulders
-                     running off the bottom the way every default avatar
-                     does. Replaced, not kept, when the real picture
-                     arrives. -->
-                <svg class="member-avatar" viewBox="0 0 64 64" aria-hidden="true">
-                  <circle cx="32" cy="25" r="11"></circle>
-                  <path d="M8 68 C8 49 18 41 32 41 C46 41 56 49 56 68 Z"></path>
-                </svg>
-              </div>
-              <p class="member-name">{member.name}</p>
-              <p class="member-teams">
-                {member.teams.length ? member.teams.join(' · ') : 'Rookie'}
-                <span class="sr-only">
-                  {member.teams.length ? ' previous GNCE teams' : ', no previous teams'}
-                </span>
-              </p>
-            </Reveal>
-          </li>
-        ))
+        roster.map((member) => {
+          const photo = photoFor(member.name);
+          // The plate is at most a 260px column, so two widths cover it and
+          // its retina pass, capped at the file's own size so a small
+          // original is never blown up. Eager because this section is what
+          // the cover wipe opens onto: none of it is below the fold.
+          // The name sits directly under the picture in its own line, so
+          // alt repeats nothing: the photo is labelled by that text.
+          return (
+            <li class="member">
+              <Reveal variant="up">
+                <div
+                  class="member-plate"
+                  data-placeholder={photo ? undefined : `member-photo-${slug(member.name)}`}
+                >
+                  {photo ? (
+                    <Image
+                      class="member-photo"
+                      src={photo}
+                      alt=""
+                      widths={[...new Set([260, Math.min(520, photo.width)])]}
+                      sizes="(min-width: 40rem) 260px, 45vw"
+                      loading="eager"
+                    />
+                  ) : (
+                    // Stand-in portrait until the photo lands: head and
+                    // shoulders in the plate's own edge tone, the shoulders
+                    // running off the bottom the way every default avatar
+                    // does.
+                    <svg class="member-avatar" viewBox="0 0 64 64" aria-hidden="true">
+                      <circle cx="32" cy="25" r="11" />
+                      <path d="M8 68 C8 49 18 41 32 41 C46 41 56 49 56 68 Z" />
+                    </svg>
+                  )}
+                </div>
+                <p class="member-name">{member.name}</p>
+                <p class="member-teams">
+                  {member.teams.length ? member.teams.join(' · ') : 'Rookie'}
+                  <span class="sr-only">
+                    {member.teams.length ? ' previous GNCE teams' : ', no previous teams'}
+                  </span>
+                </p>
+              </Reveal>
+            </li>
+          );
+        })
       }
     </ul>
   </div>
@@ -124,6 +164,17 @@ const slug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     width: 100%;
     height: 100%;
     fill: var(--color-slot-edge);
+  }
+
+  /* A real photo fills the plate the silhouette was holding, inside the
+     hairline rather than over it. The files are already square, so cover
+     crops nothing; it is here so an off-square one can never letterbox. */
+  .member-photo {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 
   @media (min-width: 40rem) {

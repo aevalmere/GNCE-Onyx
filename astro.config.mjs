@@ -15,6 +15,16 @@ export default defineConfig({
     '/contact': '/GNCE-Onyx/#contact',
     '/outreach': '/GNCE-Onyx/#outreach',
   },
+  // Astro's stock image service resizes without sharpening, so every
+  // rendition ships softer than its source. This is that service with one
+  // unsharp pass added after the resize; see the file for what it does and
+  // does not touch. Set `sharpen: false` to fall back to stock behaviour.
+  image: {
+    service: {
+      entrypoint: './src/lib/sharpen-image-service.mjs',
+      config: { sharpen: { sigma: 0.75 } },
+    },
+  },
   // External links in post bodies leave the site, so they open their own tab.
   markdown: {
     rehypePlugins: [[rehypeExternalLinks, { target: '_blank', rel: ['noopener'] }]],

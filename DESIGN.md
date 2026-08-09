@@ -167,7 +167,10 @@ section:
   never answer the pointer; the portraits do: the hovered face zooms in a
   touch (1.045) and its grid neighbours (either side plus the vertical one)
   follow at half the step, attention falling off with distance. Transform
-  only; the grid never moves.
+  only; the grid never moves. Portraits run in full colour as shot, each
+  cropped square to fill its plate: no duotone, no grade, no unifying
+  filter. They are photos of people, and the frame is what makes the row a
+  set. Plates without a photo yet keep the slot wash and its silhouette.
 - **Season** (`#season`): collapsible event rows (Qualifier 1 / Qualifier 2
   / States / More to come), exclusive: opening one sweeps the other shut.
   The hover poster flies from the cursor card into its seat on bare
