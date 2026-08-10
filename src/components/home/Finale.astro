@@ -27,24 +27,20 @@
  * No transforms or positioning on the root: the sticky comes from
  * index.astro and anything here would fight it.
  */
-import Placeholder from '../Placeholder.astro';
 ---
 
 <section id="contact" class="finale band-deep">
   <div class="finale-frame mx-auto w-full max-w-[88rem] px-5 sm:px-8">
-    <!-- The shirt back: the names printed between the shoulders, biggest
-         backer on top, the rest sharing the line under it. One list, one
-         axis, no boxes. -->
+    <!-- The shirt back: the names printed between the shoulders, every
+         backer at the same size on the same line. One list, one axis, no
+         boxes, and no ranking. -->
     <div class="wall">
       <h2 class="wall-head type-display">Sponsored by</h2>
 
-      <Placeholder name="finale-sponsors">
-        <ul class="wall-list">
-          <li class="wall-name wall-lead type-display">Sponsor 1</li>
-          <li class="wall-name type-display">Sponsor 2</li>
-          <li class="wall-name type-display">Sponsor 3</li>
-        </ul>
-      </Placeholder>
+      <ul class="wall-list">
+        <li class="wall-name type-display">WEEFC</li>
+        <li class="wall-name type-display">Weston Owl</li>
+      </ul>
     </div>
 
     <div class="reach">
@@ -157,11 +153,10 @@ import Placeholder from '../Placeholder.astro';
     color: var(--color-muted);
   }
 
-  /* One flex line per tier. The lead takes a full basis so it owns the top
-     line; every other name wraps under it and centres on the same axis,
-     which is what keeps the lockup composed at two names or at nine. The
-     measure is deliberately narrower than the frame: a name set loose across
-     88rem is a floating word, inside 54rem it is part of a block. */
+  /* Names wrap and centre on one axis, which is what keeps the lockup
+     composed at two names or at nine. The measure is deliberately narrower
+     than the frame: a name set loose across 88rem is a floating word,
+     inside 54rem it is part of a block. */
   .wall-list {
     display: flex;
     flex-wrap: wrap;
@@ -174,23 +169,18 @@ import Placeholder from '../Placeholder.astro';
     list-style: none;
   }
 
-  /* The lower tier. The display face gets a little tracking as it comes down in size,
-     the way small print on a shirt is spaced out to stay legible. Capped
-     against viewport height as well as width, so a short landscape screen
-     keeps the whole frame in one viewport. */
+  /* Every backer at one size. There was a lead tier here, set large across
+     its own line with the rest beneath it, and it was a ranking nobody
+     asked us to publish: whoever gave most got the top line and the others
+     got the small print. Equal billing is the honest lockup, and it is also
+     the one that matches the back of the shirt. The display face gets a
+     little tracking, the way print on a shirt is spaced out to stay
+     legible. Capped against viewport height as well as width, so a short
+     landscape screen keeps the whole frame in one viewport. */
   .wall-name {
-    font-size: clamp(1.3rem, min(3.8vw, 4svh), 2.5rem);
+    font-size: clamp(1.6rem, min(5vw, 5.5svh), 3.25rem);
     line-height: 1.06;
-    letter-spacing: 0.03em;
-  }
-
-  /* The top tier, and the only reason the two rules are ordered this way:
-     .wall-lead carries both classes, so it has to come second to win. */
-  .wall-lead {
-    flex-basis: 100%;
-    font-size: clamp(2.5rem, min(8.5vw, 9svh), 5.5rem);
-    line-height: 1;
-    letter-spacing: 0.005em;
+    letter-spacing: 0.02em;
   }
 
   /* ---- Get in touch ------------------------------------------------ */

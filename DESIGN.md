@@ -104,11 +104,15 @@ Under reduced motion the module bows out and static CSS stands in.
   the same info accessibly (sr-only text plus a static line on coarse
   pointers / reduced motion). Every card is a paper tag (see Bands). Used by
   the roster, the season rows, and the nav drawer's link descriptors.
-  `[data-cursor-lane="sel"]` on the trigger names the parts of itself the
-  card may never cover. The card is then held in the clear ground between
-  them and rides level with the pointer instead of below it, and it stops
-  flipping sides. A row with its name down the left and its mark at the
-  right keeps both readable while the poster tracks the hand down the list.
+  `[data-cursor-lane="sel"]` on the trigger names the parts the card may
+  never cover; `[data-cursor-lane-root]` on their common ancestor is what
+  the lane is measured across. ONE line for the whole group, set by the
+  longest name in it, never a different edge under each row: a per-row edge
+  makes the card step sideways every time the hand moves down one. Inside
+  the lane the card hangs off the pointer's left, rides level with it rather
+  than below, and never flips sides. Neighbouring triggers own separate card
+  elements, so the outgoing card's position is handed to the incoming one
+  (260ms window) and the swap glides instead of blinking.
 - Display type never answers the pointer: no ripple on headings, no lean
   on the script flourish. Titles and subtitles hold still.
 

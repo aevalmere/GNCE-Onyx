@@ -639,20 +639,27 @@ function initCursorCards() {
   };
 
   /* A trigger can give the card a lane to ride in. `data-cursor-lane` names
-     the parts of the trigger the card must never sit on: everything left of
-     the trigger's middle pushes the lane's near edge right, everything right
-     of it pulls the far edge left, and what is left over is clear ground.
-     A row whose words run down the left and whose mark sits at the right
-     hands back the gap between them. Returns null when a trigger asks for
-     nothing, and that card keeps riding off the pointer's shoulder. */
+     the parts the card must never sit on: everything left of the middle
+     pushes the lane's near edge right, everything right of it pulls the far
+     edge left, and what is left over is clear ground.
+
+     Measured across the whole group, not per row. `[data-cursor-lane-root]`
+     marks the common ancestor, and every matching part inside it counts, so
+     the lane is ONE line down the section: the longest name in the list is
+     what the near edge clears. Measured per row instead, the edge would sit
+     at a different place under every row and the poster would step sideways
+     each time the hand moved down one, which reads as the card twitching
+     rather than tracking. Returns null when a trigger asks for nothing, and
+     that card keeps riding off the pointer's shoulder. */
   const laneFor = (trigger: HTMLElement | null) => {
     const sel = trigger?.dataset.cursorLane;
     if (!trigger || !sel) return null;
-    const box = trigger.getBoundingClientRect();
+    const root = trigger.closest<HTMLElement>('[data-cursor-lane-root]') ?? trigger;
+    const box = root.getBoundingClientRect();
     const mid = box.left + box.width / 2;
     let min = box.left;
     let max = box.right;
-    trigger.querySelectorAll<HTMLElement>(sel).forEach((part) => {
+    root.querySelectorAll<HTMLElement>(sel).forEach((part) => {
       const r = part.getBoundingClientRect();
       if (!r.width) return;
       if (r.left + r.width / 2 < mid) min = Math.max(min, r.right);
@@ -671,17 +678,17 @@ function initCursorCards() {
     let y: number;
 
     if (lane) {
-      /* In a lane the card never flips to the pointer's other side: it stays
-         on the right, held inside the clear ground, and rides level with the
-         pointer rather than below it. Reading down a list of rows then moves
-         the poster straight down beside the hand instead of stepping it
+      /* In a lane the card never flips sides: it hangs off the pointer's
+         left, held inside the clear ground, and rides level with the pointer
+         rather than below it. Reading down a list of rows then walks the
+         poster straight down beside the hand instead of stepping it
          diagonally across the words. A lane too narrow to hold the card is
          no lane at all: centre it on what there is and let the viewport
          clamp below have the last word. */
       const room = lane.max - lane.min - LANE * 2;
       x =
         room >= rig.w
-          ? gsap.utils.clamp(lane.min + LANE, lane.max - LANE - rig.w, cx + OFF_X)
+          ? gsap.utils.clamp(lane.min + LANE, lane.max - LANE - rig.w, cx - OFF_X - rig.w)
           : lane.min + (lane.max - lane.min - rig.w) / 2;
       y = cy - rig.h / 2;
     } else {
@@ -705,6 +712,24 @@ function initCursorCards() {
     rig.yTo = gsap.quickTo(rig.card, 'y', { duration: 0.45, ease: 'power3.out' });
   };
 
+  /* Where the card that just left the pointer was standing. Neighbouring
+     triggers own SEPARATE card elements, so a hand moving down a list is one
+     card hiding and a different one appearing: started at its own mark, the
+     artwork teleports the height of a row every time. Handed the outgoing
+     card's position instead, the incoming one picks up exactly where the
+     last left off and glides to its mark, and the swap reads as one object
+     continuing rather than two objects blinking. Only honoured for a
+     moment, so a hover a minute later still starts at the pointer. */
+  let handoff: { x: number; y: number; at: number } | null = null;
+  const HANDOFF_MS = 260;
+  const remember = (rig: Rig) => {
+    handoff = {
+      x: Number(gsap.getProperty(rig.card, 'x')) || 0,
+      y: Number(gsap.getProperty(rig.card, 'y')) || 0,
+      at: performance.now(),
+    };
+  };
+
   document.querySelectorAll<HTMLElement>('[data-cursor-card]').forEach((trigger) => {
     const id = trigger.dataset.cursorCard;
     const rig = id ? rigFor(id) : null;
@@ -720,6 +745,13 @@ function initCursorCards() {
       const p = place(rig, e.clientX, e.clientY, trigger);
       if (rig.shown) {
         // Handed straight from a sibling trigger: glide, don't teleport.
+        rig.xTo?.(p.x);
+        rig.yTo?.(p.y);
+      } else if (handoff && performance.now() - handoff.at < HANDOFF_MS) {
+        // A sibling's card was on the pointer a frame ago. Take over where it
+        // stood and travel to this row's mark, so the list hands the poster
+        // along instead of blinking it from row to row.
+        snap(rig, handoff.x, handoff.y);
         rig.xTo?.(p.x);
         rig.yTo?.(p.y);
       } else {
@@ -757,6 +789,7 @@ function initCursorCards() {
     trigger.addEventListener('pointerleave', () => {
       if (rig.owner !== trigger) return; // a sibling already took the card over
       rig.owner = null;
+      remember(rig); // in case the next row is about to ask for it
       if (rig.cut) {
         gsap.killTweensOf(rig.card, 'autoAlpha,opacity,visibility,scale');
         gsap.set(rig.card, { autoAlpha: 0 });
