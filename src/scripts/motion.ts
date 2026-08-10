@@ -603,6 +603,7 @@ function initCursorCards() {
   const OFF_X = 20; // the card rides off the pointer's shoulder,
   const OFF_Y = 16; // never under the arrow itself
   const EDGE = 12; // and never touching the viewport rim
+  const LANE = 24; // and keeps this much clear of anything it must not cover
 
   type Rig = {
     card: HTMLElement;
@@ -637,13 +638,57 @@ function initCursorCards() {
     return rig;
   };
 
+  /* A trigger can give the card a lane to ride in. `data-cursor-lane` names
+     the parts of the trigger the card must never sit on: everything left of
+     the trigger's middle pushes the lane's near edge right, everything right
+     of it pulls the far edge left, and what is left over is clear ground.
+     A row whose words run down the left and whose mark sits at the right
+     hands back the gap between them. Returns null when a trigger asks for
+     nothing, and that card keeps riding off the pointer's shoulder. */
+  const laneFor = (trigger: HTMLElement | null) => {
+    const sel = trigger?.dataset.cursorLane;
+    if (!trigger || !sel) return null;
+    const box = trigger.getBoundingClientRect();
+    const mid = box.left + box.width / 2;
+    let min = box.left;
+    let max = box.right;
+    trigger.querySelectorAll<HTMLElement>(sel).forEach((part) => {
+      const r = part.getBoundingClientRect();
+      if (!r.width) return;
+      if (r.left + r.width / 2 < mid) min = Math.max(min, r.right);
+      else max = Math.min(max, r.left);
+    });
+    return { min, max };
+  };
+
   // Beside the cursor, flipped to the other side when that edge is close,
   // then clamped so a corner hover can still never push the card off screen.
-  const place = (rig: Rig, cx: number, cy: number) => {
+  const place = (rig: Rig, cx: number, cy: number, trigger: HTMLElement | null) => {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-    const x = cx + OFF_X + rig.w > vw - EDGE ? cx - OFF_X - rig.w : cx + OFF_X;
-    const y = cy + OFF_Y + rig.h > vh - EDGE ? cy - OFF_Y - rig.h : cy + OFF_Y;
+    const lane = laneFor(trigger);
+    let x: number;
+    let y: number;
+
+    if (lane) {
+      /* In a lane the card never flips to the pointer's other side: it stays
+         on the right, held inside the clear ground, and rides level with the
+         pointer rather than below it. Reading down a list of rows then moves
+         the poster straight down beside the hand instead of stepping it
+         diagonally across the words. A lane too narrow to hold the card is
+         no lane at all: centre it on what there is and let the viewport
+         clamp below have the last word. */
+      const room = lane.max - lane.min - LANE * 2;
+      x =
+        room >= rig.w
+          ? gsap.utils.clamp(lane.min + LANE, lane.max - LANE - rig.w, cx + OFF_X)
+          : lane.min + (lane.max - lane.min - rig.w) / 2;
+      y = cy - rig.h / 2;
+    } else {
+      x = cx + OFF_X + rig.w > vw - EDGE ? cx - OFF_X - rig.w : cx + OFF_X;
+      y = cy + OFF_Y + rig.h > vh - EDGE ? cy - OFF_Y - rig.h : cy + OFF_Y;
+    }
+
     return {
       x: gsap.utils.clamp(EDGE, Math.max(EDGE, vw - rig.w - EDGE), x),
       y: gsap.utils.clamp(EDGE, Math.max(EDGE, vh - rig.h - EDGE), y),
@@ -672,7 +717,7 @@ function initCursorCards() {
       // display:none, so its box is real.
       rig.w = rig.card.offsetWidth;
       rig.h = rig.card.offsetHeight;
-      const p = place(rig, e.clientX, e.clientY);
+      const p = place(rig, e.clientX, e.clientY, trigger);
       if (rig.shown) {
         // Handed straight from a sibling trigger: glide, don't teleport.
         rig.xTo?.(p.x);
@@ -703,7 +748,7 @@ function initCursorCards() {
       raf = requestAnimationFrame(() => {
         raf = 0;
         if (rig.owner !== trigger) return;
-        const p = place(rig, cx, cy);
+        const p = place(rig, cx, cy, trigger);
         rig.xTo?.(p.x);
         rig.yTo?.(p.y);
       });

@@ -104,6 +104,11 @@ Under reduced motion the module bows out and static CSS stands in.
   the same info accessibly (sr-only text plus a static line on coarse
   pointers / reduced motion). Every card is a paper tag (see Bands). Used by
   the roster, the season rows, and the nav drawer's link descriptors.
+  `[data-cursor-lane="sel"]` on the trigger names the parts of itself the
+  card may never cover. The card is then held in the clear ground between
+  them and rides level with the pointer instead of below it, and it stops
+  flipping sides. A row with its name down the left and its mark at the
+  right keeps both readable while the poster tracks the hand down the list.
 - Display type never answers the pointer: no ripple on headings, no lean
   on the script flourish. Titles and subtitles hold still.
 
@@ -162,7 +167,10 @@ section:
   cover wipe on fine pointers, plain flow on touch. A small "Team members"
   display title over a grid of portrait plates with the name and that
   member's previous team numbers under each, two across on a phone
-  (everything centred) and five (two full rows) above 40rem · plate height
+  (everything centred) and above 40rem a column count derived from the
+  roster: the fewest rows that hold everyone, then the members spread evenly
+  across them, capped at six columns. Nine ran 5 + 4, eleven runs 6 + 5.
+  The rag stays, the orphan row never happens · plate height
   set in `svh` so the grid never overruns the screens it has · the names
   never answer the pointer; the portraits do: the hovered face zooms in a
   touch (1.045) and its grid neighbours (either side plus the vertical one)

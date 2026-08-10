@@ -4,8 +4,8 @@ Astro 7 + Tailwind CSS 4 website for FTC team 37122, GNCE Onyx. The whole
 site is one scrollable page
 (`src/pages/index.astro` composing `src/components/home/`); blog posts and
 the `/drivetrain/` calculator are the only separate routes. Copy and
-identity facts are real (team 37122, gnceonyx@gmail.com, @gnceonyx). Four of
-the nine roster portraits are real photos; the rest of the media and the
+identity facts are real (team 37122, gnceonyx@gmail.com, @gnceonyx). Five of
+the eleven roster portraits are real photos; the rest of the media and the
 sponsor form link are still placeholder slots.
 
 ## Development
@@ -73,6 +73,15 @@ Manage the background server with `astro dev stop`, `astro dev status`, and `ast
   file per member: two extensions for the same slug and the lookup picks
   whichever the glob lists first. Members without a file stay on the
   silhouette, so faces can land one at a time.
+  Crop with `-auto-orient` first: a phone photo carries its rotation in EXIF
+  and cropping without applying it cuts the wrong region and lands the face
+  sideways. Aim for the head at 45-50% of the square, which is what makes a
+  face read at 200px; the roster's problem has always been faces that are
+  small in frame, not files that are short of pixels.
+  The grid takes its column count from the roster length (see `Team.astro`),
+  so adding a member reshapes the grid rather than orphaning a last row.
+  It stays two rows: the section is pinned under the cover wipe by
+  `index.astro`'s `-260svh` geometry and must stay one viewport tall.
   The plate is a 260px column, so a source under 520px is soft on a 2x
   screen. Vera's original was only 272px and is upscaled to 544; if a
   higher-resolution file ever turns up, prefer it over the upscale. The

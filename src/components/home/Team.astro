@@ -32,15 +32,28 @@ const roster: { name: string; teams: string[] }[] = [
   { name: 'Ethan Zhang', teams: ['22489', '26111'] },
   { name: 'Anson Su', teams: ['22489', '26111'] },
   { name: 'Adrian Chang', teams: ['22489', '26111'] },
+  { name: 'Arnie Sreeram', teams: ['22489', '26413'] },
   { name: 'Elisa Peng', teams: ['22489', '26413'] },
   { name: 'Nicholas Colli', teams: ['26413', '26112'] },
   { name: 'Ethan Zhuang', teams: ['26112', '26111'] },
   { name: 'Leo Li', teams: ['26111'] },
   { name: 'Raymond Liu', teams: [] },
   { name: 'Vera Su', teams: [] },
+  { name: 'Hannah Zhang', teams: [] },
 ];
 
 const slug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
+// The grid reads its shape off the roster rather than holding a fixed five.
+// Take the fewest rows that fit everyone, then spread the members evenly
+// across those rows: nine came out five and four, eleven comes out six and
+// five, thirteen would come out five, five and three. A fixed five would
+// have answered eleven with five, five and one, and a row holding a single
+// member reads as a mistake rather than as a rag. Six is the ceiling
+// because past that a face is too small to be a face.
+const MAX_COLUMNS = 6;
+const rowCount = Math.ceil(roster.length / MAX_COLUMNS);
+const columns = Math.ceil(roster.length / rowCount);
 
 // Portraits are matched to the roster by filename rather than by a second
 // list to keep in sync: a square photo saved as the member's slug is picked
@@ -63,12 +76,12 @@ const photoFor = (name: string) => {
   <div class="team-frame mx-auto w-full max-w-[88rem] px-5 sm:px-8">
     <h2 id="team-title" class="team-head type-display" data-split>Team members</h2>
 
-    <ul class="roster" data-reveal-group>
+    <ul class="roster" data-reveal-group style={`--columns:${columns};--rows:${rowCount}`}>
       {
         roster.map((member) => {
           const photo = photoFor(member.name);
-          // The plate is at most a 260px column, so two widths cover it and
-          // its retina pass, capped at the file's own size so a small
+          // Six columns put the plate at roughly 200px, so two widths cover
+          // it and its retina pass, capped at the file's own size so a small
           // original is never blown up. Eager because this section is what
           // the cover wipe opens onto: none of it is below the fold.
           // The name sits directly under the picture in its own line, so
@@ -86,7 +99,7 @@ const photoFor = (name: string) => {
                       src={photo}
                       alt=""
                       widths={[...new Set([260, Math.min(520, photo.width)])]}
-                      sizes="(min-width: 40rem) 260px, 45vw"
+                      sizes="(min-width: 40rem) 210px, 45vw"
                       loading="eager"
                     />
                   ) : (
@@ -181,12 +194,21 @@ const photoFor = (name: string) => {
     .roster {
       /* Squares cannot be told to fit a short screen by trimming their
          height, so the CELL is what gets capped: the smaller of the column
-         width and the height two rows may have, with the grid centring
-         itself whenever the height is what binds. The 28rem reserve is this
-         section's other furniture (both paddings, the title, the two name
-         blocks, the row gap) measured at its largest. */
-      --cell: min((100% - 4 * var(--grid-gap)) / 5, (100svh - 28rem) / 2);
-      grid-template-columns: repeat(5, var(--cell));
+         width and the height its rows may have, with the grid centring
+         itself whenever the height is what binds. Both counts come from the
+         roster (set inline on the element), so adding a member reshapes the
+         grid instead of overflowing it.
+
+         The reserve is this section's other furniture measured at its
+         largest: both paddings and the title are fixed, and every row adds
+         a name block and a gap. 16 + 2 x 6 is the 28rem two rows always
+         used, so nine members lay out exactly as they did before. */
+      --reserve: calc(16rem + var(--rows) * 6rem);
+      --cell: min(
+        (100% - (var(--columns) - 1) * var(--grid-gap)) / var(--columns),
+        (100svh - var(--reserve)) / var(--rows)
+      );
+      grid-template-columns: repeat(var(--columns), var(--cell));
       justify-content: center;
       gap: clamp(1.75rem, 4svh, 3rem) var(--grid-gap);
     }
