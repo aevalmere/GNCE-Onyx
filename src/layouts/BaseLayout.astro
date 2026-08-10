@@ -147,7 +147,9 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     </script>
   </head>
   <body class:list={['min-h-svh antialiased', light ? 'band-light' : 'bg-paper text-ink']}>
-    <a class="skip-link" href="#main">Skip to content</a>
+    <!-- data-no-glide: skipping the chrome is an escape, not a trip. It
+         lands at once, the way a skip link is supposed to. -->
+    <a class="skip-link" href="#main" data-no-glide>Skip to content</a>
 
     {
       intro && (

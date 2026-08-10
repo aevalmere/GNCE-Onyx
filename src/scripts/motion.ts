@@ -85,6 +85,7 @@ function boot() {
       }
       // scenes (each no-ops if its element is absent)
       initCoverWipe();
+      initAnchorGlide();
       initHashLand();
       initHorizontalReveal();
       initHScroll();
@@ -889,6 +890,71 @@ function initCoverWipe() {
 /* #contact keep their own smarter landings (the wipe end and the REACH  */
 /* level); this covers every other section.                              */
 /* ================================================================== */
+/* ================================================================== */
+/* In-page anchors glide instead of jumping.                          */
+/* ================================================================== */
+/* A plain <a href="#contact"> is a native jump, and under Lenis that   */
+/* lands hard and in the wrong place: the finale is pinned beneath the  */
+/* curtain, so the browser scrolls to where the section sits in flow    */
+/* rather than to the level it actually rests at. The drawer's links    */
+/* already went through GearNav's glideTo for exactly this reason; the  */
+/* buttons in the middle of the page never did, so "Invite us" and      */
+/* "Get in touch" teleported past the sponsor wall while every link in  */
+/* the nav eased into place.                                            */
+/*                                                                      */
+/* Neither this nor GearNav decides where a covered section rests: both */
+/* ask the section, which is the only thing that can measure its own    */
+/* cover. #contact publishes `__finale.reachLevel()` and the wipe's end  */
+/* is the cover spacer's own height, so the two paths cannot drift.      */
+/* The drawer is skipped: its own handler runs first and is smarter      */
+/* about focus and closing itself.                                       */
+function initAnchorGlide() {
+  document.addEventListener('click', (e) => {
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) {
+      return;
+    }
+    const link = (e.target as HTMLElement | null)?.closest?.<HTMLAnchorElement>('a[href]');
+    if (!link || link.closest('#site-nav') || link.target === '_blank') return;
+    if (link.hasAttribute('data-no-glide')) return;
+
+    // Same document only: a hash on another page is a real navigation.
+    const url = new URL(link.href, location.href);
+    if (url.pathname !== location.pathname || url.origin !== location.origin || !url.hash) return;
+
+    let target: HTMLElement | null = null;
+    try {
+      target = document.querySelector<HTMLElement>(url.hash);
+    } catch {
+      return;
+    }
+    if (!target) return;
+
+    const lenis = (window as any).__motion?.lenis;
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const behavior: ScrollBehavior = reduced ? 'auto' : 'smooth';
+    const reach = url.hash === '#contact' ? (window as any).__finale?.reachLevel?.() : undefined;
+
+    e.preventDefault();
+    if (typeof reach === 'number') {
+      if (lenis?.scrollTo) lenis.scrollTo(reach, { immediate: reduced });
+      else window.scrollTo({ top: reach, behavior });
+    } else if (lenis?.scrollTo) {
+      lenis.scrollTo(target, { immediate: reduced });
+    } else {
+      target.scrollIntoView({ behavior });
+    }
+
+    // The hash still belongs in the URL, but assigning location.hash would
+    // undo the glide with a jump of its own.
+    history.pushState(null, '', url.hash);
+
+    // Keyboard users land on the section rather than carrying on from the
+    // button they just left.
+    if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
+    target.focus({ preventScroll: true });
+  });
+}
+
 function initHashLand() {
   const hash = location.hash;
   if (!hash || hash === '#team' || hash === '#contact') return;

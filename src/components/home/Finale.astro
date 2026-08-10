@@ -153,19 +153,19 @@
     color: var(--color-muted);
   }
 
-  /* Names wrap and centre on one axis, which is what keeps the lockup
-     composed at two names or at nine. The measure is deliberately narrower
-     than the frame: a name set loose across 88rem is a floating word,
-     inside 54rem it is part of a block. */
+  /* One name per line, stacked and centred on a single axis. Set side by
+     side they read as a row of items; stacked with the leading pulled tight
+     they read as one printed block, which is what the back of a shirt
+     actually looks like and what the whole lockup is after. The measure is
+     deliberately narrower than the frame: a name set loose across 88rem is
+     a floating word, inside 54rem it is part of a block. */
   .wall-list {
     display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
     max-width: 54rem;
     margin: clamp(0.5rem, 1.3svh, 0.9rem) auto 0;
-    column-gap: clamp(1.5rem, 4vw, 3.25rem);
-    row-gap: clamp(0.3rem, 0.9svh, 0.6rem);
+    row-gap: clamp(0.1rem, 0.5svh, 0.35rem);
     list-style: none;
   }
 
@@ -458,7 +458,9 @@
       travel = full - reach;
     };
 
-    // GearNav's #contact branch reads this for its anchor trips. Measured on
+    // GearNav's #contact branch and motion.ts's in-page anchor glide both
+    // read this, so neither has to guess where a pinned section rests.
+    // Measured on
     // the spot: it is called once per trip, never per frame.
     (window as any).__finale = {
       reachLevel: () => {
