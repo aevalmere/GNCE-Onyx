@@ -25,12 +25,12 @@ const rungs = [
      (the section above can never peek into the resting frame) and the
      overshoot is swallowed by the top padding while the pitch itself sits
      centred in the room it has. -->
-<section id="sponsors">
+<section id="sponsors" aria-labelledby="sponsors-title">
   <div
     class="mx-auto flex min-h-[calc(100svh-9rem)] max-w-[88rem] flex-col justify-center px-5 pt-[clamp(3rem,9svh,8rem)] pb-[clamp(2.5rem,7svh,6rem)] sm:px-8"
   >
     <span class="mark" aria-hidden="true"></span>
-    <h2 class="type-display text-[clamp(2.25rem,min(7vw,9svh),5.5rem)]" data-split>
+    <h2 id="sponsors-title" class="type-display text-[clamp(2.25rem,min(7vw,9svh),5.5rem)]" data-split>
       Back the build.
     </h2>
 
@@ -52,13 +52,10 @@ const rungs = [
 </section>
 
 <style>
-  /* Grape rule above the headline: the small grape highlight over the headline. */
+  /* The shared grape bar (global.css); only its air belongs to this section,
+     and it gives some of that back on a short screen. */
   .mark {
-    display: block;
-    width: 2.75rem;
-    height: 3px;
     margin-bottom: clamp(1rem, 2.5svh, 1.75rem);
-    background: var(--color-accent);
   }
 
   .ladder {

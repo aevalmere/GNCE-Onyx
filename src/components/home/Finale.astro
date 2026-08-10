@@ -1,11 +1,11 @@
 ---
 /**
- * Finale — the last frame, on paper. index.astro pins this section and
- * scrolls the rest of the page off it like a curtain, so it has to read as
- * one still picture instead of a sequence: no reveals, no split headline,
+ * Finale — the last frame, on the deep band. index.astro pins this section
+ * and scrolls the rest of the page off it like a curtain, so it has to read
+ * as one still picture instead of a sequence: no reveals, no split headline,
  * nothing that arrives. The sponsor lockup holds the top edge and one
  * centred line closes the bottom: the "Get in touch" headline with three
- * machined keys beside it (email, Instagram, the sponsor form). No footer
+ * machined keys beside it (email, Instagram, YouTube). No footer
  * and no small print;
  * the contact line IS the sign-off (the blog pages keep the shared Footer,
  * where it does navigation work). Sized to one viewport, so what the
@@ -29,7 +29,7 @@
  */
 ---
 
-<section id="contact" class="finale band-deep">
+<section id="contact" class="finale band-deep" aria-labelledby="contact-title">
   <div class="finale-frame mx-auto w-full max-w-[88rem] px-5 sm:px-8">
     <!-- The shirt back: the names printed between the shoulders, every
          backer at the same size on the same line. One list, one axis, no
@@ -44,11 +44,11 @@
     </div>
 
     <div class="reach">
-      <h2 class="reach-head type-display">Get in touch</h2>
+      <h2 id="contact-title" class="reach-head type-display">Get in touch</h2>
 
       <div class="reach-row">
         <!-- Three keys, one type: glyph then value, one block each. Email,
-             Instagram and the sponsor form are the same control at the same
+             Instagram and YouTube are the same control at the same
              size, drawn here rather than pulled from a set, on the same 24
              grid at the same stroke weight. -->
         <a class="pin" href="mailto:gnceonyx@gmail.com">
@@ -92,8 +92,8 @@
           </span>
         </a>
 
-        <a class="pin" href="#" title="Form link pending">
-          <span class="sr-only">Sponsor form</span>
+        <a class="pin" href="https://www.youtube.com/@gnceonyx" target="_blank" rel="noopener">
+          <span class="sr-only">YouTube</span>
           <svg
             class="pin-glyph"
             viewBox="0 0 24 24"
@@ -102,14 +102,13 @@
             stroke-width="1.6"
             aria-hidden="true"
           >
-            <rect x="4.5" y="3" width="15" height="18"></rect>
-            <path d="M8 8 H 16"></path>
-            <path d="M8 12 H 16"></path>
-            <path d="M8 16 H 13"></path>
+            <rect x="2.5" y="5" width="19" height="14" rx="3"></rect>
+            <path d="M10.25 9.25 L15.25 12 L10.25 14.75 Z" fill="currentColor" stroke="none"
+            ></path>
           </svg>
           <span class="pin-slot">
             <span class="pin-clip">
-              <span class="pin-value stub" title="Form link pending">Form</span>
+              <span class="pin-value">@GNCEOnyx</span>
             </span>
           </span>
         </a>
@@ -120,8 +119,8 @@
 
 <style>
   /* One viewport tall, flex column: the frame takes what it needs and the
-     contact line holds the bottom edge whatever the height. Paper fill and
-     indigo ink come from .band-light. */
+     contact line holds the bottom edge whatever the height. The fill comes
+     from .band-deep; the ink ramp is the page's own. */
   .finale {
     display: flex;
     flex-direction: column;
@@ -184,8 +183,8 @@
   }
 
   /* ---- Get in touch ------------------------------------------------ */
-  /* One centred line at the bottom edge: the headline with the two keys and
-     the form button riding beside it, the whole group on the frame's centre
+  /* One centred line at the bottom edge: the headline with the three keys
+     riding beside it, the whole group on the frame's centre
      axis. This line is everything the curtain leaves uncovered at REACH, so
      the shorter it stands, the more of the sponsor pitch shares the screen
      above it; it is also the page's sign-off, footer and all. Wraps into a
@@ -288,10 +287,6 @@
     font-size: 0.9375rem;
     letter-spacing: 0.02em;
     white-space: nowrap;
-    /* Paper dash: .stub draws a grape one, which is nothing on indigo. */
-    border-bottom-color: color-mix(in srgb, var(--color-paper) 60%, transparent);
-    /* .stub also asks for the help cursor; inside a link the pointer wins. */
-    cursor: inherit;
   }
 
   /* The keys take the same grape the buttons do: one hover vocabulary
@@ -312,6 +307,13 @@
      state's no-wrap proof (above) is what makes that safe. The pointer
      keeps its key: the box grows around the glyph, so the hand never loses
      what it is holding. */
+  /* The one frame armLine() measures in: the drawers have to be AT their
+     collapsed size to be measured, not 480ms away from it. */
+  .reach-measuring .pin-slot,
+  .reach-measuring .pin-value {
+    transition: none !important;
+  }
+
   .reach-live .pin-slot {
     grid-template-columns: 0fr;
     transition: grid-template-columns 480ms var(--ease-spring);
@@ -407,7 +409,13 @@
         reachLine.classList.remove('reach-live');
         return;
       }
-      // Measure the armed geometry itself, drawers collapsed.
+      // Measure the armed geometry itself, drawers collapsed. The collapse
+      // is a 480ms transition, so a measurement taken the moment the class
+      // lands reads the drawers still OPEN: the line then looks two whole
+      // drawers wider than it will ever be, and the proof fails on a window
+      // with room to spare. `reach-measuring` freezes the transition for the
+      // one frame we measure in, so what we measure is what will be there.
+      reachLine.classList.add('reach-measuring');
       reachLine.classList.add('reach-live');
       const width = reachLine.clientWidth;
       const gap = parseFloat(getComputedStyle(reachLine).columnGap) || 0;
@@ -419,6 +427,10 @@
         drawer = Math.max(drawer, v.offsetWidth);
       });
       if (rest + drawer + 12 > width) reachLine.classList.remove('reach-live');
+      // Settle the decided state while transitions are still frozen, or
+      // handing them back animates the drawers from wherever this left them.
+      void reachLine.offsetWidth;
+      reachLine.classList.remove('reach-measuring');
     };
     fine.addEventListener?.('change', () => armLine());
 

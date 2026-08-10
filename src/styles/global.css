@@ -21,14 +21,15 @@
 
 /* ==================================================================
    GNCE ONYX — design tokens
-   Six colors only: black, space indigo, twilight indigo, shadow grey,
-   grape soda, pale slate. The site is a light page now: pale slate is
-   the paper everywhere, space indigo is the main color (ink, fills,
-   controls), black keeps the intro cover and the veils, and grape is
-   reserved for true highlights (selection, heat rail, hovers, marks
-   and stubs).
+   Five colors: black, space indigo, shadow grey, grape soda, pale slate,
+   plus the mixes derived from the first two (the ink ramp, the deep band,
+   the media plate). The site is a light page: pale slate is the paper
+   everywhere, space indigo is the main color (ink, fills, controls), black
+   keeps the intro cover and the veils, and grape is reserved for true
+   highlights (selection, heat rail, hovers, marks and stubs).
    No idle glows. No gradient fills. Motion and solid color carry the life.
    Type: LEMON MILK Medium (display), Grey Qo (script accent), Ubuntu (body).
+   Every token lives in this block; nothing is redeclared on :root.
    ================================================================== */
 @theme {
   /* Type */
@@ -37,17 +38,34 @@
   --font-text: 'Ubuntu', system-ui, sans-serif;
   --font-code: ui-monospace, 'SFMono-Regular', Menlo, monospace;
 
-  /* Color — the six values + pale slate alphas */
+  /* Color — the values themselves */
   --color-bg: #000000; /* black — the veils only: scrims, backdrops */
   --color-surface: #10254F; /* space indigo — text on paper, small fills */
-  --color-panel: #303D6A; /* twilight indigo — glass, raised surfaces */
-  --color-steel: #2B2C33; /* shadow grey — media slots, code frames */
+  --color-steel: #2B2C33; /* shadow grey — code frames, and nothing else */
   --color-paper: #C9CFDD; /* pale slate as a surface — light bands, cursor cards */
-  --color-line: color-mix(in srgb, #C9CFDD 14%, transparent);
-  --color-ink: #C9CFDD; /* pale slate */
-  --color-muted: color-mix(in srgb, #C9CFDD 60%, transparent);
-  --color-faint: color-mix(in srgb, #C9CFDD 38%, transparent);
   --color-accent: #823A80; /* grape soda */
+
+  /* The ink ramp: space indigo at 100 / 70 / 52 / 18%. Declared HERE and
+     nowhere else, so Tailwind's utilities (text-ink, text-muted, text-faint)
+     and the raw var() reads resolve to one set of values. Sections that float
+     over any band (.band-light, .cursor-card, .nav-drawer) restate the ramp
+     against --color-surface rather than inheriting it. */
+  --color-ink: #10254F;
+  --color-muted: color-mix(in srgb, #10254F 70%, transparent);
+  --color-faint: color-mix(in srgb, #10254F 52%, transparent);
+  --color-line: color-mix(in srgb, #10254F 18%, transparent);
+
+  /* One step deeper into the blue than paper: the alternate band. */
+  --color-deep: color-mix(in srgb, #10254F 9%, #c9cfdd);
+  /* Media plates waiting on a picture: deeper again, so a plate reads as a
+     plate on either band. Shadow grey belonged to the black site and lands
+     on a light page as a hole in it. */
+  --color-slot: color-mix(in srgb, #10254F 20%, #c9cfdd);
+  /* The plate's own edge. A band hairline (18% of the ink, as alpha) is all
+     but invisible against a 20% fill, so the frame gets its own value: one
+     clear step deeper than the plate, solid rather than alpha, which reads
+     as a printed edge without becoming a box around the picture. */
+  --color-slot-edge: color-mix(in srgb, #10254F 34%, #c9cfdd);
 
   /* Motion — strong curves (emil-design-eng); never ease-in on UI. */
   --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
@@ -61,28 +79,9 @@
    fills, controls. Black keeps only the intro cover and the veils
    (scrims, popup backdrops), and grape appears solely as a true
    highlight: selection, the heat rail, hover states, the small marks,
-   the stub dashes. The default ink ramp below is the
-   indigo one; .band-deep tints a section a step deeper into the blue so
-   neighbouring bands and the two curtain seams stay legible.
+   the stub dashes. .band-deep tints a section a step deeper into the blue
+   so neighbouring bands and the two curtain seams stay legible.
    ================================================================== */
-:root {
-  --color-ink: #10254f;
-  --color-muted: color-mix(in srgb, #10254f 70%, transparent);
-  --color-faint: color-mix(in srgb, #10254f 52%, transparent);
-  --color-line: color-mix(in srgb, #10254f 18%, transparent);
-  /* One step deeper into the blue than paper: the alternate band. */
-  --color-deep: color-mix(in srgb, #10254f 9%, #c9cfdd);
-  /* Media plates waiting on a picture: deeper again, so a plate reads as a
-     plate on either band. Shadow grey belonged to the black site and lands
-     on a light page as a hole in it. */
-  --color-slot: color-mix(in srgb, #10254f 20%, #c9cfdd);
-  /* The plate's own edge. A band hairline (18% of the ink, as alpha) is all
-     but invisible against a 20% fill, so the frame gets its own value: one
-     clear step deeper than the plate, solid rather than alpha, which reads
-     as a printed edge without becoming a box around the picture. */
-  --color-slot-edge: color-mix(in srgb, #10254f 34%, #c9cfdd);
-}
-
 html {
   background: var(--color-paper);
   color-scheme: light;
@@ -200,10 +199,22 @@ body {
   border-color: var(--color-line);
 }
 
-/* Inline mark for small unknowns (team number, handle, TBD date). */
+/* Inline mark for small unknowns (a handle, a TBD date). Nothing wears it
+   at the moment; it stays because it is the convention the next unknown
+   gets marked with. */
 .stub {
   border-bottom: 1px dashed color-mix(in srgb, var(--color-accent) 60%, transparent);
   cursor: help;
+}
+
+/* The grape bar a section can open on, above its headline: a small true
+   highlight, the same 2.75rem in every section that takes one. The margin
+   below it is the section's own business, so it is not set here. */
+.mark {
+  display: block;
+  width: 2.75rem;
+  height: 3px;
+  background: var(--color-accent);
 }
 
 /* ==================================================================
@@ -255,10 +266,6 @@ html.gsap [data-reveal] {
   transition: none !important;
 }
 
-.reveal-clip-inner {
-  display: block;
-}
-
 @media (prefers-reduced-motion: reduce) {
   html.js [data-reveal] {
     opacity: 1;
@@ -296,8 +303,7 @@ html.gsap [data-reveal] {
 /* No-flash: hide what is about to move before first paint. Set
    synchronously in <head>; cleared when motion.ts boots (failsafe clears
    it otherwise). */
-html.will-animate [data-split],
-html.will-animate [data-reveal-scrub] {
+html.will-animate [data-split] {
   opacity: 0;
 }
 
@@ -375,17 +381,6 @@ html.no-js .cursor-card {
     border-color: var(--color-accent);
     color: var(--color-paper);
   }
-}
-
-/* A button can wear the .stub mark itself (the form link is still pending).
-   .btn's border shorthand outruns .stub, so the dash is redrawn here, and
-   on a solid fill it switches to paper where an indigo dash would drown. */
-.btn.stub {
-  border-bottom: 1px dashed color-mix(in srgb, var(--color-accent) 60%, transparent);
-}
-
-.btn-solid.stub {
-  border-bottom-color: color-mix(in srgb, var(--color-paper) 60%, transparent);
 }
 
 /* ==================================================================

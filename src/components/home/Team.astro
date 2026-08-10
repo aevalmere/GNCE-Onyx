@@ -5,8 +5,9 @@
  * fine pointers, so this is the first thing the page opens onto. On touch
  * it sits in plain flow and the page scrolls straight into it.
  *
- * Five across at full width, the last row ragging left like type does;
- * two across on a phone. The plates are sized by
+ * The column count comes off the roster (see the arithmetic below): eleven
+ * members run six and five, the last row ragging left like type does. Two
+ * across on a phone. The plates are sized by
  * height rather than by ratio, which is what keeps every row the same depth
  * and every name on the same line, and what lets the whole block shrink
  * with a short viewport instead of overrunning it. Photos drop straight
@@ -80,17 +81,21 @@ const photoFor = (name: string) => {
       {
         roster.map((member) => {
           const photo = photoFor(member.name);
-          // Six columns put the plate at roughly 200px, so two widths cover
-          // it and its retina pass, capped at the file's own size so a small
-          // original is never blown up. Eager because this section is what
-          // the cover wipe opens onto: none of it is below the fold.
+          // Six columns across the 88rem frame put the plate at about 200px,
+          // so two widths cover it and its retina pass, capped at the file's
+          // own size so a small original is never blown up. The sizes ladder
+          // is measured, not guessed: the plate only reaches 200px once the
+          // frame does, and at the 40rem breakpoint six columns leave it
+          // nearer 110px, so a flat desktop figure would over-fetch on every
+          // tablet. Eager because this section is what the cover wipe opens
+          // onto: none of it is below the fold.
           // The name sits directly under the picture in its own line, so
           // alt repeats nothing: the photo is labelled by that text.
           return (
             <li class="member">
               <Reveal variant="up">
                 <div
-                  class="member-plate"
+                  class="slot member-plate"
                   data-placeholder={photo ? undefined : `member-photo-${slug(member.name)}`}
                 >
                   {photo ? (
@@ -99,7 +104,7 @@ const photoFor = (name: string) => {
                       src={photo}
                       alt=""
                       widths={[...new Set([260, Math.min(520, photo.width)])]}
-                      sizes="(min-width: 40rem) 210px, 45vw"
+                      sizes="(min-width: 64rem) 200px, (min-width: 40rem) 15vw, 45vw"
                       loading="eager"
                     />
                   ) : (
@@ -151,8 +156,8 @@ const photoFor = (name: string) => {
   .roster {
     --grid-gap: clamp(0.85rem, 1.8vw, 1.75rem);
     display: grid;
-    /* Two across on a phone, portraits big enough to be faces. Five across
-       from the tablet breakpoint up. */
+    /* Two across on a phone, portraits big enough to be faces. From the
+       tablet breakpoint up the count comes off the roster (block below). */
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: clamp(1.25rem, 3svh, 2.5rem) var(--grid-gap);
   }
@@ -160,13 +165,12 @@ const photoFor = (name: string) => {
   /* Square, always: one ratio for every portrait means a row of faces is a
      row of faces, and a photo dropped in crops to the same shape for
      everyone. The cell width sets the size, so the names below sit on one
-     line across the whole grid. */
+     line across the whole grid. The fill and the edge come from .slot
+     (global.css), so a portrait plate and a media plate are the same object. */
   .member-plate {
     position: relative;
     width: 100%;
     aspect-ratio: 1 / 1;
-    background: var(--color-slot);
-    border: 1px solid var(--color-slot-edge);
   }
 
   /* The silhouette fills the plate; anything past the viewBox (the

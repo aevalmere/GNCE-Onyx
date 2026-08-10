@@ -1,25 +1,29 @@
 # Design System — GNCE Onyx
 
-A light, medieval-modern identity built for a scroll-driven experience.
+A light, machined identity built for a scroll-driven experience.
 Pale slate paper everywhere, space indigo as the main color (ink, fills,
 controls), sections alternating between paper and a deeper blue-tinted
-band, grape reserved for true highlights, and a distinctive uncial +
-script + clean-sans type system. Typography carries the identity;
+band, grape reserved for true highlights, and a geometric-caps + script +
+clean-sans type system. Typography carries the identity;
 motion is the life. Read this (and the skills in `.claude/skills/`) before
 touching UI.
 
 ## Principles
 
-1. **Six colors.** `#C9CFDD` pale slate is the paper the whole site sits
+1. **Five colors.** `#C9CFDD` pale slate is the paper the whole site sits
    on; `#10254F` space indigo is the main color (all text, solid button
    fills, the nav toggle, the intro cover) plus its alphas for rules and
-   muted copy, and a 9% wash of it into the paper makes `--color-deep`,
-   the alternate band. `#000000` black keeps only the nav drawer's scrim.
-   `#303D6A` twilight indigo (glass, raised surfaces) and
-   `#2B2C33` shadow grey (`--color-steel`: code frames) hold
-   their jobs. `#823A80` grape soda appears ONLY as a true highlight:
+   muted copy, a 9% wash of it into the paper makes `--color-deep` (the
+   alternate band), and 20/34% washes make the media plate and its edge.
+   `#000000` black keeps only the nav drawer's scrim.
+   `#2B2C33` shadow grey (`--color-steel`) is code frames and nothing
+   else. `#823A80` grape soda appears ONLY as a true highlight:
    selection, the heat rail, hover states, the section marks, the stub
    dashes.
+   The `/drivetrain/` calculator is the one exception on the site: a
+   self-contained tool page with its own token set (a three-level ink
+   ramp, a deeper grape that clears AA as small text, and one burnt-orange
+   warning hue for limits). It is declared and justified inside that page.
 2. **No idle glows. No gradient fills. No blur.** Life comes from motion
    and solid color; content is sharp from its first painted frame (reveals
    are clip wipes and drift, never a blur-in), and nothing frosted sits
@@ -46,8 +50,10 @@ touching UI.
    only stamps `data-placeholder` so every open slot is one grep away
    (`grep -rn "data-placeholder" src/`). An empty media block is a `.slot`,
    an indigo wash inside the band's own hairline, with no label in it, and
-   it reads as a plate waiting for a picture. `.stub` (a dashed grape underline) still
-   marks inline unknowns: team number, handle, the pending form link.
+   it reads as a plate waiting for a picture. `.stub` (a dashed grape
+   underline) marks inline unknowns. Nothing wears one right now: the team
+   number, the email and both handles are real. The convention stands for
+   the next unknown.
 7. **No em-dashes in visible copy. Lean copy only** (no-slop-writing): every
    visible sentence earns its place; anything that restates gets cut.
 
@@ -59,14 +65,21 @@ touching UI.
 | `--font-script` | Grey Qo | One script flourish per page |
 | `--font-text` | Ubuntu | Body, labels (`.type-label` = spaced caps) |
 | `--color-bg` | `#000000` | Black, veils only: the nav drawer's scrim |
-| `--color-surface` | `#10254F` | Space indigo: text on the light bands, small solid fills (nav toggle). Not a background |
-| `--color-panel` | `#303D6A` | Twilight indigo: glass panels, raised surfaces, footer |
-| `--color-steel` | `#2B2C33` | Shadow grey: code frames and quiet dark surfaces |
-| `--color-slot` | indigo 20% on paper | Media plates waiting on a picture (`.slot`, the roster portraits) |
+| `--color-surface` | `#10254F` | Space indigo: text on the light bands, small solid fills (nav toggle, the contact keys). Not a background |
+| `--color-steel` | `#2B2C33` | Shadow grey: code frames in post bodies |
 | `--color-paper` | `#C9CFDD` | Pale slate as a surface: light bands, cursor cards |
+| `--color-deep` | indigo 9% on paper | The alternate band (`.band-deep`) |
+| `--color-slot` | indigo 20% on paper | Media plates waiting on a picture (`.slot`, the roster portraits) |
+| `--color-slot-edge` | indigo 34% on paper | That plate's own edge, solid rather than alpha so it reads on either band |
 | `--color-accent` | `#823A80` | Grape soda: fills, accent text, markers |
 | `--color-ink` / `--color-muted` / `--color-faint` / `--color-line` | space indigo at 100 / 70 / 52 / 18% | The ink ramp: text, secondary text, quiet text, hairlines |
 | `--ease-out-strong` etc. | cubic-beziers | Entrances, on-screen movement, spring |
+
+Everything above is declared once, in the `@theme` block. Nothing is
+redeclared on `:root`. Components that float over any band (`.band-light`,
+`.cursor-card`, the nav drawer, the season poster) restate the ink ramp
+against `--color-surface` locally, which is the only place a token value is
+ever written twice.
 
 **Bands.** The whole site runs the paper + indigo ramp; sections alternate
 paper and `.band-deep` (a 9% indigo wash) down the page: Hero deep, Team
@@ -92,18 +105,19 @@ Under reduced motion the module bows out and static CSS stands in.
   from behind the line, scroll-locked; re-split on resize.
 - `[data-reveal]` (up/left/right/scale/diag) — crisp clip-path wipe on
   enter, opacity held at 1 (no fade); `diag` is a corner wipe. Lists
-  alternate variants instead of repeating one. `[data-reveal-scrub]` is the
-  same, locked to scroll. `data-reveal-group` staggers children.
-- `[data-parallax="±px"]`, `[data-hover-preview]`
-  (image beside cursor, needs `[data-preview-root]` + `[data-preview-img]`).
+  alternate variants instead of repeating one. `data-reveal-group` staggers
+  children off the group's own line, and a `delay` is only read on a reveal
+  that stands alone. Watched with IntersectionObserver, with a timer-and-
+  rect backstop under it that opens anything left clipped.
   Nothing follows the cursor on buttons: hover on a control is a 1px rise
   and the fill turning grape, and display type never answers the pointer.
 - `[data-cursor-card="id"]` — hover detail that rides the pointer: the
   trigger floats the element `#id.cursor-card` beside the cursor
   (viewport-clamped, edge-flipping, pointer-fine only). Triggers must carry
   the same info accessibly (sr-only text plus a static line on coarse
-  pointers / reduced motion). Every card is a paper tag (see Bands). Used by
-  the roster, the season rows, and the nav drawer's link descriptors.
+  pointers / reduced motion). Every card is a paper tag (see Bands), except
+  the season poster, which opts out so the artwork can fly into the panel
+  unchanged. The season rows are the only user left.
   `[data-cursor-lane="sel"]` on the trigger names the parts the card may
   never cover; `[data-cursor-lane-root]` on their common ancestor is what
   the lane is measured across. ONE line for the whole group, set by the
@@ -126,20 +140,21 @@ Under reduced motion the module bows out and static CSS stands in.
   and `[data-cover-fast]` (the team number, top right) spends most of a
   viewport of extra travel, first thing fully off: the exit shears into
   three planes at three speeds.
-- `[data-hscroll]` / `[data-hscroll-track]` — diagonal scroll-hijack
-  (season build log): the track pans sideways while climbing, panels
-  counter-drift past each other, and the track skews with scroll velocity.
-- `[data-screen]` — cinema screen-on: letterbox bars part from the centre,
-  scrubbed (season highlight match).
 - `[data-drift="±px"]` — sibling columns scrub opposite directions so a
   grid shears and crosses as it passes (season gallery).
-- `[data-tilt]` — glass panels lean toward the cursor, pointer-fine only
-  (contact channels).
 - `[data-ladder]`/`[data-rung]` (sponsor tiers), `[data-progress]` (blog
-  reading bar).
+  reading bar; a page carrying one loses the heat rail, since two grape
+  progress signals read as a fault).
 
 One trick per section: no two sections on a page share an entrance or
-scroll behaviour.
+scroll behaviour. The engine holds nothing it does not use: a scene with no
+markup left gets deleted rather than kept as a library, so this list and
+`motion.ts` are the same list.
+
+Two scenes live in their own components rather than in the engine, because
+each knows something the engine cannot: the season accordion (`Season.astro`,
+which owns the flying poster and the scroll correction that holds a clicked
+row still) and the finale gesture lock (`Finale.astro`).
 
 ## The one-page structure
 
@@ -213,11 +228,13 @@ section:
   levels under a live gesture is finished toward the level it was headed
   for. Leaving upward is plain scrolling; keyboards are never trapped;
   reduced motion gets no lock. Content: the shirt-back "Sponsored by"
-  lockup (lead name across the top, the rest sharing a tightened centered
-  line beneath, no boxes or rules, placeholder names until real sponsors
-  land) and, on the bottom edge, one centered contact line: the "Get in
+  lockup (every backer at one size, one name per line on a single centred
+  axis with the leading pulled tight, no boxes and no rules; there was a
+  lead tier here and it was a ranking nobody asked us to publish, so equal
+  billing is what the back of the shirt actually looks like) and, on the
+  bottom edge, one centred contact line: the "Get in
   touch" headline with three machined keys beside it, one type: email,
-  Instagram, and the sponsor form (its drawer says just "Form"). The keys
+  Instagram and YouTube. The keys
   take the buttons' grape on hover. The drawers exist only when the script
   has PROVED the geometry (fine pointer, everything on one line, room for
   the widest drawer to open fully): then the line is pinned by its left
@@ -243,9 +260,10 @@ slides a paper drawer in from the right edge over a black scrim, roughly
 24rem wide and full height. The links are bare display type, one per
 section, stacked on one left margin; they zoom the last few percent into
 place with a short stagger as the panel lands. Hover moves nothing: the
-word goes grape, because a link that grew would shove its neighbours and
-make the cursor card flicker. Each link keeps its cursor-card descriptor
-and its sr-only line. Section changes go in the
+word goes grape, because a link that grew would shove its neighbours.
+Each link carries its one-line descriptor as sr-only text; the cursor cards
+that used to float those descriptors beside the pointer are gone.
+Section changes go in the
 `links` array here and in `Footer.astro`, which carries the plain-text
 fallback on blog pages. Under reduced motion the panel and its
 boxes just appear.
@@ -269,7 +287,7 @@ BaseLayout).
 | `scripts/motion.ts` | Motion engine: primitives + scenes. Reduced-motion safe. |
 | `layouts/BaseLayout.astro` | Shell: fonts, intro cover (the mark drawing itself over the count), heat rail, view transitions, GearNav, footer (`hideFooter` on home), imports motion. |
 | `components/home/*.astro` | The six one-page sections, composed by `pages/index.astro`. |
-| `components/Reveal.astro` | `[data-reveal]` wrapper. |
+| `components/Reveal.astro` | `[data-reveal]` wrapper. Variants and timing live in `motion.ts`, not here. |
 | `components/GearNav.astro` | Corner toggle (two rules that cross) + right-side drawer: paper panel, bare display-type links that zoom in (hover turns them grape, nothing floats), Lenis smooth anchors. Old filename, no gear. |
 | `components/Placeholder.astro` / `Footer.astro` | Invisible slot markers / the shared small print (blog pages only; home ends on the finale's contact line). |
 
@@ -279,11 +297,16 @@ BaseLayout).
   sections; body copy caps its own measure (`ch`-based) inside the wide
   column. The blog is measured, not full-width: the post page runs a 44rem
   column for header and body both, near 72 characters a line. The shared
-  Footer defaults to 64rem and takes the finale's measure via
-  `--foot-measure`.
+  Footer runs a 64rem column, and only blog pages carry it.
 - The browser scrollbar is hidden site-wide (`scrollbar-width: none` +
-  the webkit twin): the grape heat rail is the page's progress. Wheel,
+  the webkit twin): the grape heat rail is the page's progress, except on a
+  blog post, where the reading bar takes that job and the rail stands down.
+  Wheel,
   keyboard and touch scrolling are untouched.
 - Section rhythm varies on purpose; don't metronome identical sections.
-- No eyebrows: sections open with a display headline, plus the `.mark`
-  grape bar on black bands. `.type-label` is for metadata only.
+- No eyebrows: sections open with a display headline, optionally over the
+  `.mark` grape bar (declared once in `global.css`; a section sets only the
+  air under it). Season and Sponsors take one; the rest open on the
+  headline alone. `.type-label` is for metadata only.
+- Every section is a landmark with a name: `aria-labelledby` pointing at its
+  own headline, or `aria-label` where the headline is a wordmark (Hero).

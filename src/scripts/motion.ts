@@ -28,7 +28,7 @@ const FINE = matchMedia('(hover: hover) and (pointer: fine)').matches;
 function showEverything() {
   root.classList.remove('will-animate');
   document
-    .querySelectorAll<HTMLElement>('[data-split],[data-reveal],[data-reveal-scrub]')
+    .querySelectorAll<HTMLElement>('[data-split],[data-reveal]')
     .forEach((el) => {
       el.style.opacity = '1';
       el.style.clipPath = 'none';
@@ -76,27 +76,15 @@ function boot() {
     try {
       // primitives
       initReveals();
-      initScrubReveals();
       initSplits();
-      initParallax();
-      if (FINE) {
-        initHoverPreview();
-        initCursorCards();
-      }
+      if (FINE) initCursorCards();
       // scenes (each no-ops if its element is absent)
       initCoverWipe();
       initAnchorGlide();
       initHashLand();
-      initHorizontalReveal();
-      initHScroll();
-      initScreens();
       initDriftCols();
-      initFloatCards();
-      if (FINE) initTilt();
-      initFlip();
       initTierLadder();
       initProgress();
-      initRoster(); // async (dynamic Swiper import)
       root.classList.add('motion-booted');
       root.classList.remove('will-animate');
       ScrollTrigger.refresh();
@@ -520,79 +508,6 @@ function initReveals() {
   startRevealSweep();
 }
 
-/* [data-reveal-scrub] — the same wipe, but locked to scroll progress.
-   Units in every slot, for the reason spelled out at REVEAL_OPEN. */
-function initScrubReveals() {
-  gsap.utils.toArray<HTMLElement>('[data-reveal-scrub]').forEach((el) => {
-    const v = el.getAttribute('data-reveal-scrub') || 'up';
-    const hidden =
-      v === 'left'
-        ? 'inset(0% 100% 0% 0%)'
-        : v === 'right'
-          ? 'inset(0% 0% 0% 100%)'
-          : 'inset(100% 0% 0% 0%)';
-    gsap.fromTo(
-      el,
-      { clipPath: hidden, opacity: 1 },
-      {
-        clipPath: REVEAL_OPEN,
-        ease: 'none',
-        scrollTrigger: { trigger: el, start: 'top 90%', end: 'top 55%', scrub: 0.5 },
-      }
-    );
-  });
-}
-
-/* ================================================================== */
-/* [data-parallax="±px"] — depth via scrubbed y shift.                */
-/* ================================================================== */
-function initParallax() {
-  document.querySelectorAll<HTMLElement>('[data-parallax]').forEach((el) => {
-    const s = parseFloat(el.dataset.parallax || '-60');
-    gsap.fromTo(
-      el,
-      { y: -s },
-      {
-        y: s,
-        ease: 'none',
-        scrollTrigger: { trigger: el, start: 'top bottom', end: 'bottom top', scrub: true },
-      }
-    );
-  });
-}
-
-/* ================================================================== */
-/* [data-hover-preview] — a row reveals its image beside the cursor.  */
-/* Wrapper [data-preview-root] holds one shared floating <img>.        */
-/* ================================================================== */
-function initHoverPreview() {
-  const rootEl = document.querySelector<HTMLElement>('[data-preview-root]');
-  const img = rootEl?.querySelector<HTMLImageElement>('[data-preview-img]');
-  if (!rootEl || !img) return;
-  const xTo = gsap.quickTo(img, 'x', { duration: 0.5, ease: 'power3.out' });
-  const yTo = gsap.quickTo(img, 'y', { duration: 0.5, ease: 'power3.out' });
-  let raf = 0;
-  rootEl.addEventListener('pointermove', (e) => {
-    if (raf) return;
-    raf = requestAnimationFrame(() => {
-      raf = 0;
-      const r = rootEl.getBoundingClientRect();
-      xTo(e.clientX - r.left);
-      yTo(e.clientY - r.top);
-    });
-  });
-  rootEl.querySelectorAll<HTMLElement>('[data-hover-preview]').forEach((rowEl) => {
-    rowEl.addEventListener('pointerenter', () => {
-      const src = rowEl.dataset.hoverPreview;
-      if (src) img.src = src;
-      gsap.to(img, { autoAlpha: 1, scale: 1, duration: 0.35, ease: 'power3.out' });
-    });
-    rowEl.addEventListener('pointerleave', () =>
-      gsap.to(img, { autoAlpha: 0, scale: 0.9, duration: 0.3, ease: 'power2.out' })
-    );
-  });
-}
-
 /* ================================================================== */
 /* [data-cursor-card="id"] — hover detail rides the pointer.          */
 /* The card is #id (.cursor-card): parked fixed at 0,0 and moved by    */
@@ -880,17 +795,6 @@ function initCoverWipe() {
 }
 
 /* ================================================================== */
-/* Deep-link landings. The browser resolves a fragment while this module */
-/* is still booting, and its own smooth-scroll animation then fights the */
-/* Lenis instance that has just taken the page over: the two animators   */
-/* trade the scroll position and the landing dies wherever the fight     */
-/* ends (coming back from a blog post to /#outreach landed at the top).  */
-/* So once the engine owns the page, the landing is re-done here, once,  */
-/* immediately, unless the reader has already started driving. #team and */
-/* #contact keep their own smarter landings (the wipe end and the REACH  */
-/* level); this covers every other section.                              */
-/* ================================================================== */
-/* ================================================================== */
 /* In-page anchors glide instead of jumping.                          */
 /* ================================================================== */
 /* A plain <a href="#contact"> is a native jump, and under Lenis that   */
@@ -955,6 +859,17 @@ function initAnchorGlide() {
   });
 }
 
+/* ================================================================== */
+/* Deep-link landings. The browser resolves a fragment while this module */
+/* is still booting, and its own smooth-scroll animation then fights the */
+/* Lenis instance that has just taken the page over: the two animators   */
+/* trade the scroll position and the landing dies wherever the fight     */
+/* ends (coming back from a blog post to /#outreach landed at the top).  */
+/* So once the engine owns the page, the landing is re-done here, once,  */
+/* immediately, unless the reader has already started driving. #team and */
+/* #contact keep their own smarter landings (the wipe end and the REACH  */
+/* level); this covers every other section.                              */
+/* ================================================================== */
 function initHashLand() {
   const hash = location.hash;
   if (!hash || hash === '#team' || hash === '#contact') return;
@@ -982,83 +897,6 @@ function initHashLand() {
   setTimeout(stop, 1400);
 }
 
-/* SCENE: horizontal text reveal (mission). [data-hreveal] chars wipe   */
-/* brighter across on scrub. */
-function initHorizontalReveal() {
-  const el = document.querySelector<HTMLElement>('[data-hreveal]');
-  if (!el) return;
-  const chars = splitToLines(el);
-  el.style.opacity = '1';
-  gsap.set(chars, { opacity: 0.14 });
-  gsap.to(chars, {
-    opacity: 1,
-    ease: 'none',
-    stagger: 0.02,
-    scrollTrigger: { trigger: el, start: 'top 80%', end: 'bottom 55%', scrub: 0.5 },
-  });
-}
-
-/* SCENE: build-log drift (season). [data-hscroll] pins and pans its      */
-/* [data-hscroll-track] on a shallow DIAGONAL — the log climbs as the     */
-/* season advances — while panels counter-drift vertically in alternation */
-/* (a cross-current inside the pan) and the whole track skews with scroll */
-/* velocity, springing straight as it settles. */
-function initHScroll() {
-  const wrap = document.querySelector<HTMLElement>('[data-hscroll]');
-  const track = wrap?.querySelector<HTMLElement>('[data-hscroll-track]');
-  if (!wrap || !track) return;
-  const distance = () => track.scrollWidth - window.innerWidth;
-  const skewTo = gsap.quickTo(track, 'skewX', { duration: 0.45, ease: 'power2.out' });
-  gsap.fromTo(track,
-    { y: () => window.innerHeight * 0.055 },
-    {
-      x: () => -distance(),
-      y: () => -window.innerHeight * 0.055,
-      ease: 'none',
-      scrollTrigger: {
-        trigger: wrap,
-        start: 'top top',
-        end: () => `+=${distance()}`,
-        pin: true,
-        scrub: 0.6,
-        invalidateOnRefresh: true,
-        onUpdate: (self) => skewTo(gsap.utils.clamp(-3.5, 3.5, self.getVelocity() / 260)),
-      },
-    });
-  // The cross-current: odd panels ride up while even panels sink, so
-  // neighbours pass each other mid-pan.
-  gsap.utils.toArray<HTMLElement>('.hscroll-panel', track).forEach((panel, i) => {
-    gsap.fromTo(panel, { y: i % 2 ? -42 : 42 }, {
-      y: i % 2 ? 42 : -42,
-      ease: 'none',
-      scrollTrigger: {
-        trigger: wrap,
-        start: 'top top',
-        end: () => `+=${distance()}`,
-        scrub: 0.9,
-        invalidateOnRefresh: true,
-      },
-    });
-  });
-}
-
-/* SCENE: screen-on (season highlight match). [data-screen] opens like a  */
-/* cinema screen: the letterbox bars part from the centre, locked to      */
-/* scroll, so the match slot literally powers on as it enters. */
-function initScreens() {
-  gsap.utils.toArray<HTMLElement>('[data-screen]').forEach((el) => {
-    gsap.fromTo(
-      el,
-      { clipPath: 'inset(50% 0% 50% 0%)', opacity: 1 },
-      {
-        clipPath: REVEAL_OPEN,
-        ease: 'none',
-        scrollTrigger: { trigger: el, start: 'top 88%', end: 'top 38%', scrub: 0.5 },
-      }
-    );
-  });
-}
-
 /* SCENE: gallery cross-drift (season). Sibling [data-drift="±px"]        */
 /* columns scrub in opposite directions, so the photo grid shears and     */
 /* crosses as it passes — depth without cards. */
@@ -1078,125 +916,7 @@ function initDriftCols() {
   });
 }
 
-/* [data-tilt] — glass panels lean toward the cursor (contact). The one   */
-/* pointer-depth effect outside the hero. Pointer-fine only. */
-/* -------------------------------------------------------------------- */
-/* SCENE: floating cards. [data-float] tracks the pointer; each          */
-/* [data-float-card] drifts by its own depth and tilts toward the        */
-/* cursor, over a slow idle bob. Masked rise on entry, then the clip is  */
-/* released so the tilt is never cropped. Reduced motion skips all of it */
-/* (this whole module bows out); coarse pointers keep just the idle bob. */
-function initFloatCards() {
-  const wrap = document.querySelector<HTMLElement>('[data-float]');
-  if (!wrap) return;
-  const cards = gsap.utils.toArray<HTMLElement>('[data-float-card]', wrap);
-  if (!cards.length) return;
-
-  // Masked rise on entry, staggered; release the clip once open so the
-  // pointer tilt below can push a card past its box without being cropped.
-  gsap.set(cards, { clipPath: 'inset(100% 0% 0% 0%)', y: 28 });
-  ScrollTrigger.create({
-    trigger: wrap,
-    start: 'top 82%',
-    once: true,
-    onEnter: () =>
-      gsap.to(cards, {
-        clipPath: REVEAL_OPEN,
-        y: 0,
-        duration: 1.05,
-        ease: 'expo.out',
-        stagger: 0.09,
-        onComplete: () => gsap.set(cards, { clipPath: 'none' }),
-      }),
-  });
-
-  // Slow idle bob on an inner wrapper (kept off the pointer transforms).
-  cards.forEach((card, i) => {
-    const inner = card.querySelector<HTMLElement>('.float-inner') ?? card;
-    gsap.to(inner, {
-      y: '+=9',
-      duration: 3.2 + i * 0.5,
-      ease: 'sine.inOut',
-      repeat: -1,
-      yoyo: true,
-      delay: i * 0.3,
-    });
-  });
-
-  if (!FINE) return;
-
-  gsap.set(cards, { transformPerspective: 950, transformOrigin: 'center' });
-  const rig = cards.map((card) => ({
-    depth: parseFloat(card.dataset.depth || '20'),
-    x: gsap.quickTo(card, 'x', { duration: 0.8, ease: 'power3.out' }),
-    y: gsap.quickTo(card, 'y', { duration: 0.8, ease: 'power3.out' }),
-    rx: gsap.quickTo(card, 'rotationX', { duration: 0.6, ease: 'power3.out' }),
-    ry: gsap.quickTo(card, 'rotationY', { duration: 0.6, ease: 'power3.out' }),
-    card,
-  }));
-
-  // Pointer position over the whole group drifts every card by its depth.
-  wrap.addEventListener('pointermove', (e) => {
-    const r = wrap.getBoundingClientRect();
-    const px = (e.clientX - r.left) / r.width - 0.5;
-    const py = (e.clientY - r.top) / r.height - 0.5;
-    rig.forEach((c) => {
-      c.x(px * c.depth);
-      c.y(py * c.depth);
-    });
-  });
-  wrap.addEventListener('pointerleave', () => rig.forEach((c) => (c.x(0), c.y(0))));
-
-  // Hovering a single card tilts it toward the cursor.
-  rig.forEach((c) => {
-    c.card.addEventListener('pointermove', (e) => {
-      const r = c.card.getBoundingClientRect();
-      c.rx(((e.clientY - r.top) / r.height - 0.5) * -11);
-      c.ry(((e.clientX - r.left) / r.width - 0.5) * 11);
-    });
-    c.card.addEventListener('pointerleave', () => (c.rx(0), c.ry(0)));
-  });
-}
-
-function initTilt() {
-  document.querySelectorAll<HTMLElement>('[data-tilt]').forEach((el) => {
-    gsap.set(el, { transformPerspective: 900 });
-    const rx = gsap.quickTo(el, 'rotationX', { duration: 0.5, ease: 'power3.out' });
-    const ry = gsap.quickTo(el, 'rotationY', { duration: 0.5, ease: 'power3.out' });
-    el.addEventListener('pointermove', (e) => {
-      const r = el.getBoundingClientRect();
-      rx(((e.clientY - r.top) / r.height - 0.5) * -6);
-      ry(((e.clientX - r.left) / r.width - 0.5) * 6);
-    });
-    el.addEventListener('pointerleave', () => {
-      rx(0);
-      ry(0);
-    });
-  });
-}
-
-/* SCENE: flip cards (season awards). [data-flip] turns in on enter.    */
-function initFlip() {
-  const cards = gsap.utils.toArray<HTMLElement>('[data-flip]');
-  if (!cards.length) return;
-  cards.forEach((card) => {
-    gsap.set(card, { rotationY: -100, transformPerspective: 800, transformOrigin: '50% 50%' });
-    ScrollTrigger.create({
-      trigger: card,
-      start: 'top 84%',
-      once: true,
-      onEnter: () =>
-        gsap.to(card, {
-          rotationY: 0,
-          duration: 0.9,
-          ease: 'power3.out',
-          delay: (parseFloat(card.dataset.flipDelay || '0') || 0) / 1000,
-        }),
-    });
-  });
-}
-
-/* SCENE: tier ladder (contact). [data-ladder] > [data-rung] lock in    */
+/* SCENE: tier ladder (sponsors). [data-ladder] > [data-rung] lock in   */
 /* one at a time on scrub via a left-to-right clip. */
 function initTierLadder() {
   const ladder = document.querySelector<HTMLElement>('[data-ladder]');
@@ -1229,30 +949,4 @@ function initProgress() {
       scrollTrigger: { trigger: article, start: 'top top', end: 'bottom bottom', scrub: 0.3 },
     }
   );
-}
-
-/* SCENE: roster coverflow (home). [data-coverflow] via Swiper.         */
-async function initRoster() {
-  const el = document.querySelector<HTMLElement>('[data-coverflow]');
-  if (!el) return;
-  try {
-    const [{ default: Swiper }, mods] = await Promise.all([
-      import('swiper'),
-      import('swiper/modules'),
-    ]);
-    await import('swiper/css');
-    await import('swiper/css/effect-coverflow');
-    new Swiper(el, {
-      modules: [mods.EffectCoverflow, mods.Keyboard, mods.A11y],
-      effect: 'coverflow',
-      grabCursor: true,
-      centeredSlides: true,
-      slidesPerView: 'auto',
-      loop: true,
-      keyboard: { enabled: true },
-      coverflowEffect: { rotate: 28, stretch: 0, depth: 160, modifier: 1, slideShadows: false },
-    });
-  } catch (e) {
-    /* carousel degrades to a plain scrollable row if Swiper fails */
-  }
 }

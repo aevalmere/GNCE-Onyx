@@ -24,9 +24,11 @@ const shortDate = (d: Date) =>
   d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 ---
 
-<section id="outreach" class="band-deep">
+<section id="outreach" class="band-deep" aria-labelledby="outreach-title">
   <div class="outreach-frame mx-auto w-full max-w-[88rem] px-5 sm:px-8">
-    <h2 class="type-display text-[clamp(2.5rem,7vw,6.5rem)]" data-split>Outreach</h2>
+    <h2 id="outreach-title" class="type-display text-[clamp(2.5rem,7vw,6.5rem)]" data-split>
+      Outreach
+    </h2>
 
     <!-- POSTS: a ruled index. One entry per post, columns aligned across
          every row, so a season with one post reads the same as a season

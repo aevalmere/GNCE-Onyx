@@ -32,11 +32,11 @@ type NavLink = {
 };
 const links: NavLink[] = [
   { href: `${base}/`, label: 'Home', note: 'Back to the top' },
-  { href: `${base}/#team`, label: 'Team', note: 'Nine students' },
+  { href: `${base}/#team`, label: 'Team', note: 'Eleven students' },
   { href: `${base}/#season`, label: 'Season', note: 'Qualifiers and States' },
   { href: `${base}/#outreach`, label: 'Outreach', note: 'Posts and events we show up to' },
   { href: `${base}/#sponsors`, label: 'Sponsors', note: 'Recognition, low to high' },
-  { href: `${base}/#contact`, label: 'Contact', note: 'Email, Instagram, or the sponsor form' },
+  { href: `${base}/#contact`, label: 'Contact', note: 'Email, Instagram, YouTube' },
 ];
 ---
 
@@ -302,12 +302,6 @@ const links: NavLink[] = [
     transform: translateY(-6px) rotate(-45deg);
   }
 
-  /* ---- Hover cards ------------------------------------------------ */
-  /* Paper, indigo type, the hairline and the hidden resting state all come
-     from the base .cursor-card (global.css), which motion.ts then flies off
-     the pointer; only the small-tag scale is set here. The z-index sorts
-     inside .nav-root, so it has to beat the scrim, the panel and the toggle
-     and nothing else. */
   /* ---- Reduced motion --------------------------------------------- */
   /* The panel, the scrim and the links just appear: no slide, no zoom, no
      fade. The mark still crosses, it just snaps, and the press gives its
@@ -403,13 +397,6 @@ const links: NavLink[] = [
       // fall back to the top of the document: hand it to the button first.
       if (drawer.contains(document.activeElement)) toggle.focus({ preventScroll: true });
       drawer.setAttribute('inert', '');
-      // The pointer can be left sitting where a box used to be. Browsers are
-      // uneven about firing pointerleave for something that slid out from
-      // under the cursor, and the descriptor card would hang on screen, so
-      // tell its rig plainly that the pointer is gone.
-      drawer
-        .querySelectorAll<HTMLElement>('[data-cursor-card]')
-        .forEach((el) => el.dispatchEvent(new PointerEvent('pointerleave')));
     };
 
     // Trailing slashes differ between dev, build and the base path.

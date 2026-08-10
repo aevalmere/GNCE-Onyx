@@ -4,9 +4,10 @@ Astro 7 + Tailwind CSS 4 website for FTC team 37122, GNCE Onyx. The whole
 site is one scrollable page
 (`src/pages/index.astro` composing `src/components/home/`); blog posts and
 the `/drivetrain/` calculator are the only separate routes. Copy and
-identity facts are real (team 37122, gnceonyx@gmail.com, @gnceonyx). Five of
-the eleven roster portraits are real photos; the rest of the media and the
-sponsor form link are still placeholder slots.
+identity facts are real (team 37122, gnceonyx@gmail.com, @gnceonyx on
+Instagram, @GNCEOnyx on YouTube). Five of the eleven roster portraits are
+real photos; the season highlights and galleries are the only placeholder
+slots left.
 
 ## Development
 
@@ -41,11 +42,11 @@ Manage the background server with `astro dev stop`, `astro dev status`, and `ast
 - One shared shell: `src/layouts/BaseLayout.astro` (fonts, GearNav, Footer,
   intro cover, heat rail). It imports the motion engine
   `src/scripts/motion.ts` (GSAP + ScrollTrigger + Lenis): generic
-  primitives (`[data-split]` masked lines, `[data-reveal]`/
-  `[data-reveal-scrub]` clip wipes, `[data-parallax]`,
-  `[data-hover-preview]`, `[data-cursor-card]`) plus named scenes
-  (`[data-cover-wipe]`, `[data-hscroll]` horizontal pan,
-  `[data-ladder]`, `[data-progress]`). The cover wipe and the finale
+  primitives (`[data-split]` masked lines, `[data-reveal]` clip wipes,
+  `[data-cursor-card]`) plus named scenes
+  (`[data-cover-wipe]`, `[data-drift]`, `[data-ladder]`,
+  `[data-progress]`). The engine carries nothing it does not use: a scene
+  whose markup is gone gets deleted, not parked. The cover wipe and the finale
   gesture lock run on fine pointers only; touch scrolls the page straight
   through, with just the finale's sticky curtain reveal. Nothing follows
   the cursor on buttons and display type never answers the pointer. All reduced-motion
@@ -82,8 +83,9 @@ Manage the background server with `astro dev stop`, `astro dev status`, and `ast
   so adding a member reshapes the grid rather than orphaning a last row.
   It stays two rows: the section is pinned under the cover wipe by
   `index.astro`'s `-260svh` geometry and must stay one viewport tall.
-  The plate is a 260px column, so a source under 520px is soft on a 2x
-  screen. Vera's original was only 272px and is upscaled to 544; if a
+  Six columns across the 88rem frame put the plate at about 200px, and the
+  rendition widths are 260 and 520 to cover that at 1x and 2x, so a source
+  under 520px is soft on a 2x screen. Vera's original was only 272px and is upscaled to 544; if a
   higher-resolution file ever turns up, prefer it over the upscale. The
   pass was `magick in.jpg -filter Lanczos -resize 544x544 -unsharp 0x1
   -strip -quality 92 out.webp` (the project's own `sharp` gives the same
@@ -121,10 +123,12 @@ Manage the background server with `astro dev stop`, `astro dev status`, and `ast
 ## Placeholder convention (important)
 
 Blocks awaiting real content are wrapped in `components/Placeholder.astro`
-with a unique kebab-case `name`; small inline unknowns (team number, email,
-handles, TBD dates) use a `.stub` span instead. When adding real content,
-remove the wrapper/span and keep the children. Find all remaining slots:
-`grep -rn "data-placeholder\|<Placeholder\|stub" src/`
+with a unique kebab-case `name`; small inline unknowns (a TBD date, a handle
+that does not exist yet) use a `.stub` span instead. When adding real
+content, remove the wrapper/span and keep the children. No `.stub` is in use
+right now; the season highlights and galleries are the open blocks. Find all
+remaining slots:
+`grep -rn "data-placeholder\|<Placeholder\|class=\"stub\"" src/`
 
 ## Working with the user (important)
 

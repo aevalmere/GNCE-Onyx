@@ -2,6 +2,7 @@
 import { defineConfig } from 'astro/config';
 
 import tailwindcss from '@tailwindcss/vite';
+import { unified } from '@astrojs/markdown-remark';
 import rehypeExternalLinks from 'rehype-external-links';
 
 // https://astro.build/config
@@ -32,8 +33,12 @@ export default defineConfig({
     },
   },
   // External links in post bodies leave the site, so they open their own tab.
+  // The plugin hangs off `processor` rather than `markdown.rehypePlugins`,
+  // which Astro 7 deprecated: same default remark/rehype pipeline, extended.
   markdown: {
-    rehypePlugins: [[rehypeExternalLinks, { target: '_blank', rel: ['noopener'] }]],
+    processor: unified({
+      rehypePlugins: [[rehypeExternalLinks, { target: '_blank', rel: ['noopener'] }]],
+    }),
   },
   vite: {
     plugins: [tailwindcss()]

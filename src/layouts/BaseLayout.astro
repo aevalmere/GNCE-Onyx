@@ -401,6 +401,14 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
         display: none;
       }
 
+      /* A page carrying its own reading bar ([data-progress], the blog post)
+         does not also get the rail: same grape, same 3px, same job, and two
+         of them reads as a rendering fault rather than as progress. Keyed
+         off the bar itself, so whichever page grows one loses the rail. */
+      body:has([data-progress]) .heat-rail {
+        display: none !important;
+      }
+
       @supports (animation-timeline: scroll()) {
         .heat-rail {
           display: block;
