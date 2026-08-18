@@ -5,9 +5,9 @@
  * fine pointers, so this is the first thing the page opens onto. On touch
  * it sits in plain flow and the page scrolls straight into it.
  *
- * The column count comes off the roster (see the arithmetic below): eleven
- * members run six and five, the last row ragging left like type does. Two
- * across on a phone. The plates are sized by
+ * The column count comes off the roster (see the arithmetic below): ten
+ * members run five and five, and an odd roster rags its last row left the
+ * way type does. Two across on a phone. The plates are sized by
  * height rather than by ratio, which is what keeps every row the same depth
  * and every name on the same line, and what lets the whole block shrink
  * with a short viewport instead of overrunning it. Photos drop straight
@@ -33,7 +33,6 @@ const roster: { name: string; teams: string[] }[] = [
   { name: 'Ethan Zhang', teams: ['22489', '26111'] },
   { name: 'Anson Su', teams: ['22489', '26111'] },
   { name: 'Adrian Chang', teams: ['22489', '26111'] },
-  { name: 'Arnie Sreeram', teams: ['22489', '26413'] },
   { name: 'Elisa Peng', teams: ['22489', '26413'] },
   { name: 'Nicholas Colli', teams: ['26413', '26112'] },
   { name: 'Ethan Zhuang', teams: ['26112', '26111'] },
@@ -47,8 +46,8 @@ const slug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
 // The grid reads its shape off the roster rather than holding a fixed five.
 // Take the fewest rows that fit everyone, then spread the members evenly
-// across those rows: nine came out five and four, eleven comes out six and
-// five, thirteen would come out five, five and three. A fixed five would
+// across those rows: ten comes out five and five, nine came out five and
+// four, thirteen would come out five, five and three. A fixed five would
 // have answered eleven with five, five and one, and a row holding a single
 // member reads as a mistake rather than as a rag. Six is the ceiling
 // because past that a face is too small to be a face.
@@ -81,14 +80,14 @@ const photoFor = (name: string) => {
       {
         roster.map((member) => {
           const photo = photoFor(member.name);
-          // Six columns across the 88rem frame put the plate at about 200px,
-          // so two widths cover it and its retina pass, capped at the file's
-          // own size so a small original is never blown up. The sizes ladder
-          // is measured, not guessed: the plate only reaches 200px once the
-          // frame does, and at the 40rem breakpoint six columns leave it
-          // nearer 110px, so a flat desktop figure would over-fetch on every
-          // tablet. Eager because this section is what the cover wipe opens
-          // onto: none of it is below the fold.
+          // Five columns across the 88rem frame put the plate at about
+          // 245px, so two widths cover it and its retina pass, capped at the
+          // file's own size so a small original is never blown up. The sizes
+          // ladder is measured, not guessed: the plate only reaches 245px
+          // once the frame is full at 90rem, and it tracks 18vw the whole way
+          // up from the 40rem breakpoint, so a flat desktop figure would
+          // over-fetch on every tablet. Eager because this section is what
+          // the cover wipe opens onto: none of it is below the fold.
           // The name sits directly under the picture in its own line, so
           // alt repeats nothing: the photo is labelled by that text.
           return (
@@ -104,7 +103,7 @@ const photoFor = (name: string) => {
                       src={photo}
                       alt=""
                       widths={[...new Set([260, Math.min(520, photo.width)])]}
-                      sizes="(min-width: 64rem) 200px, (min-width: 40rem) 15vw, 45vw"
+                      sizes="(min-width: 90rem) 245px, (min-width: 40rem) 18vw, 45vw"
                       loading="eager"
                     />
                   ) : (

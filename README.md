@@ -66,7 +66,7 @@ member's name from `Team.astro`'s `roster` array, lowercased and hyphenated.
 It replaces that member's silhouette automatically, so faces can land one at
 a time. Crop to square with `-auto-orient` applied first, aim for the head at
 45-50% of the frame, and keep the source at 520px or better. Five of the
-eleven are in.
+ten are in.
 
 ## Dropping in remaining content
 

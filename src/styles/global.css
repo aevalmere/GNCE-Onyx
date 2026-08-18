@@ -472,6 +472,114 @@ html.no-js .cursor-card {
   border: 1px solid var(--color-line);
 }
 
+/* Photographs break the reading column. The text stays at its 44rem measure
+   because that is what a line of type wants; a photograph wants to be looked
+   at, so it widens to 56rem and hangs its caption underneath in faint ink.
+   56rem is measured, not chosen: event photos come off phones at 1024px, and
+   a wider frame would only be showing an upscale. Below the tablet
+   breakpoint the width resolves to the column itself and nothing breaks out,
+   which is correct: on a phone the column already is the screen. */
+.post-body .post-figures {
+  width: min(56rem, calc(100vw - 2.5rem));
+  margin-top: clamp(2.25rem, 5vw, 3.5rem);
+  margin-bottom: clamp(2.25rem, 5vw, 3.5rem);
+  margin-left: 50%;
+  transform: translateX(-50%);
+}
+
+/* ---- .soft-edge: a picture that comes up out of the paper ----------- */
+/* No frame, rounded corners, and a perimeter that dissolves into the page.
+   Reusable anywhere on the site: put `soft-edge` on an image element, or put
+   the picture inside a `.post-figures` block in a post, since a markdown
+   image cannot carry a class of its own. Both routes land on this one rule.
+
+   The mask is one rounded rectangle put through three filter steps, and it
+   is aiming at ink soaking into paper: turbulence and a displacement map
+   push the edge off true by a few units, then a wide Gaussian carries it out
+   over roughly a tenth of the frame. Ink does not stop on a line and it does
+   not stop straight, so neither does this.
+
+   Two linear ramps intersected were the first cut and they were wrong twice
+   over: a linear ramp meeting the solid middle breaks slope at the joint,
+   and the eye reads that break as a line, which is the exact border this is
+   meant to get rid of. They also fade every corner through both ramps at
+   once, so the corner was gone before any radius could be seen in it. A
+   Gaussian has no break in it at either end and runs parallel to the rounded
+   edge the whole way round, so the corner keeps its curve while the edge
+   goes.
+
+   `preserveAspectRatio='none'` on a 4:3 viewBox stretches the mask to
+   whatever it is masking, so the fade is a constant fraction of the picture
+   rather than a fixed band: a half-width picture in a pair dissolves at the
+   same rate as the full-width one above it, which a fixed band could not do.
+   Our photographs are all 4:3, so for them it stretches by exactly nothing.
+
+   Tune it in the SVG itself, in viewBox units, 400 of them across: `rx` is
+   the corner, `stdDeviation` is how far the ink carries, `scale` on the
+   displacement is how much the edge wanders, and the rect's inset is how far
+   in from the frame the picture starts giving out. Keep the inset at about
+   three times the blur, or the outer tail runs off the frame and gets cut
+   square, which puts the line back.
+
+   Nothing here paints a colour, so this is not the gradient fill DESIGN.md
+   rules out. The paper the site already has is what shows through. */
+.post-body .post-figures img,
+.soft-edge {
+  border: 0;
+  /* The shape on its own, for anywhere masks are missing: a plain rounded
+     picture, which is a plainer page and not a broken one. */
+  border-radius: clamp(0.6rem, 2vw, 1.85rem);
+  -webkit-mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300' preserveAspectRatio='none'><filter id='f' x='-30%' y='-30%' width='160%' height='160%' color-interpolation-filters='sRGB'><feTurbulence type='fractalNoise' baseFrequency='0.015' numOctaves='2' seed='7' result='n'/><feDisplacementMap in='SourceGraphic' in2='n' scale='14' xChannelSelector='R' yChannelSelector='G' result='d'/><feGaussianBlur in='d' stdDeviation='11'/></filter><rect x='32' y='32' width='336' height='236' rx='22' fill='%23fff' filter='url(%23f)'/></svg>");
+  mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300' preserveAspectRatio='none'><filter id='f' x='-30%' y='-30%' width='160%' height='160%' color-interpolation-filters='sRGB'><feTurbulence type='fractalNoise' baseFrequency='0.015' numOctaves='2' seed='7' result='n'/><feDisplacementMap in='SourceGraphic' in2='n' scale='14' xChannelSelector='R' yChannelSelector='G' result='d'/><feGaussianBlur in='d' stdDeviation='11'/></filter><rect x='32' y='32' width='336' height='236' rx='22' fill='%23fff' filter='url(%23f)'/></svg>");
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+/* Two photographs that belong together sit side by side, because the pair is
+   the point: stacked, they read as two separate looks at two separate
+   things. They stack anyway under 40rem, where half a column is too small to
+   be a picture of anyone. */
+.post-figures-pair {
+  display: grid;
+  gap: clamp(0.75rem, 1.6vw, 1.25rem);
+}
+
+@media (min-width: 40rem) {
+  .post-figures-pair {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* Two fr columns land a fraction of a pixel apart, and two pictures of the
+     same ratio at slightly different widths are two slightly different
+     heights, which drops one caption below the other. So the pair stretches
+     both figures to one height, the picture row takes the slack and the
+     caption sits on the bottom edge of it: the two photographs end on the
+     same line and the two captions start on the same line, whatever the
+     tracks rounded to. Cover, so the pixel the picture gives up is cropped
+     rather than squashed. */
+  .post-figures-pair figure {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  /* The mask scales with the frame it is on (see .soft-edge), so nothing
+     here has to correct the pair for being half the width of the lead. */
+  .post-figures-pair img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.post-body figcaption {
+  margin-top: 0.7rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--color-faint);
+}
+
 .post-body hr {
   border: 0;
   border-top: 1px solid var(--color-line);

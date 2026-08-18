@@ -188,7 +188,7 @@ section:
   member's previous team numbers under each, two across on a phone
   (everything centred) and above 40rem a column count derived from the
   roster: the fewest rows that hold everyone, then the members spread evenly
-  across them, capped at six columns. Nine ran 5 + 4, eleven runs 6 + 5.
+  across them, capped at six columns. Nine ran 5 + 4, ten runs 5 + 5.
   The rag stays, the orphan row never happens · plate height
   set in `svh` so the grid never overruns the screens it has · the names
   never answer the pointer; the portraits do: the hovered face zooms in a
@@ -298,6 +298,34 @@ BaseLayout).
   column. The blog is measured, not full-width: the post page runs a 44rem
   column for header and body both, near 72 characters a line. The shared
   Footer runs a 64rem column, and only blog pages carry it.
+- Photographs in a post break that column: `.post-figures` widens a figure
+  to 56rem centred on the same axis, with the caption under it in faint ink
+  at 0.875rem. Text wants 44rem, a photograph wants to be looked at, and the
+  two measures disagreeing is what makes the picture read as a picture
+  rather than as an illustration of the paragraph above it. Add
+  `.post-figures-pair` and put two `<figure>`s inside to set them side by
+  side: both stretch to one height, so the pictures end on the same line and
+  the captions start on one. 56rem is the ceiling because event photos come
+  off phones at 1024px; a wider frame is showing an upscale.
+- **`.soft-edge`**: a picture that comes up out of the paper instead of
+  sitting on it. No frame, rounded corners, and a perimeter that dissolves
+  into the page: ink soaking into paper, which is the look it is after. The
+  mask is one rounded rectangle carried as an inline SVG and put through
+  three filter steps, turbulence into a displacement map to take the edge off
+  true, then a wide Gaussian to carry it out over about a tenth of the frame.
+  Not a pair of linear gradients intersected: a linear ramp breaks slope
+  where it meets the solid middle and the eye reads that break as the very
+  border the effect is removing, and two ramps fade each corner twice, so no
+  radius inside them can be seen. A Gaussian has no break at either end and
+  follows the rounded edge the whole way round. The mask stretches to
+  whatever it is on, so the fade is a constant fraction of the picture and a
+  half-width one dissolves at the same rate as a full-width one. Tune `rx`,
+  `stdDeviation`, the displacement `scale` and the rect's inset in the SVG;
+  keep the inset near three times the blur or the tail gets cut square.
+  Reusable: the class goes on any image element, and `.post-figures img`
+  picks it up for posts, where a markdown image can carry no class. This is
+  the one place a photograph loses its hairline; everywhere else on the
+  site a picture is a plate with an edge.
 - The browser scrollbar is hidden site-wide (`scrollbar-width: none` +
   the webkit twin): the grape heat rail is the page's progress, except on a
   blog post, where the reading bar takes that job and the rail stands down.

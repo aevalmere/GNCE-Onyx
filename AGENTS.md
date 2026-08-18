@@ -5,7 +5,7 @@ site is one scrollable page
 (`src/pages/index.astro` composing `src/components/home/`); blog posts and
 the `/drivetrain/` calculator are the only separate routes. Copy and
 identity facts are real (team 37122, gnceonyx@gmail.com, @gnceonyx on
-Instagram, @GNCEOnyx on YouTube). Five of the eleven roster portraits are
+Instagram, @GNCEOnyx on YouTube). Five of the ten roster portraits are
 real photos; the season highlights and galleries are the only placeholder
 slots left.
 
@@ -119,6 +119,18 @@ Manage the background server with `astro dev stop`, `astro dev status`, and `ast
   the layout depends on, not around it.
 - Blog: posts are markdown in `src/content/blog/` (collection defined in
   `src/content.config.ts`), rendered by `src/pages/outreach/[id].astro`.
+  Photos live in `src/assets/blog/` and go in with markdown image syntax
+  (relative path, so Astro optimises them) wrapped in a `<figure
+  class="post-figures">`, which breaks the 44rem reading column out to
+  56rem; `.post-figures-pair` around two `<figure>`s sets them side by side.
+  Both classes are in `global.css`; see `DESIGN.md` "Conventions". Leave a
+  blank line between the HTML tags and the markdown or the image never
+  parses.
+- Pictures with the soft dissolved edge use `.soft-edge` (`global.css`),
+  which is the same rule `.post-figures img` lands on. Put the class on any
+  image element anywhere on the site to get it; the whole effect is one
+  masked SVG in that rule, so tuning it there changes every picture wearing
+  it.
 
 ## Placeholder convention (important)
 
