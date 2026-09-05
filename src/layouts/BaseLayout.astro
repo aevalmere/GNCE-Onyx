@@ -136,6 +136,13 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
           // intro over the hero, which is always what sits under the lift.
           if (intro && !location.hash) {
             document.documentElement.classList.add('loading');
+            // The cut (doors, the travelling part, chips) is a desktop
+            // piece: a pointer that hovers, and room for two doors. A
+            // phone or tablet keeps the plain cover. The meter script
+            // takes the class back off if any part of the cut is missing.
+            if (matchMedia('(min-width: 48rem) and (hover: hover) and (pointer: fine)').matches) {
+              document.documentElement.classList.add('intro-cine');
+            }
             setTimeout(function () {
               document.documentElement.classList.remove('loading');
             }, 4500);
@@ -154,28 +161,89 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     {
       intro && (
         <Fragment>
-          <!-- Intro cover: the team mark drawing itself over one centered
-               count, both climbing in time with the fonts, then the cover
-               lifts into the hero's entrance. The path here is the same
-               unicursal line as public/logo.svg; the meter script below
-               plays its stroke out to match the counted progress, so the
-               ring closes exactly as the count lands on 100. -->
+          <!-- Intro cover. On a phone: the team mark drawing itself over one
+               centered count, both climbing in time with the fonts, then the
+               cover lifts into the hero's entrance. On a desktop
+               (html.intro-cine) the same cover is a cut: the sheet is scored
+               by a raked seam and four registration marks, a scan line makes
+               one pass, and the part starts big and off true in the top-left
+               and travels into its seat while a tool head cuts its line and
+               throws chips; the count rolls on three reels bottom-right. On
+               100 the stroke flashes grape, the tool retracts, a latch runs
+               the seam, and the two doors part into the hero.
+               The path here is the same unicursal line as public/logo.svg;
+               the meter script below plays its stroke out to match the
+               counted progress, so the ring closes exactly as the count
+               lands on 100. -->
           <div class="intro" data-intro aria-hidden="true">
-            <svg class="intro-mark" viewBox="0 0 64 64" aria-hidden="true">
-              <path
-                data-intro-path
+            <!-- Left door: carries the part. On the phone both doors are
+                 display: contents, so the mark and the count fall straight
+                 into the cover's own centered column. -->
+            <div class="intro-door intro-door-l">
+              <span class="intro-reg intro-reg-tl"></span>
+              <span class="intro-reg intro-reg-bl"></span>
+              <div class="intro-part" data-intro-part>
+                <svg class="intro-mark" data-intro-mark viewBox="0 0 64 64" aria-hidden="true">
+                  <path
+                    data-intro-path
                 d="M32.0,9.0 C30.8,9.0 29.7,9.7 28.9,10.9 C28.0,12.1 27.6,13.9 27.7,15.9 C27.8,18.0 28.5,20.2 29.7,22.4 C30.9,24.5 32.7,26.5 34.9,28.1 C37.0,29.6 39.4,30.7 41.9,31.2 C44.3,31.7 46.6,31.7 48.6,31.1 C50.6,30.6 52.1,29.6 53.0,28.5 C54.0,27.3 54.2,26.0 53.9,24.9 C53.5,23.8 52.5,22.9 51.1,22.5 C49.7,22.1 47.8,22.2 45.9,22.9 C44.0,23.7 42.1,25.0 40.4,26.9 C38.8,28.7 37.5,31.0 36.6,33.5 C35.8,36.0 35.5,38.7 35.8,41.1 C36.1,43.6 36.8,45.8 38.0,47.5 C39.1,49.2 40.5,50.4 41.9,50.9 C43.2,51.4 44.6,51.3 45.5,50.6 C46.5,49.9 47.0,48.7 46.9,47.2 C46.9,45.7 46.2,44.0 44.9,42.5 C43.6,40.9 41.8,39.4 39.5,38.4 C37.3,37.4 34.6,36.9 32.0,36.9 C29.4,36.9 26.7,37.4 24.5,38.4 C22.2,39.4 20.4,40.9 19.1,42.5 C17.8,44.0 17.1,45.7 17.1,47.2 C17.0,48.7 17.5,49.9 18.5,50.6 C19.4,51.3 20.8,51.4 22.1,50.9 C23.5,50.4 24.9,49.2 26.0,47.5 C27.2,45.8 27.9,43.6 28.2,41.1 C28.5,38.7 28.2,36.0 27.4,33.5 C26.5,31.0 25.2,28.7 23.6,26.9 C21.9,25.0 20.0,23.7 18.1,22.9 C16.2,22.2 14.3,22.1 12.9,22.5 C11.5,22.9 10.5,23.8 10.1,24.9 C9.8,26.0 10.0,27.3 11.0,28.5 C11.9,29.6 13.4,30.6 15.4,31.1 C17.4,31.7 19.7,31.7 22.1,31.2 C24.6,30.7 27.0,29.6 29.1,28.1 C31.3,26.5 33.1,24.5 34.3,22.4 C35.5,20.2 36.2,18.0 36.3,15.9 C36.4,13.9 36.0,12.1 35.1,10.9 C34.3,9.7 33.2,9.0 32.0,9.0 Z"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="4.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"></path>
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="4.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"></path>
+                  <!-- The tool head: a reticle riding the pen tip, turned to
+                       the tangent. Desktop only; the script positions the
+                       outer group and retracts the inner one on 100. -->
+                  <g class="intro-tool" data-intro-tool>
+                    <g class="intro-tool-in" data-intro-tool-in>
+                      <circle r="3.3"></circle>
+                      <path d="M-5.6,0 H-4.2 M4.2,0 H5.6 M0,-5.6 V-4.2 M0,4.2 V5.6"></path>
+                    </g>
+                  </g>
+                </svg>
+              </div>
+            </div>
+            <!-- Right door: carries the readout. The plain number is the
+                 phone's; the three reels are the desktop's odometer, and
+                 the leading reels start on a blank so 47 reads as 47. -->
+            <div class="intro-door intro-door-r">
+              <span class="intro-reg intro-reg-tr"></span>
+              <span class="intro-reg intro-reg-br"></span>
+              <p class="intro-count">
+                <span class="intro-rule"></span>
+                <span class="intro-line">
+                  <span class="intro-num" data-intro-num>0</span>
+                  <span class="intro-reels" data-intro-reels>
+                    <span class="intro-reel">
+                      <span class="intro-reel-col" data-intro-reel="h"><i>&nbsp;</i><i>1</i></span>
+                    </span>
+                    <span class="intro-reel">
+                      <span class="intro-reel-col" data-intro-reel="t">
+                        <i>&nbsp;</i><i>1</i><i>2</i><i>3</i><i>4</i><i>5</i><i>6</i><i>7</i><i>8</i><i>9</i><i>0</i>
+                      </span>
+                    </span>
+                    <span class="intro-reel">
+                      <span class="intro-reel-col" data-intro-reel="o">
+                        <i>0</i><i>1</i><i>2</i><i>3</i><i>4</i><i>5</i><i>6</i><i>7</i><i>8</i><i>9</i><i>0</i>
+                      </span>
+                    </span>
+                  </span>
+                  <span class="intro-pct">%</span>
+                </span>
+              </p>
+            </div>
+            <!-- The sheet: seam, scan pass and latch in one SVG. Desktop
+                 only; the script sets the viewBox in pixels and the line
+                 ends from the door geometry, so a hairline is one pixel on
+                 every screen and the seam sits exactly on the doors' edge. -->
+            <svg class="intro-frame" data-intro-frame viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+              <line class="intro-seam" data-intro-seam></line>
+              <line class="intro-scan" data-intro-scan></line>
+              <line class="intro-latch" data-intro-latch></line>
             </svg>
-            <p class="intro-count">
-              <span class="intro-line">
-                <span class="intro-num" data-intro-num>0</span><span class="intro-pct">%</span>
-              </span>
-            </p>
+            <!-- Chips off the cut. Desktop only. -->
+            <canvas class="intro-fx" data-intro-fx></canvas>
           </div>
 
           <!-- Drives the load meter from real font loading (the "text").
@@ -209,6 +277,320 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
               var draw = function (t) {
                 if (mark && markLen) mark.style.strokeDashoffset = String(markLen * (1 - t));
               };
+
+              // The cut (desktop, html.intro-cine). Every piece of it is
+              // optional: if anything is missing or throws, the class comes
+              // off and the plain cover plays exactly as it does on a phone.
+              var cut = null;
+              if (root.classList.contains('intro-cine')) {
+                try {
+                  cut = setupCut();
+                } catch (e) {
+                  cut = null;
+                }
+                if (!cut) root.classList.remove('intro-cine');
+              }
+
+              function setupCut() {
+                if (!mark || !markLen || !mark.getPointAtLength) return null;
+                var intro = document.querySelector('[data-intro]');
+                var part = document.querySelector('[data-intro-part]');
+                var svg = document.querySelector('[data-intro-mark]');
+                var tool = document.querySelector('[data-intro-tool]');
+                var toolIn = document.querySelector('[data-intro-tool-in]');
+                var frame = document.querySelector('[data-intro-frame]');
+                var seam = document.querySelector('[data-intro-seam]');
+                var scan = document.querySelector('[data-intro-scan]');
+                var latch = document.querySelector('[data-intro-latch]');
+                var canvas = document.querySelector('[data-intro-fx]');
+                var reelH = document.querySelector('[data-intro-reel="h"]');
+                var reelT = document.querySelector('[data-intro-reel="t"]');
+                var reelO = document.querySelector('[data-intro-reel="o"]');
+                if (
+                  !intro || !part || !svg || !tool || !toolIn || !frame || !seam || !scan ||
+                  !latch || !canvas || !reelH || !reelT || !reelO || !part.animate
+                ) {
+                  return null;
+                }
+                var ctx = canvas.getContext('2d');
+                if (!ctx) return null;
+                var W = intro.clientWidth;
+                var H = intro.clientHeight;
+                if (!W || !H) return null;
+
+                // Colors and curves come from the theme, never restated.
+                var theme = getComputedStyle(root);
+                var read = function (name, fallback) {
+                  var v = theme.getPropertyValue(name).trim();
+                  return v || fallback;
+                };
+                var PAPER = read('--color-paper', '#C9CFDD');
+                var GRAPE = read('--color-accent', '#823A80');
+                var OUT = read('--ease-out-strong', 'cubic-bezier(0.23, 1, 0.32, 1)');
+                var INOUT = read('--ease-in-out-strong', 'cubic-bezier(0.77, 0, 0.175, 1)');
+
+                // The seat: where the part comes to rest, measured before
+                // anything moves it. Chips are placed from this box and
+                // the pose, so the CSS seat and the script's math are one
+                // set of numbers.
+                var ir = intro.getBoundingClientRect();
+                var pr = part.getBoundingClientRect();
+                var seatX = pr.left - ir.left + pr.width / 2;
+                var seatY = pr.top - ir.top + pr.height / 2;
+                var size = pr.width;
+                if (!size) return null;
+
+                // Start pose: 2.6x, high and left, fourteen degrees off
+                // true. The part rides a straight line into its seat and
+                // is home by 80% of the count, so the ring closes on a
+                // still part. Eased out rather than linear: it arrives,
+                // it does not stop.
+                var S0 = 2.6;
+                var R0 = -14;
+                var dx0 = W * 0.16 - seatX;
+                var dy0 = H * 0.24 - seatY;
+                var pose = { x: dx0, y: dy0, s: S0, r: R0 };
+
+                function travel(t) {
+                  var u = Math.min(1, t / 0.8);
+                  u = 1 - Math.pow(1 - u, 3);
+                  pose.x = dx0 * (1 - u);
+                  pose.y = dy0 * (1 - u);
+                  pose.s = S0 + (1 - S0) * u;
+                  pose.r = R0 * (1 - u);
+                  part.style.transform =
+                    'translate(-50%, -50%) translate(' +
+                    pose.x.toFixed(2) + 'px, ' + pose.y.toFixed(2) + 'px) rotate(' +
+                    pose.r.toFixed(3) + 'deg) scale(' + pose.s.toFixed(4) + ')';
+                }
+
+                // A point in the mark's 64-unit box, on the screen, given
+                // the current pose (same order the transform applies).
+                function toScreen(px, py) {
+                  var k = (size / 64) * pose.s;
+                  var lx = (px - 32) * k;
+                  var ly = (py - 32) * k;
+                  var a = (pose.r * Math.PI) / 180;
+                  var c = Math.cos(a);
+                  var s = Math.sin(a);
+                  return { x: seatX + pose.x + lx * c - ly * s, y: seatY + pose.y + lx * s + ly * c };
+                }
+                function turn(vx, vy) {
+                  var a = (pose.r * Math.PI) / 180;
+                  var c = Math.cos(a);
+                  var s = Math.sin(a);
+                  return { x: vx * c - vy * s, y: vx * s + vy * c };
+                }
+
+                // The tool head rides the pen tip, turned to the tangent.
+                var tip = { x: 32, y: 9, tx: 0, ty: 1 };
+                function toolAt(t) {
+                  var l = markLen * t;
+                  var p = mark.getPointAtLength(l);
+                  var a = mark.getPointAtLength(Math.max(0, l - 0.5));
+                  var b = mark.getPointAtLength(Math.min(markLen, l + 0.5));
+                  var tx = b.x - a.x;
+                  var ty = b.y - a.y;
+                  var n = Math.sqrt(tx * tx + ty * ty) || 1;
+                  tip.x = p.x;
+                  tip.y = p.y;
+                  tip.tx = tx / n;
+                  tip.ty = ty / n;
+                  tool.setAttribute(
+                    'transform',
+                    'translate(' + p.x.toFixed(2) + ' ' + p.y.toFixed(2) + ') rotate(' +
+                      ((Math.atan2(ty, tx) * 180) / Math.PI).toFixed(1) + ')'
+                  );
+                }
+
+                // The odometer. Each reel is a column of digits one em
+                // tall, moved by a whole number of ems plus the carry: the
+                // ones reel turns continuously, the tens reel only while
+                // the ones passes 9, the hundreds only on the last unit.
+                // The leading columns start on a blank, and 100 lands on
+                // the trailing zero of each column, so the wrap from 9 to
+                // 0 is the same glyph in the same place.
+                function reelsAt(v) {
+                  var o = v % 10;
+                  var t = v >= 100 ? 10 : (Math.floor(v / 10) % 10) + Math.max(0, o - 9);
+                  var h = v >= 100 ? 1 : Math.max(0, v - 99);
+                  reelO.style.transform = 'translateY(' + (-o).toFixed(3) + 'em)';
+                  reelT.style.transform = 'translateY(' + (-t).toFixed(3) + 'em)';
+                  reelH.style.transform = 'translateY(' + (-h).toFixed(3) + 'em)';
+                }
+
+                // Chips: small solid squares thrown off the cut, under
+                // gravity and drag, shrinking to nothing over their last
+                // third rather than fading. Pooled and capped; the canvas
+                // runs at no more than 1.5x so a 3x display does not pay
+                // nine times the fill.
+                var dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+                canvas.width = Math.round(W * dpr);
+                canvas.height = Math.round(H * dpr);
+                ctx.scale(dpr, dpr);
+                var chips = [];
+                var CAP = 72;
+                var dirty = false;
+                function spawn(n, x, y, dir, spread, v0, v1, l0, l1, s0, s1, g, color) {
+                  for (var i = 0; i < n; i++) {
+                    if (chips.length >= CAP) chips.shift();
+                    var a = dir + (Math.random() - 0.5) * spread;
+                    var v = v0 + Math.random() * (v1 - v0);
+                    chips.push({
+                      x: x,
+                      y: y,
+                      vx: Math.cos(a) * v,
+                      vy: Math.sin(a) * v,
+                      age: 0,
+                      life: l0 + Math.random() * (l1 - l0),
+                      size: s0 + Math.random() * (s1 - s0),
+                      rot: Math.random() * Math.PI,
+                      vr: (Math.random() - 0.5) * 14,
+                      g: g,
+                      color: color,
+                    });
+                  }
+                }
+                function tick(dt) {
+                  if (!chips.length) {
+                    if (dirty) {
+                      ctx.clearRect(0, 0, W, H);
+                      dirty = false;
+                    }
+                    return;
+                  }
+                  var damp = Math.exp(-2.4 * dt);
+                  ctx.clearRect(0, 0, W, H);
+                  for (var i = chips.length - 1; i >= 0; i--) {
+                    var c = chips[i];
+                    c.age += dt;
+                    if (c.age >= c.life) {
+                      chips.splice(i, 1);
+                      continue;
+                    }
+                    c.vx *= damp;
+                    c.vy = c.vy * damp + c.g * dt;
+                    c.x += c.vx * dt;
+                    c.y += c.vy * dt;
+                    c.rot += c.vr * dt;
+                    var k = 1 - c.age / c.life;
+                    var sz = c.size * Math.min(1, k / 0.35);
+                    ctx.save();
+                    ctx.translate(c.x, c.y);
+                    ctx.rotate(c.rot);
+                    ctx.fillStyle = c.color;
+                    ctx.fillRect(-sz / 2, -sz / 2, sz, sz);
+                    ctx.restore();
+                  }
+                  dirty = true;
+                }
+
+                // One chip every 2.5% of the count, thrown back along the
+                // line the tool just cut.
+                var lastSpawn = 0;
+                function render(t) {
+                  travel(t);
+                  toolAt(t);
+                  reelsAt(t * 100);
+                  if (t < 1 && t - lastSpawn >= 0.025) {
+                    lastSpawn = t;
+                    var p = toScreen(tip.x, tip.y);
+                    var d = turn(-tip.tx, -tip.ty);
+                    spawn(1, p.x, p.y, Math.atan2(d.y, d.x), 1.1, 160, 420, 0.4, 0.7, 2.5, 4.5, 1400, PAPER);
+                  }
+                }
+
+                // The sheet. The seam runs where the doors' clip edges
+                // meet (60% at the top, 48% at the foot; keep in step with
+                // the CSS), drawn in once. The scan line is the same line
+                // making one pass across the sheet. The latch is a short
+                // grape dash on the seam, hidden in its gap until 100.
+                frame.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+                var x1 = W * 0.6;
+                var x2 = W * 0.48;
+                [seam, scan, latch].forEach(function (el) {
+                  el.setAttribute('x1', String(x1));
+                  el.setAttribute('y1', '0');
+                  el.setAttribute('x2', String(x2));
+                  el.setAttribute('y2', String(H));
+                });
+                var L = Math.sqrt((x1 - x2) * (x1 - x2) + H * H);
+                seam.style.strokeDasharray = L + ' ' + L;
+                seam.style.strokeDashoffset = String(L);
+                seam.animate([{ strokeDashoffset: String(L) }, { strokeDashoffset: '0' }], {
+                  duration: 560,
+                  delay: 80,
+                  easing: OUT,
+                  fill: 'both',
+                });
+                // The pass parks just past the right edge, and the sheet
+                // later rides left with the door, which would carry the
+                // parked line back across the page: it is put away when
+                // the pass is over.
+                var pass = scan.animate(
+                  [
+                    { transform: 'translateX(' + (-0.72 * W).toFixed(1) + 'px)' },
+                    { transform: 'translateX(' + (0.56 * W).toFixed(1) + 'px)' },
+                  ],
+                  { duration: 680, delay: 240, easing: INOUT, fill: 'both' }
+                );
+                pass.onfinish = function () {
+                  scan.style.display = 'none';
+                };
+                var bolt = 0.16 * L;
+                latch.style.strokeDasharray = bolt + ' ' + L;
+                latch.style.strokeDashoffset = String(bolt);
+
+                // 100: the stroke flashes grape and cuts back (a hard cut,
+                // not a fade), the tool retracts, the part recoils, the
+                // last chips burst grape, and the latch runs the seam. The
+                // doors follow from lift().
+                function complete() {
+                  mark.style.stroke = GRAPE;
+                  setTimeout(function () {
+                    mark.style.stroke = '';
+                  }, 120);
+                  toolIn.animate([{ transform: 'scale(1)' }, { transform: 'scale(0)' }], {
+                    duration: 200,
+                    easing: INOUT,
+                    fill: 'forwards',
+                  });
+                  svg.animate(
+                    [{ transform: 'scale(1)' }, { transform: 'scale(1.04)', offset: 0.3 }, { transform: 'scale(1)' }],
+                    { duration: 320, easing: OUT }
+                  );
+                  var p = toScreen(tip.x, tip.y);
+                  spawn(34, p.x, p.y, 0, Math.PI * 2, 240, 720, 0.16, 0.26, 3, 6, 900, GRAPE);
+                  setTimeout(function () {
+                    latch.animate([{ strokeDashoffset: String(bolt) }, { strokeDashoffset: String(-L) }], {
+                      duration: 220,
+                      easing: INOUT,
+                      fill: 'forwards',
+                    });
+                  }, 110);
+                }
+
+                // After the doors have gone the cover is an empty fixed
+                // layer; take it out of the way entirely.
+                var ended = false;
+                function end() {
+                  ended = true;
+                  chips.length = 0;
+                  ctx.clearRect(0, 0, W, H);
+                  setTimeout(function () {
+                    intro.style.display = 'none';
+                  }, 720);
+                }
+                function busy() {
+                  return !ended && chips.length > 0;
+                }
+
+                // First paint already shows the start pose.
+                travel(0);
+                toolAt(0);
+                reelsAt(0);
+                return { render: render, tick: tick, complete: complete, busy: busy, end: end };
+              }
 
               // Real progress: the fraction of the site's font faces that
               // have loaded. document.fonts.ready is the definitive
@@ -244,39 +626,60 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
               }
 
               var start = performance.now();
+              var last = start;
               var MIN = 900; // a real screen, never a flash, even from cache
               var MAX = 3400; // never hang
               var shown = 0;
               var done = false;
+              var finished = false;
 
-              function lift() {
+              // A beat on 100 before the cover lifts: 160ms for the plain
+              // cover; the cut holds 320ms so the flash, the retract and
+              // the latch have played before the doors move.
+              function lift(delay) {
                 if (done) return;
                 done = true;
                 setTimeout(function () {
                   window.__introDone = true;
                   root.classList.remove('loading');
                   document.dispatchEvent(new Event('intro:done'));
-                }, 160); // a beat on 100 before the cover lifts
+                  if (cut) cut.end();
+                }, delay);
               }
 
               function frame(now) {
-                var elapsed = now - start;
-                // Track real loading, but never outrun the time floor, and
-                // force it home past MAX. goal only ever rises, so the
-                // count is monotonic.
-                var goal = elapsed >= MAX ? 1 : Math.min(target, elapsed / MIN);
-                shown += (goal - shown) * 0.16;
-                if (goal - shown < 0.004) shown = goal;
-                if (shown < 0) shown = 0;
-                if (shown >= 1) {
-                  numEl.textContent = '100';
-                  draw(1);
-                  lift();
-                  return;
+                var dt = Math.min(0.05, Math.max(0, (now - last) / 1000));
+                last = now;
+                if (!finished) {
+                  var elapsed = now - start;
+                  // Track real loading, but never outrun the time floor, and
+                  // force it home past MAX. goal only ever rises, so the
+                  // count is monotonic. The chase closes 16% of the gap per
+                  // 60Hz frame and is held to that rate on faster displays,
+                  // so the count climbs at one speed everywhere.
+                  var goal = elapsed >= MAX ? 1 : Math.min(target, elapsed / MIN);
+                  shown += (goal - shown) * (1 - Math.pow(0.84, dt * 60));
+                  if (goal - shown < 0.004) shown = goal;
+                  if (shown < 0) shown = 0;
+                  if (shown >= 1) {
+                    finished = true;
+                    numEl.textContent = '100';
+                    draw(1);
+                    if (cut) {
+                      cut.render(1);
+                      cut.complete();
+                    }
+                    lift(cut ? 320 : 160);
+                  } else {
+                    numEl.textContent = String(Math.max(0, Math.round(shown * 100)));
+                    draw(shown);
+                    if (cut) cut.render(shown);
+                  }
                 }
-                numEl.textContent = String(Math.max(0, Math.round(shown * 100)));
-                draw(shown);
-                requestAnimationFrame(frame);
+                // Chips keep falling after the count lands; the loop runs
+                // until the last one is gone.
+                if (cut) cut.tick(dt);
+                if (!finished || (cut && cut.busy())) requestAnimationFrame(frame);
               }
               requestAnimationFrame(frame);
             })();
@@ -304,7 +707,9 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     <style>
       /* ---- Intro cover -------------------------------------------- */
       /* Sits offscreen by default; html.loading holds it down over the
-         page, and removing the class lifts it into the hero entrance. */
+         page, and removing the class lifts it into the hero entrance.
+         This is the phone's cover, and the ground the desktop cut stands
+         on (see "The cut" below). */
       .intro {
         position: fixed;
         inset: 0;
@@ -320,6 +725,23 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
         transform: translateY(-101%);
         transition: transform 560ms var(--ease-in-out-strong);
         pointer-events: none;
+      }
+
+      /* On the phone the doors and the part are not boxes at all: the mark
+         and the count fall straight into the cover's own column, and every
+         piece of the cut stays out of the tree. */
+      .intro-door,
+      .intro-part {
+        display: contents;
+      }
+
+      .intro-reg,
+      .intro-rule,
+      .intro-reels,
+      .intro-frame,
+      .intro-fx,
+      .intro-tool {
+        display: none;
       }
 
       /* The mark, drawing itself above the count in pale slate. The dash
@@ -393,6 +815,252 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
         .intro-line {
           transform: none;
           animation: none;
+        }
+      }
+
+      /* ---- The cut (desktop, html.intro-cine) ---------------------- */
+      /* One sheet, two doors. The cover is scored by a raked seam (60% at
+         the top, 48% at the foot) that the doors part along; the left door
+         carries the part and the right one the readout, so each leaves
+         with its door. The seam, the scan pass and the latch share one SVG
+         whose viewBox the meter script sets in pixels, so a hairline is one
+         pixel on every screen and the seam sits exactly on the doors' edge.
+         The part's pose (2.6x, high and left, off true at the start; its
+         seat at rest) is written by the script every frame from the load
+         count; the CSS only gives it the seat. Transforms, clip-path and
+         stroke-dash throughout; no opacity anywhere. */
+      :global(html.intro-cine) .intro {
+        display: block;
+        background: transparent;
+        transform: none;
+        transition: none;
+      }
+
+      :global(html.intro-cine) .intro-door {
+        display: block;
+        position: absolute;
+        inset: 0;
+        background: var(--color-surface);
+        transform: translateX(-100%);
+        transition: transform 560ms var(--ease-in-out-strong);
+        will-change: transform;
+      }
+
+      :global(html.intro-cine) .intro-door-l {
+        clip-path: polygon(0 0, 60% 0, 48% 100%, 0 100%);
+      }
+
+      /* The right door overlaps the left by a hair: two clip edges meeting
+         exactly leave an antialiased crack of page between them. */
+      :global(html.intro-cine) .intro-door-r {
+        clip-path: polygon(59.8% 0, 100% 0, 100% 100%, 47.8% 100%);
+        transform: translateX(100%);
+      }
+
+      /* The sheet rides out with the left door, whose edge the seam is. */
+      :global(html.intro-cine) .intro-frame {
+        display: block;
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+        fill: none;
+        transform: translateX(-100%);
+        transition: transform 560ms var(--ease-in-out-strong);
+      }
+
+      :global(html.intro-cine.loading) .intro-door,
+      :global(html.intro-cine.loading) .intro-frame {
+        transform: none;
+        transition: none;
+      }
+
+      .intro-seam {
+        stroke: color-mix(in srgb, var(--color-paper) 35%, transparent);
+        stroke-width: 1;
+      }
+
+      .intro-scan {
+        stroke: color-mix(in srgb, var(--color-paper) 70%, transparent);
+        stroke-width: 1;
+      }
+
+      .intro-latch {
+        stroke: var(--color-accent);
+        stroke-width: 6;
+      }
+
+      :global(html.intro-cine) .intro-fx {
+        display: block;
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      /* Registration marks: a hairline cross in each corner, drawn in one
+         after another and leaving with its door. */
+      :global(html.intro-cine) .intro-reg {
+        --reg-inset: clamp(1.5rem, 3vw, 3rem);
+        display: block;
+        position: absolute;
+        width: 22px;
+        height: 22px;
+      }
+
+      .intro-reg-tl {
+        top: var(--reg-inset);
+        left: var(--reg-inset);
+      }
+
+      .intro-reg-tr {
+        top: var(--reg-inset);
+        right: var(--reg-inset);
+      }
+
+      .intro-reg-br {
+        right: var(--reg-inset);
+        bottom: var(--reg-inset);
+      }
+
+      .intro-reg-bl {
+        bottom: var(--reg-inset);
+        left: var(--reg-inset);
+      }
+
+      .intro-reg::before,
+      .intro-reg::after {
+        content: '';
+        position: absolute;
+        background: color-mix(in srgb, var(--color-paper) 55%, transparent);
+      }
+
+      .intro-reg::before {
+        top: 50%;
+        right: 0;
+        left: 0;
+        height: 1px;
+        transform: scaleX(0);
+        animation: intro-reg-x 320ms var(--ease-out-strong) both;
+      }
+
+      .intro-reg::after {
+        top: 0;
+        bottom: 0;
+        left: 50%;
+        width: 1px;
+        transform: scaleY(0);
+        animation: intro-reg-y 320ms var(--ease-out-strong) both;
+      }
+
+      .intro-reg-tr::before,
+      .intro-reg-tr::after {
+        animation-delay: 70ms;
+      }
+
+      .intro-reg-br::before,
+      .intro-reg-br::after {
+        animation-delay: 140ms;
+      }
+
+      .intro-reg-bl::before,
+      .intro-reg-bl::after {
+        animation-delay: 210ms;
+      }
+
+      @keyframes intro-reg-x {
+        to {
+          transform: scaleX(1);
+        }
+      }
+
+      @keyframes intro-reg-y {
+        to {
+          transform: scaleY(1);
+        }
+      }
+
+      /* The part's seat: left of the seam, on the centre line. The script
+         composes its travel on top of the centring translate. */
+      :global(html.intro-cine) .intro-part {
+        display: block;
+        position: absolute;
+        top: 50%;
+        left: 42vw;
+        width: clamp(6rem, 15vw, 9.5rem);
+        aspect-ratio: 1;
+        transform: translate(-50%, -50%);
+      }
+
+      :global(html.intro-cine) .intro-mark {
+        display: block;
+        width: 100%;
+      }
+
+      :global(html.intro-cine) .intro-tool {
+        display: inline;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.1;
+        stroke-linecap: square;
+      }
+
+      /* Retracts about its own centre on 100. */
+      .intro-tool-in {
+        transform-box: fill-box;
+        transform-origin: center;
+      }
+
+      /* The readout: bottom right, three reels under a dimension rule. */
+      :global(html.intro-cine) .intro-count {
+        position: absolute;
+        right: clamp(2.5rem, 6vw, 7rem);
+        bottom: clamp(2.5rem, 7vh, 6rem);
+        font-size: clamp(3.5rem, 7vw, 6.5rem);
+      }
+
+      :global(html.intro-cine) .intro-num {
+        display: none;
+      }
+
+      :global(html.intro-cine) .intro-reels {
+        display: inline-flex;
+      }
+
+      /* One digit tall, one digit wide (tabular figures make 1ch exact),
+         showing whichever row the script has scrolled to. */
+      .intro-reel {
+        display: block;
+        width: 1ch;
+        height: 1em;
+        overflow: clip;
+      }
+
+      .intro-reel-col {
+        display: block;
+        will-change: transform;
+      }
+
+      .intro-reel-col i {
+        display: block;
+        height: 1em;
+        font-style: normal;
+      }
+
+      :global(html.intro-cine) .intro-rule {
+        display: block;
+        height: 1px;
+        margin-bottom: 0.22em;
+        background: color-mix(in srgb, var(--color-paper) 40%, transparent);
+        transform: scaleX(0);
+        transform-origin: right;
+        animation: intro-rule 620ms var(--ease-out-strong) 200ms both;
+      }
+
+      @keyframes intro-rule {
+        to {
+          transform: scaleX(1);
         }
       }
 

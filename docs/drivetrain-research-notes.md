@@ -81,11 +81,12 @@ the page says so instead of offering a decorative vendor dropdown.
 
 ### Pack and loop resistance (page: pack 80 / 100 / 130 mOhm, loop 0.12 / 0.14 / 0.17 ohm)
 
-The page carries these as two separate fields. **Pack health** takes the tester
-number exactly as the screen shows it, and the chips write 80 / 100 / 130 into
-it. **Loop resistance** is the whole current path: the page sets it to the pack
-value plus a 0.040 ohm wiring allowance, unless you type a loop value yourself,
-which decouples the two fields until the pack field is touched again.
+The page carries these as two separate fields, both typed. **Pack health**
+takes the tester number exactly as the screen shows it; 80 / 100 / 130 is the
+measured ladder this section documents, not a control on the page. **Loop
+resistance** is the whole current path: the page sets it to the pack value plus
+a 0.040 ohm wiring allowance, unless you type a loop value yourself, which
+decouples the two fields until the pack field is touched again.
 
 This was the biggest correction of the pass. An earlier note recorded "REV
 docs say 11-20 mOhm" as an FTC pack figure. **That is wrong**: 11-20 mOhm is
@@ -882,9 +883,12 @@ page is displaying.
    as set. Rest voltage is the only term the drain moves, because it is the only
    one the flat NiMH curve still supports directionally: a pack that has been
    run down does sit lower at rest, even though the volts say little about how
-   much is left. The floor keeps the drained state above the dead-cell line that
-   11.8 V marks. The exact reduction is stated in the board's own fold, so the
-   page and this note cannot drift.
+   much is left. The reduction is **1.0 V, floored at 12.0 V**, which keeps the
+   drained state above the dead-cell line that 11.8 V marks. The floor only
+   stops the drop; it never lifts a pack, so a reader who types 11.8 gets 11.8
+   for both states rather than a "drained" pack resting higher than the one it
+   drained from. (The board fold that used to carry this number came off with
+   the rest of the board's prose, so the figure lives here now.)
 3. **Score.** The mean of those ten times. The recommendation is the buildable
    recipe with the lowest score, and the sweep curve, the plateau window and the
    sensitivity band recompute on the same composite, so the chart and the
@@ -924,6 +928,10 @@ behind a fold.
   build nobody can do, which was the original review's flaw #4 in a new costume.
 - Window explanation, best-time spread, runner-up, scoring basis and the drain
   state move into one fold titled for what it answers, "how this is scored".
+  **Retired since.** The fold came off with the rest of the board's prose. The
+  board is now four figures and two lines, and the scoring basis is written
+  down here instead of on the page, so what this bullet promised the reader one
+  click down they get from this file.
 - No sentence on the board proper runs much past eight words.
 
 Basis: the board had grown into paragraphs, and a paragraph on a verdict card is
@@ -973,10 +981,13 @@ Rest voltage stays as a typed field, and the 13.5 / 12.0 / 11.8 V readings stay
 as prose in the battery fold, including the part that actually earns its keep:
 11.8 V is a dead-cell detector, not a discharge level.
 
-The pack-health chips stay, and the difference is the point. 80, 100 and 130 mΩ
-are readings off this team's own tester, and the field takes the number the
-screen shows. That is a measurement with an instrument behind it, not an
-inference from a flat curve.
+The pack-health chips were kept at the time, and the difference was the point:
+80, 100 and 130 mΩ are readings off this team's own tester, not an inference
+from a flat curve. **They came off later anyway**, in the pass that stripped
+every field on the page to a plain label and one control. The reasoning above
+still holds and the ladder is still real; it is documented here rather than
+offered as three buttons. The pack field takes whatever number the tester
+screen shows.
 
 ## Typed teeth, stocked recipes
 
@@ -1010,10 +1021,12 @@ widening the input does not widen it.
 | --- | --- |
 | Thermal i²t fuse mode, hard cap kept | ATM blade trip curves (verified) + one-shot consequence |
 | Braking charged, strength user-set (default 0.6) | RR configs vs traction ceiling; no measurement exists |
+| Chain braking = ZPA x brakingStrength x 4 | The library's own product, read out of ErrorCalculator at 2.1.2; the docs say a brakingStrength of 1 IS the retired ZPAM of 4 |
+| Core Hex torque divided by the ratio AND the efficiency | REV publishes 3.2 N·m at the gearbox output, so the ratio alone leaves the model applying the box's loss twice |
 | Verdict = buildable recipe from verified parts only | Product-URL-confirmed tooth counts; pinions unpinned |
 | Optimum reported as 1%-plateau window across μ±0.10, R±0.05 | Only tile μ spec (0.51) sits below folklore; loop-R spread is real |
 | SOC presets 13.5 / 12.0 / 11.8 V | 10 x 1.35 V rested; 12-13 V working band; 11.8 V is the one-dead-cell line |
-| Pack-health chips 0.12 / 0.14 / 0.17 Ω | Measured pack ladder (80/100/130 mΩ) plus a ~35 mΩ wiring allowance |
+| Loop 0.12 / 0.14 / 0.17 Ω for an 80/100/130 mΩ pack | Measured pack ladder plus a ~35 mΩ wiring allowance; typed, not chipped |
 | COTS presets first, custom everywhere | Pit-onboarding request; folklore constants keep their labels |
 | Spec/dyno both computed, never blended | gm0's own "testing methods" note; cold-vs-sustained physics |
 | Encoder-log overlay + Crr back-solve | The review's closing condition; validation still owed |
@@ -1036,8 +1049,95 @@ widening the input does not widen it.
 | Apply-recommended changes gear ratio and nothing else | The verdict is about gearing; touching weight, wheels or battery would rewrite the robot the user described in order to win its own argument |
 | Reset restores the fresh-visit defaults exactly | One canonical defaults object feeds both first load and reset, so they cannot drift, and every restored value clamps to its field bounds so a corrupt payload cannot inject a weird one |
 | Stage teeth typed, stocked sizes as suggestions | The confirmed MOD 0.8 ladder runs 15–40 pinion and 48–108 hub, wider than any select shipped, while recipes still name stocked parts only |
-| Pack-state chips removed, pack-health chips kept | Rest volts are flat across the NiMH middle, so three labelled states oversold a reading; the tester's mΩ number is an instrument reading and stays |
+| Every chip removed, both ladders kept as prose | Rest volts are flat across the NiMH middle, so three labelled states oversold a reading; the pack ladder is real but a preset chip is still chrome, and every field on the page is now a plain label and one control |
 | Three-up charts drawn as equal blocks | They are three views of one run, so unequal frames make the eye compare the frames instead of the curves |
+
+## The braking constant, read out of 2.1.2 instead of inferred
+
+Pass six went looking for "Pedro 3" and there is not one. **2.1.2 is still the
+current release.** `Pedro-Pathing/PedroPathing` `main`, cloned at commit
+`b025bad` (2026-08-31), carries `version=2.1.2` in its `gradle.properties`, the
+newest tag on the releases page is `v2.1.2` (7 May), and
+`Pedro-Pathing/Quickstart` `main` at `d3aea9c` (4 August) still pins
+`com.pedropathing:ftc:2.1.2`. This pass also settles a question the notes had
+left open, and unlike passes one to five it settles it from the files
+themselves: github.com, raw.githubusercontent.com and **pedropathing.com**
+all fetch from this environment now, where the docs domain used to answer 403.
+
+Sources read in full:
+
+- <https://github.com/Pedro-Pathing/PedroPathing> (`core/src/main/java/com/pedropathing/paths/PathConstraints.java`,
+  `core/src/main/java/com/pedropathing/ErrorCalculator.java`,
+  `core/src/main/java/com/pedropathing/follower/FollowerConstants.java`)
+- <https://github.com/Pedro-Pathing/PedroPathing/releases>
+- <https://github.com/Pedro-Pathing/Quickstart> (`TeamCode/.../pedroPathing/Constants.java`)
+- <https://pedropathing.com/docs/pathing/reference/deceleration>
+
+### What the constant is now
+
+- The tunable is **`brakingStrength` on `PathConstraints`**, and its javadoc is
+  the definition: "A multiplier for the zero power acceleration to change the
+  speed the robot decelerates at the end of paths. Increasing this will cause
+  the robot to try to decelerate faster, at the risk of overshoots or
+  localization slippage." **Default Value: 1**, both in that javadoc and in the
+  live `defaultConstraints = new PathConstraints(0.995, 0.1, 0.1, 0.007, 100,
+  1, 10, 1)`.
+- The quickstart ships `new PathConstraints(0.99, 100, 1, 1)`. That is the
+  four-argument convenience constructor, whose signature is
+  `(tValueConstraint, timeoutConstraint, brakingStrength, brakingStart)`, so
+  **the quickstart's brakingStrength is 1 and its brakingStart is 1**. Pass
+  four recorded those four numbers without the argument order; this pins it.
+- `ErrorCalculator.getDriveVelocityError` is where the number lands, and it
+  scales it by a hard-coded four:
+  `Kinematics.getVelocityToStopWithDeceleration(forwardDistanceToGoal,
+  constants.forwardZeroPowerAcceleration * (currentPath.getBrakingStrength() *
+  4))`. The docs page says the same thing in words: "BrakingStrength was
+  formerly known as **Zero Power Acceleration Multiplier (ZPAM)** in earlier
+  versions of Pedro Pathing", and "A BrakingStrength of 1 corresponds to a ZPAM
+  of 4."
+- `brakingStart` (default 1) multiplies the distance at which braking *begins*,
+  not the rate: `if (distanceToGoal >= stoppingDistance *
+  currentPath.getBrakingStartMultiplier())`. At the default it changes nothing
+  the page models.
+- `DecelerationType` default is `LAST_PATH` (`PathBuilder.java` field
+  initializer), which confirms the pass-four note.
+
+### Correction to "FollowerConstants at 2.1.2, and a correction"
+
+That section reads the rename as a behaviour change: "`brakingStrength` on
+`PathConstraints`, and its default fell from 4 to 1, which is a behaviour
+change and not just a rename." **The rename is all it was.** The default did
+fall from 4 to 1 as a written number, but the library put the missing factor of
+four back in `ErrorCalculator`, so 1 today decelerates exactly as 4 did before.
+Reading the field default without the call site is what made it look like a
+change.
+
+`FollowerConstants.defaults()` is re-confirmed at this commit:
+`forwardZeroPowerAcceleration = -41.278`, `lateralZeroPowerAcceleration =
+-59.7819`, `mass = 10.65`, `centripetalScaling = 0.0005`,
+`holdPointTranslationalScaling = 0.45`, `holdPointHeadingScaling = 0.35`,
+`automaticHoldEnd = true`, `stuckVelocity = 1.0`, `stuckTimeout = 500.0`. The
+field-level initializers still read -34.62719 and -78.15554 and are still
+stale against the method, exactly as that section records.
+
+### What the page does with it
+
+The page brakes at the product of all three, in metres:
+
+    41.278 in/s^2  x  brakingStrength 1  x  ErrorCalculator's 4  x  0.0254
+      = 4.194 m/s^2
+
+which is the number it was already using. The arithmetic did not move; what
+moved is that the two ends of it are now named for what they are
+(`BRAKING_STRENGTH` and `BRAKING_SCALE`) instead of one `ZPA_MULT = 4` carrying
+a retired constant's name and a comment that credited the 4 to the quickstart.
+A team that tunes `brakingStrength` away from 1 can now find the one line to
+change.
+
+Honest limit, unchanged: `forwardZeroPowerAcceleration` is a per-robot
+measurement by the library's own instruction, and -41.278 is a placeholder. The
+page inherits that, as does the official visualizer, which does not read
+`FollowerConstants` at all.
 
 ## Open questions the next pass should close
 
@@ -1108,3 +1208,14 @@ goBILDA's own competition code on GitHub fetches without trouble, and it states
 one cartridge's exact fraction in a comment. Every other ratio on the page is
 back-solved from a published speed, which is a decision recorded above with its
 limitation attached.
+
+Pass six, 2026-09-05, was a correctness audit of the shipped page rather than a
+research sweep, and it closed two things this file had left open. The Pedro
+braking constant is settled from source and from the docs site, which now
+fetches; see "The braking constant, read out of 2.1.2 instead of inferred"
+above. The REV Core Hex row is corrected: its published 3.2 N·m is measured at
+the gearbox OUTPUT, and the page was referring it back through the 72:1 ratio
+only, so the model then applied the gearbox efficiency a second time and
+printed 2.98 N·m against REV's own 3.2. The row now divides by the efficiency
+as well as the ratio. This pass also caught up the sections that still
+described chips and a scoring fold the page had already dropped.

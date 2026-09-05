@@ -79,13 +79,19 @@ the page's own text; the page draws the full 144 inch frame and says so.
 
 Nothing from this repository is reproduced here. It was read as a behavioural
 reference for the 2.1.2 `PathBuilder` method surface that the custom editor
-accepts, and for the constants the page names in prose: the
-`FollowerConstants.defaults()` value `forwardZeroPowerAcceleration = -41.278`
-in/s², used as the deceleration rate of the page's follower-style profile, and
-the fact that `usePredictiveBraking` is off by default so the real follower
-commands full power along the path tangent until it is inside a stopping
-distance of the end. Those are stated as facts about Pedro's behaviour, not
-ported as source.
+accepts, and for the constants the page names in prose. Three of them set the
+deceleration rate of the page's follower-style profile, and the page uses their
+product: `FollowerConstants.defaults()` sets `forwardZeroPowerAcceleration =
+-41.278` in/s²; `PathConstraints.brakingStrength` defaults to `1`, which is also
+what `Pedro-Pathing/Quickstart` ships; and `ErrorCalculator` multiplies that
+strength by a literal `4` before it reaches the deceleration, which is why the
+project's own deceleration docs say a brakingStrength of 1 corresponds to the
+retired ZPAM of 4. The page also relies on `usePredictiveBraking` being `false`
+by default on `FollowerConstants`, so the real follower commands full power
+along the path tangent until it is inside a stopping distance of the end. Those
+are stated as facts about Pedro's behaviour, not ported as source. All four were
+re-read at `main` commit `b025bad` (2026-08-31), whose `gradle.properties` still
+reads `version=2.1.2`.
 
 ---
 

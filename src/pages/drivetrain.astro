@@ -469,7 +469,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
      site-wide stylesheet; this site's global.css has never heard of them,
      so the page declares its own, set in the site's faces and this sheet's
      inks. The eyebrow / title / lede classes need no base rules here: the
-     .dt-shell-scoped rules below set every property they use. */
+     .dt-shell-scoped rules further down set every property they use. */
   .page-shell {
     max-width: 46rem;
     margin-inline: auto;
@@ -680,28 +680,6 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
   /* No rule of its own: the first section's own top rule closes the masthead,
      so the page never carries two rules with empty space between them. */
   .dt-head { padding-bottom: 0; }
-  /* A quantity symbol is not a word and must never be case-transformed: the
-     capital of Greek mu is a glyph indistinguishable from a Latin M. */
-  .dt-sym { text-transform: none; }
-
-  /* ─── QUANTITY SYMBOLS ───────────────────────────────────────────────────
-     Engineering convention: the QUANTITY is italic, the UNIT is upright.
-     `v` slants, `m/s` does not. .dt-q marks the quantity. Ubuntu ships a
-     real italic (BaseLayout loads it) for every prose and label context;
-     inside a mono run the system face's own italic answers, which every
-     ui-monospace resolution carries.
-     Two guards go with it:
-       · a descriptive subscript is a word, not a symbol, so it stays upright
-         inside a slanted parent (C with a roman "rr", not C with a slanted one);
-       · .dt-u is the escape hatch for a unit that has to sit INSIDE an
-         italicised or emphasised run, so no unit ever inherits a slant. */
-  .dt-q {
-    font-style: italic;
-    text-transform: none;
-    /* the slant leans the last glyph toward whatever follows it */
-    padding-right: 0.04em;
-  }
-  .dt-q sub, .dt-q sup, .dt-u { font-style: normal; }
   .dt-shell .page-eyebrow {
     font: var(--t-label);
     letter-spacing: 0.08em;
@@ -723,52 +701,6 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     max-width: 62ch;
     margin: var(--sp-4) 0 0;
   }
-
-  /* Status line: what this model stands on, in one pass. Three markers, and
-     the weakest state is the only one that carries colour, because an
-     unvalidated model IS a limit state. */
-  .dt-status {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--sp-2) var(--sp-5);
-    margin: var(--sp-5) 0 0;
-    padding: 0;
-    list-style: none;
-    font: var(--t-caption);
-    color: var(--ink-3);
-  }
-  .dt-status li { position: relative; padding-left: var(--sp-4); }
-  .dt-status li + li::after {
-    content: "";
-    position: absolute;
-    left: calc(var(--sp-3) * -1 + 1px);
-    top: 0.15em;
-    bottom: 0.15em;
-    width: 1px;
-    background: var(--rule);
-  }
-  .dt-status li::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 0.42em;
-    width: 8px;
-    height: 8px;
-    box-sizing: border-box;
-  }
-  .dt-status li[data-state="ok"]::before { background: var(--ok-text); }
-  .dt-status li[data-state="range"]::before {
-    border: 1px solid var(--ink-3);
-    background: linear-gradient(to right, var(--ink-3) 50%, transparent 50%);
-  }
-  .dt-status li[data-state="none"]::before { border: 1px solid var(--warn-line); }
-  .dt-status b {
-    font: var(--t-label);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--ink-1);
-  }
-  .dt-status a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
 
   /* ─── SECTION ───────────────────────────────────────────────────────────
      One rule and the heading start each section. The heading is the only
@@ -794,17 +726,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     color: var(--ink-1);
     margin: 0;
   }
-  .dt-sec-sub,
-  .dt-panel-h .dt-sec-sub {
-    display: block;
-    font: var(--t-caption);
-    letter-spacing: 0;
-    color: var(--ink-3);
-    max-width: 68ch;
-    margin: var(--sp-2) 0 0;
-  }
   .dt-panel-h + .dt-panel,
-  .dt-panel-h + .dt-sec-sub + .dt-panel,
   .dt-panel-h + .dt-pins { margin-top: var(--sp-6); }
 
   /* ─── PANEL ─────────────────────────────────────────────────────────────
@@ -848,7 +770,6 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
   /* `end`, not `start`: a two-line label beside a one-line label must not push
      its input a line lower than the one next to it. The inputs share an edge. */
   .dt-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4) var(--sp-3); align-items: end; }
-  .dt-grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--sp-4) var(--sp-3); align-items: end; }
   .dt-mt { margin-top: var(--sp-4); }
   .dt-field { display: flex; flex-direction: column; gap: var(--sp-2); min-width: 0; }
   .dt-field > label,
@@ -949,54 +870,15 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     border-radius: 2px;
   }
 
-  .dt-hint {
-    margin: var(--sp-2) 0 0;
-    font: var(--t-caption);
-    color: var(--ink-3);
-    max-width: 38ch;
-  }
-  .dt-hint.dt-under { margin-top: var(--sp-2); }
-  .dt-hint .dt-num { font-size: 0.75rem; }
-
-  /* A called-out fact: the fixed, rules-mandated ground a panel is built on. */
-  .dt-spec {
-    margin: 0 0 var(--sp-4);
-    padding: var(--sp-2) var(--sp-3);
-    background: var(--s-inset);
-    border-left: 3px solid var(--ink-3);
-    font: var(--t-caption);
-    color: var(--ink-2);
-  }
-  .dt-spec b {
-    font-family: var(--dt-font-mono);
-    font-size: 0.8125rem;
-    font-weight: 500;
-    color: var(--ink-1);
-  }
-
-  .dt-check { display: flex; gap: var(--sp-3); align-items: flex-start; cursor: pointer; }
-  .dt-check input { width: 16px; height: 16px; margin-top: 3px; flex: none; }
-  .dt-check span { font: var(--t-ui); color: var(--ink-2); }
-  .dt-check em {
-    display: block;
-    font-style: normal;
-    font: var(--t-caption);
-    color: var(--ink-3);
-  }
-
   /* ─── FOLDS ─────────────────────────────────────────────────────────────
      The most-used component on the page, so it is the quietest. The marker is
      a CSS triangle: a "+" and a "−" beside a page of equations read as
      arithmetic operators, which is a real legibility problem here. */
-  .dt-fold,
-  .dt-tune,
-  .dt-overlay {
+  .dt-fold {
     margin-top: var(--sp-4);
     border-top: 1px solid var(--rule-hair);
   }
-  .dt-fold > summary,
-  .dt-tune > summary,
-  .dt-overlay > summary {
+  .dt-fold > summary {
     display: flex;
     align-items: center;
     gap: var(--sp-2);
@@ -1009,12 +891,8 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     cursor: pointer;
     list-style: none;
   }
-  .dt-fold > summary::-webkit-details-marker,
-  .dt-tune > summary::-webkit-details-marker,
-  .dt-overlay > summary::-webkit-details-marker { display: none; }
-  .dt-fold > summary::before,
-  .dt-tune > summary::before,
-  .dt-overlay > summary::before {
+  .dt-fold > summary::-webkit-details-marker { display: none; }
+  .dt-fold > summary::before {
     content: "";
     flex: none;
     width: 0;
@@ -1023,16 +901,10 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     border-bottom: 4px solid transparent;
     border-left: 7px solid var(--ink-3);
   }
-  .dt-fold[open] > summary::before,
-  .dt-tune[open] > summary::before,
-  .dt-overlay[open] > summary::before { transform: rotate(90deg); }
-  .dt-fold > summary:hover,
-  .dt-tune > summary:hover,
-  .dt-overlay > summary:hover { color: var(--ink-1); }
+  .dt-fold[open] > summary::before { transform: rotate(90deg); }
+  .dt-fold > summary:hover { color: var(--ink-1); }
 
-  .dt-fold-body,
-  .dt-tune-body,
-  .dt-overlay-body {
+  .dt-fold-body {
     padding: var(--sp-1) 0 var(--sp-5);
     font: var(--t-body);
     color: var(--ink-2);
@@ -1057,36 +929,8 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
   .dt-fold-body a:hover,
   .dt-fold-body.prose a:hover { color: var(--accent-ink); }
   .dt-fold-body strong, .dt-fold-body.prose strong { font-weight: 600; color: var(--ink-1); }
-  .dt-tune-body, .dt-overlay-body { max-width: none; }
-  .dt-tune-body { font: var(--t-caption); }
-  /* Opening a fold fades its body in over 200ms on opacity and 3px of
-     translate. No height animation, which would thrash layout and fight the
-     chart resize observer. */
-  .dt-tune[open] > .dt-tune-body,
-  .dt-fold[open] > .dt-fold-body,
-
-  /* ─── CHIPS, SEGMENTED CONTROLS, BUTTONS ────────────────────────────────
+  /* ─── SEGMENTED CONTROLS AND BUTTONS ────────────────────────────────────
      Square, one height, no lift, no press-scale. Geometry never moves. */
-  .dt-chips { display: flex; gap: var(--sp-2); margin-top: var(--sp-2); flex-wrap: wrap; }
-  .dt-chip {
-    font-family: var(--dt-font-mono);
-    font-size: 0.75rem;
-    font-weight: 500;
-    letter-spacing: 0.04em;
-    padding: 5px 10px;
-    height: 26px;
-    border: 1px solid var(--rule);
-    border-radius: 0;
-    background: var(--s-panel);
-    color: var(--ink-3);
-    cursor: pointer;
-  }
-  .dt-chip.is-active {
-    background: var(--ink-1);
-    border-color: var(--ink-1);
-    color: var(--on-ink-1);
-  }
-
   .dt-seg {
     position: relative;
     isolation: isolate;
@@ -1255,259 +1099,6 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     margin: var(--sp-4) 0 var(--sp-5);
   }
 
-  /* ─── REAL-WORLD TESTING ───────────────────────────────────────────────── */
-  .dt-meas-lede {
-    margin: 0 0 var(--sp-5);
-    max-width: 68ch;
-    font: var(--t-body);
-    color: var(--ink-2);
-  }
-  .dt-meas-lede b { font-weight: 600; color: var(--ink-1); }
-
-  .dt-tests {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--sp-5);
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-  .dt-test {
-    min-width: 0;
-    border-top: 1px solid var(--rule-hair);
-    padding-top: var(--sp-5);
-  }
-  .dt-test-h {
-    display: flex;
-    align-items: baseline;
-    gap: var(--sp-3);
-    margin: 0 0 var(--sp-3);
-    font: var(--t-label);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--ink-3);
-  }
-  .dt-test-no {
-    flex: none;
-    font-family: var(--dt-font-mono);
-    font-size: 0.6875rem;
-    font-weight: 500;
-    letter-spacing: 0.06em;
-    color: var(--ink-3);
-  }
-  .dt-test-h::after { content: ""; flex: 1; height: 1px; background: var(--rule-hair); }
-  /* ─── THE PROTOCOL SHAPE ────────────────────────────────────────────────
-     All five tests answer the same five questions in the same order, in the
-     same places: what constant it pins, how you take the reading, the
-     arithmetic that turns the reading into the constant, the fields, and how
-     long it costs. Five identically-shaped cards read as a protocol somebody
-     wrote once; five differently-shaped forms read as five separate ideas.
-     The terms are a fixed column so a reader can scan one question straight
-     down the section without reading any of the answers. */
-  .dt-proto {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    margin: 0;
-    row-gap: 2px;
-  }
-  .dt-proto > dt {
-    font: var(--t-label);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--ink-3);
-  }
-  .dt-proto > dt + dd { margin: 0 0 var(--sp-3); min-width: 0; }
-  .dt-proto > dd:last-child { margin-bottom: 0; }
-  .dt-proto-sets { font: var(--t-caption); color: var(--ink-1); }
-  .dt-proto-sets .dt-q { font-weight: 500; }
-  /* The arithmetic is code, but it is one short line, so it takes the inset
-     ground and the rule and none of the block padding a real listing needs. */
-  .dt-proto-eq {
-    margin: 0;
-    padding: var(--sp-2) var(--sp-3);
-    background: var(--s-inset);
-    border-left: 2px solid var(--rule-strong);
-    font: var(--t-code);
-    color: var(--ink-1);
-    overflow-x: auto;
-  }
-  .dt-proto-eq sub { font-size: 0.8em; line-height: 0; vertical-align: -0.15em; }
-  .dt-proto-t { font: var(--t-num); color: var(--ink-3); }
-  @media (min-width: 30rem) {
-    .dt-proto {
-      grid-template-columns: 5.5rem minmax(0, 1fr);
-      column-gap: var(--sp-4);
-      row-gap: 0;
-    }
-    .dt-proto > dt { grid-column: 1; padding-top: 2px; }
-    .dt-proto > dt + dd { grid-column: 2; }
-  }
-  .dt-test-do {
-    margin: 0 0 var(--sp-4);
-    font: var(--t-caption);
-    color: var(--ink-2);
-    max-width: 68ch;
-    overflow-wrap: break-word;
-  }
-  .dt-test-do b { font-weight: 600; color: var(--ink-1); }
-  /* ForwardZeroPowerAccelerationTuner is 33 unbreakable characters and a
-     narrow phone column is about 30 wide, so the API names may break
-     mid-token. Ordinary prose still wraps on spaces. */
-  .dt-test-do .dt-num { overflow-wrap: anywhere; }
-  /* A test's closing note qualifies a whole row of fields, not one of them, so
-     it is set to the row's measure rather than a single field's 38ch. */
-  .dt-test .dt-hint.dt-under { max-width: 60ch; }
-  /* An unfilled measurement should look unfilled, not like a zero. */
-  .dt-test input::placeholder {
-    color: var(--ink-3);
-    opacity: 0.75;
-    font-variant-numeric: normal;
-  }
-  .dt-meas-ref { justify-content: flex-end; }
-  .dt-meas-refv {
-    margin: 0;
-    padding: 8px 0;
-    height: 36px;
-    box-sizing: border-box;
-    font-family: var(--dt-font-mono);
-    font-size: 0.875rem;
-    color: var(--ink-1);
-    border-bottom: 1px solid var(--rule-strong);
-  }
-  /* What one test just pinned. The warning hue appears only when a reading is
-     out of family with what the model expected; otherwise it is ordinary ink
-     against a ruled edge. */
-  .dt-meas-out {
-    margin: var(--sp-4) 0 0;
-    padding-left: var(--sp-3);
-    border-left: 3px solid var(--ink-3);
-    font-family: var(--dt-font-mono);
-    font-size: 0.8125rem;
-    line-height: 1.55;
-    color: var(--ink-1);
-  }
-  .dt-meas-out.is-off { border-left-color: var(--warn-line); }
-  .dt-meas-out b { font-weight: 500; }
-  .dt-meas-out em {
-    display: block;
-    margin-top: var(--sp-1);
-    font-style: normal;
-    font-family: var(--dt-font-sans);
-    font-size: 0.8125rem;
-    color: var(--ink-3);
-  }
-
-  /* ─── PROVENANCE LEDGER ─────────────────────────────────────────────────
-     Every constant, and where it came from. Visual weight descends with
-     epistemic strength: measured is darkest, published is the only state that
-     carries colour, because an unvalidated constant IS a limit state. */
-  .dt-prov {
-    margin-top: var(--sp-6);
-    padding-top: var(--sp-5);
-    border-top: 1px solid var(--rule);
-  }
-  .dt-prov-h {
-    display: flex;
-    align-items: baseline;
-    flex-wrap: wrap;
-    gap: var(--sp-2) var(--sp-3);
-    margin: 0 0 var(--sp-3);
-    font: var(--t-label);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--ink-3);
-  }
-  .dt-prov-sub {
-    font-family: var(--dt-font-sans);
-    font-size: 0.8125rem;
-    font-weight: 400;
-    letter-spacing: 0;
-    text-transform: none;
-    color: var(--ink-3);
-  }
-  .dt-prov-list { margin: 0; }
-  .dt-prov-row {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas: "k v" "rng rng" "src src";
-    column-gap: var(--sp-4);
-    align-items: baseline;
-    padding: var(--sp-2) 0;
-    border-top: 1px solid var(--rule-hair);
-  }
-  /* The band the model actually sweeps this constant over, on its own line
-     under the value and right-aligned to it so the two read as one figure.
-     Named rather than bracketed: a bare pair of numbers beside a constant
-     would be read as a measurement tolerance, and it is not one. Only the two
-     constants the sensitivity sweep varies get a line here. */
-  .dt-prov-rng {
-    grid-area: rng;
-    margin-top: 2px;
-    text-align: right;
-    font-family: var(--dt-font-mono);
-    font-size: 0.75rem;
-    color: var(--ink-3);
-  }
-  .dt-prov-row:first-child { border-top: 0; }
-  .dt-prov-row dt, .dt-prov-row dd { margin: 0; }
-  .dt-prov-k { grid-area: k; font: var(--t-ui); color: var(--ink-2); }
-  .dt-prov-v {
-    grid-area: v;
-    font-family: var(--dt-font-mono);
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--ink-1);
-    white-space: nowrap;
-  }
-  .dt-prov-src {
-    grid-area: src;
-    margin-top: var(--sp-1);
-    font: var(--t-caption);
-    color: var(--ink-3);
-  }
-  /* The tag: an 8px rule, then the word. Three states, three weights. */
-  .dt-prov-tag {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--sp-2);
-    margin-right: var(--sp-2);
-    font: var(--t-micro);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--warn-text);
-  }
-  .dt-prov-tag::before {
-    content: "";
-    width: 8px;
-    height: 1px;
-    background: var(--warn-line);
-  }
-  .dt-prov-row.is-measured .dt-prov-tag { color: var(--ink-1); }
-  .dt-prov-row.is-measured .dt-prov-tag::before { background: var(--ink-1); }
-  .dt-prov-row.is-reported .dt-prov-tag { color: var(--ink-3); }
-  .dt-prov-row.is-reported .dt-prov-tag::before { background: var(--rule-strong); }
-
-  @media (min-width: 62rem) {
-    .dt-tests {
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-      gap: var(--sp-5) var(--sp-8);
-    }
-    /* The log test carries a textarea, so it takes the full sheet and breaks
-       the two-column rhythm rather than being squeezed into half of it. */
-    .dt-test-wide { grid-column: 1 / -1; }
-    /* Wide enough for the datasheet order: parameter, value, then the band the
-       model sweeps it over as its own column, then the source. A constant with
-       no band leaves that column empty rather than borrowing one. */
-    .dt-prov-row {
-      grid-template-columns: minmax(0, 13rem) auto 14rem minmax(0, 1fr);
-      grid-template-areas: "k v rng src";
-      column-gap: var(--sp-6);
-    }
-    .dt-prov-v { justify-self: start; }
-    .dt-prov-rng { margin-top: 0; text-align: left; white-space: nowrap; }
-    .dt-prov-src { margin-top: 0; }
-  }
-
   /* ─── RESULTS ───────────────────────────────────────────────────────────── */
   .dt-session {
     display: flex;
@@ -1668,11 +1259,6 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     text-transform: uppercase;
     color: var(--ink-3);
   }
-  /* A card key is set uppercase; a quantity symbol in it is not a word and
-     must not be case-transformed, because the capital of Greek mu is a glyph
-     indistinguishable from a Latin M. The symbol keeps its own slant (.dt-q)
-     and the label around it does not. */
-  .dt-stat .k .dt-q { text-transform: none; }
   .dt-stat .v {
     grid-area: v;
     font: var(--t-stat);
@@ -1709,8 +1295,6 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
   @media (min-width: 62rem) {
     .dt-stats { grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); }
   }
-  .dt-fold-note { margin-top: var(--sp-4); }
-  .dt-stats-note { margin: 0; font: var(--t-caption); color: var(--ink-3); max-width: 68ch; }
 
   /* ─── FIGURES ───────────────────────────────────────────────────────────
      Chart boxes own a FIXED CSS height and the canvas fills them absolutely,
@@ -1727,14 +1311,6 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     text-transform: uppercase;
     color: var(--ink-3);
     margin: 0 0 var(--sp-4);
-  }
-  .dt-sheet-sub {
-    font-family: var(--dt-font-sans);
-    font-size: 0.8125rem;
-    font-weight: 400;
-    letter-spacing: 0;
-    text-transform: none;
-    color: var(--ink-3);
   }
   .dt-chartbox {
     position: relative;
@@ -1793,13 +1369,6 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     border: 0;
   }
 
-  /* The one line that has to be read even by someone who folds everything. */
-  .dt-honest {
-    margin: 0 0 var(--sp-5);
-    font: var(--t-caption);
-    color: var(--ink-2);
-    max-width: 68ch;
-  }
   .dt-path-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-5) var(--sp-8); }
   /* The column reads top to bottom as one answer: WHAT this chain is, HOW its
      speed moves along it, WHERE the robot is right now, and what the marks
@@ -1812,7 +1381,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     .dt-path-grid { grid-template-columns: minmax(0, 44rem) minmax(18rem, 1fr); align-items: start; }
   }
 
-  /* The chain in three numbers, before anything explains itself. */
+  /* The chain in two numbers, before anything explains itself. */
   .dt-simlead {
     padding: 0 0 var(--sp-4);
   }
@@ -1824,7 +1393,9 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     color: var(--ink-3);
   }
   .dt-simlead-cap span::before { content: "· "; }
-  .dt-simlead-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-2) var(--sp-3); }
+  /* Tracks match the children. A third track left over from a figure this
+     row no longer carries only squeezes the two that are left. */
+  .dt-simlead-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-2) var(--sp-3); }
   .dt-simlead-i { display: flex; flex-direction: column; gap: var(--sp-1); min-width: 0; }
   .dt-simlead-i b {
     font-family: var(--dt-font-sans);
@@ -1837,14 +1408,15 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
   .dt-simlead-i span { font: var(--t-caption); color: var(--ink-3); }
 
   .dt-stripbox { --ch: clamp(152px, 16vw, 200px); }
-  .dt-strip-cap { margin: var(--sp-3) 0 0; font: var(--t-caption); color: var(--ink-3); }
-  .dt-strip-cap b { font-weight: 600; color: var(--ink-2); }
 
   /* Live readout. Labelled, because five bare numbers in a column are five
-     riddles. */
+     riddles. Two tracks, not three: there are four readings over the phase
+     badge, and three tracks strand the fourth alone on a row of its own with
+     two empty cells beside it. Two fills both rows at every width the side
+     column takes, from a phone to the 44rem field's own gutter. */
   .dt-now {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--sp-3);
     margin: 0;
   }
@@ -1878,42 +1450,6 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     text-transform: uppercase;
     color: var(--ink-3);
   }
-  .dt-key-h2 { margin-top: var(--sp-4); }
-  .dt-key-ph { gap: var(--sp-2) var(--sp-4); }
-
-  /* The two speed models, said once, beside the control that swaps them. The
-     live one is set; the other stays legible but recedes. */
-  .dt-models {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--sp-3) var(--sp-5);
-    margin: 0 0 var(--sp-5);
-    max-width: 68rem;
-  }
-  @media (min-width: 46rem) {
-    .dt-models { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  }
-  .dt-model {
-    padding-left: var(--sp-3);
-    border-left: 3px solid var(--rule);
-    font: var(--t-caption);
-    color: var(--ink-3);
-  }
-  .dt-model b { display: block; font-weight: 600; color: var(--ink-2); }
-  .dt-model b.dt-model-in { display: inline; font-weight: 500; color: var(--warn-text); }
-  .dt-model[data-on="true"] {
-    border-left-color: var(--accent);
-    color: var(--ink-2);
-  }
-  .dt-model[data-on="true"] b { color: var(--ink-1); }
-  .dt-models-gap {
-    grid-column: 1 / -1;
-    margin: 0;
-    padding-left: var(--sp-3);
-    border-left: 3px solid transparent;
-    font: var(--t-caption);
-    color: var(--ink-3);
-  }
   .dt-path-main { min-width: 0; }
   .dt-path-pick {
     display: flex;
@@ -1930,14 +1466,10 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
   }
   .dt-path-pick select { width: auto; max-width: 100%; }
   .dt-path-pick .dt-seg { width: auto; }
-  .dt-path-src { font: var(--t-caption); color: var(--ink-3); }
-
-  /* ─── CODE AND EQUATIONS ────────────────────────────────────────────────
-     One treatment, two left rules: ink means "this is code", accent means
-     "this is the model". No syntax highlighting anywhere, because highlighting is
-     colour spent on nothing a judge evaluates, and it breaks the two-hue law. */
-  .dt-code,
-  .dt-eq,
+  /* ─── THE CODE WELL ─────────────────────────────────────────────────────
+     One treatment: the ink rule means "this is code". No syntax highlighting
+     anywhere, because highlighting is colour spent on nothing a judge
+     evaluates, and it breaks the two-hue law. */
   .dt-shell textarea[spellcheck="false"] {
     font: var(--t-code);
     background: var(--s-inset);
@@ -1948,27 +1480,14 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     tab-size: 2;
     overflow-x: auto;
   }
-  .dt-eq {
-    border-left-color: var(--accent);
-    margin: 0 0 var(--sp-3);
-  }
-  .dt-eq.dt-code { border-left-color: var(--ink-3); }
-  .dt-code { display: block; white-space: pre; margin: 0; }
   /* Subscripts must not collapse the line box they sit in. */
-  .dt-eq sub, .dt-eq sup, .dt-fold-body sub, .dt-fold-body sup {
+  .dt-fold-body sub, .dt-fold-body sup {
     font-size: 0.8em;
     line-height: 0;
     vertical-align: -0.15em;
   }
   .dt-fold-body sup { vertical-align: 0.4em; }
 
-  .dt-path-acts {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: var(--sp-2) var(--sp-4);
-    margin-top: var(--sp-3);
-  }
   /* The one block on this page the reader writes into. A rule above it is
      enough to set it apart now that the sheet no longer boxes anything. */
   .dt-sim-editor {
@@ -2073,21 +1592,12 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     .dt-two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     /* Once the row is multi-column the captions have to share a rule, and one
        of them runs to two lines in a narrow column. The leading is set as a
-       LENGTH, not a ratio, so the 13px sub inherits the same 18px line box as
-       the 12px label instead of resolving its own deeper one; two of those
-       are then reserved, and every canvas in the row starts level. */
+       LENGTH, not a ratio, and two of those lines are reserved whether or not
+       a caption uses both, so every canvas in the row starts level. */
     .dt-two > .dt-sheet > .dt-sheet-h {
       line-height: 18px;
       min-height: 36px;
       margin-bottom: var(--sp-4);
-    }
-    /* The 13px sub rides the same line as the 12px label, and Ubuntu's
-       taller ascent lets that mixed line grow past the 18px box by a pixel
-       or two, un-levelling the canvases below. A zero inline line-height
-       keeps the sub out of the line-box arithmetic entirely: the header's
-       own 18px strut rules every line, wrapped or not. */
-    .dt-two > .dt-sheet > .dt-sheet-h .dt-sheet-sub {
-      line-height: 0;
     }
   }
   /* Three figures in two tracks left the third one alone beside a hole for the
@@ -2132,20 +1642,6 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
   }
   .dt-anim-phase[data-phase="cruise"] { background: var(--accent-wash); border-color: var(--rule); color: var(--accent-ink); }
   .dt-anim-phase[data-phase="stop"] { background: var(--ink-1); border-color: var(--ink-1); color: var(--on-ink-1); }
-
-  /* ─── ENCODER-LOG OVERLAY ───────────────────────────────────────────────── */
-  .dt-overlay-row { display: flex; align-items: center; gap: var(--sp-3); margin: var(--sp-3) 0; }
-  .dt-overlay-row select { width: auto; }
-  .dt-cal {
-    margin: var(--sp-4) 0 0;
-    padding-left: var(--sp-3);
-    border-left: 3px solid var(--ink-3);
-    font-family: var(--dt-font-mono);
-    font-size: 0.8125rem;
-    line-height: 1.55;
-    color: var(--ink-1);
-  }
-  .dt-cal.is-off { border-left-color: var(--warn-line); }
 
   /* ─── PIN LEDGER: a datasheet parameter table ──────────────────────────
      No zebra striping: the row rules do the job at a fraction of the ink.
@@ -2204,68 +1700,11 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
   }
   .dt-pin-act.dt-pin-rm { color: var(--ink-3); }
   /* A row arriving marks a genuine state change (you pinned something), so
-     it fades in once. Opacity only; no travel. */
+     it fades in once. Opacity only; no travel. The reduced-motion block at
+     the foot of this sheet clamps it to 1ms like everything else. */
+  .dt-pin-row-new { animation: dt-row-in 200ms var(--dt-ease) both; }
+  @keyframes dt-row-in { from { opacity: 0; } to { opacity: 1; } }
   .dt-empty { margin: var(--sp-3) 0 0; font: var(--t-caption); color: var(--ink-3); }
-
-  .dt-assumptions { margin: 0; font: var(--t-body); color: var(--ink-2); max-width: 68ch; }
-  .dt-assumptions strong { color: var(--ink-1); font-weight: 600; }
-  .dt-method-prose { max-width: 68ch; }
-  .dt-method-fold { margin-top: var(--sp-5); }
-
-  /* ─── DISPLAY PHILOSOPHY ────────────────────────────────────────────────
-     Five rules, five paragraphs, no fold. The rule is the heading and the
-     paragraph is the evidence, so a reader standing at the table can take the
-     five headings alone and still have the whole argument. Set to a narrow
-     measure and given the panel's ground, because it IS a result: it is the
-     part of the report that explains why the rest of it looks the way it
-     does. */
-  .dt-philo-list { margin: 0; }
-  .dt-philo-list > dt {
-    font: var(--t-h3);
-    color: var(--ink-1);
-    margin: 0;
-  }
-  .dt-philo-list > dt + dd {
-    margin: var(--sp-2) 0 0;
-    max-width: 62ch;
-    font: var(--t-body);
-    color: var(--ink-2);
-  }
-  .dt-philo-list > dd + dt {
-    margin-top: var(--sp-5);
-    padding-top: var(--sp-5);
-    border-top: 1px solid var(--rule-hair);
-  }
-  @media (min-width: 62rem) {
-    /* Two even ranks at desk width; the fifth rule, which is the one about
-       what the page refuses to claim, takes the whole last row rather than
-       sitting beside a hole. */
-    .dt-philo-list {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      column-gap: var(--sp-10);
-    }
-    .dt-philo-list > dt { grid-column: auto; }
-    .dt-philo-list > dt:nth-of-type(1) { grid-column: 1; grid-row: 1; }
-    .dt-philo-list > dd:nth-of-type(1) { grid-column: 1; grid-row: 2; }
-    .dt-philo-list > dt:nth-of-type(2) { grid-column: 2; grid-row: 1; }
-    .dt-philo-list > dd:nth-of-type(2) { grid-column: 2; grid-row: 2; }
-    .dt-philo-list > dt:nth-of-type(3) { grid-column: 1; grid-row: 3; }
-    .dt-philo-list > dd:nth-of-type(3) { grid-column: 1; grid-row: 4; }
-    .dt-philo-list > dt:nth-of-type(4) { grid-column: 2; grid-row: 3; }
-    .dt-philo-list > dd:nth-of-type(4) { grid-column: 2; grid-row: 4; }
-    .dt-philo-list > dt:nth-of-type(5) { grid-column: 1 / -1; grid-row: 5; }
-    .dt-philo-list > dd:nth-of-type(5) { grid-column: 1 / -1; grid-row: 6; }
-    .dt-philo-list > dt:nth-of-type(3),
-    .dt-philo-list > dt:nth-of-type(4),
-    .dt-philo-list > dt:nth-of-type(5) {
-      margin-top: var(--sp-6);
-      padding-top: var(--sp-5);
-      border-top: 1px solid var(--rule-hair);
-    }
-    .dt-philo-list > dt:nth-of-type(2) { margin-top: 0; padding-top: 0; border-top: 0; }
-    .dt-philo-list > dd { align-self: start; }
-  }
 
   /* Print only. */
   .dt-printfoot { display: none; }
@@ -2277,8 +1716,6 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
        button on the site speaks. Ghosts answer in ink alone. */
     .dt-btn:hover { background: var(--accent); border-color: var(--accent); color: var(--on-ink-1); }
     .dt-btn-ghost:hover { background: transparent; border-color: transparent; color: var(--accent-ink); }
-    .dt-chip:hover { border-color: var(--rule-strong); color: var(--ink-1); }
-    .dt-chip.is-active:hover { background: #2A2F35; border-color: #2A2F35; color: var(--on-ink-1); }
     .dt-seg button:not(.is-active):hover { color: var(--ink-1); }
     .dt-stage-row .dt-rm:hover { color: var(--warn-text); border-color: var(--warn-line); }
     .dt-addstage:hover { color: var(--on-ink-1); border-color: var(--accent); background: var(--accent); }
@@ -2293,13 +1730,11 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
      Desktop keeps the density the report is drawn on; nothing here changes a
      colour, a face or a value. */
   @media (max-width: 64rem), (pointer: coarse) {
-    .dt-chip,
     .dt-seg,
     .dt-seg button,
     .dt-btn,
     .dt-addstage,
     .dt-stage-row .dt-rm { min-height: 44px; }
-    .dt-chip { height: auto; padding-block: var(--sp-3); }
     .dt-btn-sm { height: 44px; }
     .dt-shell input[type="range"] { height: 44px; }
     .dt-anim-speed select,
@@ -2352,9 +1787,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
       background-image: none;
     }
     .dt-shell .dt-panel,
-    .dt-shell .dt-sheet,
-    .dt-shell .dt-cluster,
-    .dt-shell .dt-runbar { background: #fff; }
+    .dt-shell .dt-sheet { background: #fff; }
 
     /* Every fold opens. `display` on the children is NOT enough on its own:
        a closed <details> hides its body through the ::details-content
@@ -2376,7 +1809,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
 
     /* interactive chrome disappears, site chrome with it */
     .dt-btn, .dt-anim-controls, .dt-pin-act, .dt-addstage, .back-link,
-    .dt-sim-acts, #pvScrub, #pvSpeed, .dt-chips,
+    .dt-sim-acts, #pvScrub, #pvSpeed,
     .heat-rail, .skip-link, body > footer { display: none !important; }
 
     /* inputs print as values, not as controls */
@@ -2403,7 +1836,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     }
 
     /* nothing breaks across a page */
-    .dt-panel, .dt-sheet, .dt-board, .dt-cluster, figure, table { break-inside: avoid; }
+    .dt-panel, .dt-sheet, .dt-board, figure, table { break-inside: avoid; }
     .dt-section { break-before: page; }
     h1, h2, h3 { break-after: avoid; }
 
@@ -2433,14 +1866,15 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
   const MU_BAND = 0.10;      // sensitivity half-width on mu
   const R_BAND = 0.05;       // sensitivity half-width on loop ohms
   const EPS_PLATEAU = 0.01;  // "within 1% of best" defines the honest window
-  // The stats-note fold tells the reader to read differences under about a
-  // tenth of a second as noise. That is this page's own word for "material", so
-  // it is the bar a different gearbox has to clear before the board mentions it
-  // at all: nobody rebuilds a drive pod for a hundredth of a second.
-  const NOISE_S = 0.10;
-  // An 18 in robot on 24 in foam tiles, expressed in tiles, for the animator.
-  const ROBOT_TILE = (18 * 0.0254) / TILE;
 
+  // The page's default gearbox efficiency, as a percent and as a fraction.
+  // The gbEff field and the one motor row that has to back a published OUTPUT
+  // torque out through a gearbox both read it, so the two cannot drift.
+  const GB_EFF_PCT = 93, GB_EFF = GB_EFF_PCT / 100;
+
+  // Every row here is a BARE MOTOR: the model multiplies tau by the gearbox
+  // ratio and by the efficiency to reach the wheel, so anything already
+  // measured at a gearbox output has to be divided by both on the way in.
   const MOTORS: Record<string, { rpm: number; tau: number; is: number; ifree: number }> = {
     yjspec:   { rpm: 6000, tau: 0.144, is: 9.2,  ifree: 0.25 },
     gobilda:  { rpm: 5900, tau: 0.19,  is: 11,   ifree: 0.3  },
@@ -2452,14 +1886,15 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     neverest: { rpm: 6600, tau: 0.17,  is: 9.8,  ifree: 0.4  },
     // Core Hex is one sealed 72:1 gearmotor, not a cartridge on the HD Hex.
     // Its published figures are at the OUTPUT (125 rpm free, 3.2 N·m stall,
-    // 4.4 A stall), referred back through the 72:1 box here. Free current is
+    // 4.4 A stall), referred back through the 72:1 box here. Free speed and
+    // stall current pass through untouched: an unloaded shaft does not care
+    // about gear losses and a stalled motor draws its electrical stall
+    // current whatever is bolted to it. Torque does care, and REV's 3.2 N·m
+    // is already NET of the box, so the ratio alone is not enough to back it
+    // out: divide by the efficiency too, or the model would apply that loss a
+    // second time and print 2.98 N·m against REV's own 3.2. Free current is
     // the one figure REV does not publish, so it stays on the HD Hex row.
-    revcore:  { rpm: 125 * 72, tau: 3.2 / 72, is: 4.4, ifree: 0.3 },
-  };
-  // Verdict swap pairs: vendor spec <-> dyno for the same motor class.
-  const MOTOR_ALT: Record<string, { id: string; label: string }> = {
-    yjspec:  { id: 'gobilda', label: 'gm0 dyno numbers' },
-    gobilda: { id: 'yjspec',  label: 'vendor-spec numbers' },
+    revcore:  { rpm: 125 * 72, tau: 3.2 / 72 / GB_EFF, is: 4.4, ifree: 0.3 },
   };
 
   // A gearbox mounts to exactly one brand of motor. goBILDA's cartridges key
@@ -2472,13 +1907,11 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
   // go in, not their three-decimal shorthand, so a stack of three is the tooth
   // counts multiplied rather than a rounding multiplied.
   const UP = { three: 84 / 29, four: 76 / 21, five: 68 / 13 };
-  // `cart` is the cartridge count of an UltraPlanetary stack, and it is the ONE
-  // physical-size fact about a gearbox this page is allowed to assert; see
-  // sameSizeGroup below. `sel` is the picker value that names a rung, needed
-  // only for the custom rung, whose value is the literal string while its ratio
-  // is a number.
-  interface Box { label: string; short: string; v: number | 'custom'; motor?: string; cart?: number; sel?: string }
-  interface Platform { label: string; spec?: string; dyno: string; dflt: string; note: string; bareNote?: string; boxes: Box[] }
+  // `motor` is set only by a sealed gearmotor, whose motor IS its gearbox, and
+  // it is the one thing on a rung that changes which MOTORS row the physics
+  // runs on.
+  interface Box { label: string; short: string; v: number | 'custom'; motor?: string }
+  interface Platform { label: string; spec?: string; dyno: string; dflt: string; boxes: Box[] }
 
   // UltraPlanetary cartridges stack. REV markets nominal ratios; the actual
   // tooth-count ratios are what the physics gets, and both are named.
@@ -2494,7 +1927,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
       const nom = ix.reduce((a, i) => a * Number(UP_C[i][0]), 1);
       const act = gbRound(ix.reduce((a, i) => a * UP_C[i][1], 1));
       const name = ix.map((i) => UP_C[i][0]).join('+');
-      out.push({ label: `UltraPlanetary ${name}, nominal ${nom}:1 (actual ${act.toFixed(2)})`, short: `UP ${name}`, v: act, cart: ix.length });
+      out.push({ label: `UltraPlanetary ${name}, nominal ${nom}:1 (actual ${act.toFixed(2)})`, short: `UP ${name}`, v: act });
     };
     for (let i = 0; i < 3; i++) {
       add([i]);
@@ -2517,7 +1950,6 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     gb: {
       label: 'goBILDA Yellow Jacket',
       spec: 'yjspec', dyno: 'gobilda', dflt: String(byRpm(YJ_FREE, 435)),
-      note: 'Every ratio here is back-solved from the cartridge’s own published rpm, so the speed you read is the speed printed on the box. The research notes cover what that rounding costs.',
       boxes: [
         { label: 'Bare motor, no cartridge (6000 rpm)', short: 'direct', v: 1 },
         { label: '3.7:1 cartridge (1620 rpm)', short: '3.7:1 cartridge', v: byRpm(YJ_FREE, 1620) },
@@ -2536,7 +1968,6 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     rev: {
       label: 'REV HD Hex',
       dyno: 'revhd', dflt: String(gbRound(UP.four * UP.four)),
-      note: 'Cartridges stack up to three; REV’s manual flags some motor and ratio pairs as unsafe.',
       boxes: [
         { label: 'Bare HD Hex, no cartridge (1:1)', short: 'direct', v: 1 },
         ...upStacks(),
@@ -2547,10 +1978,6 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     am: {
       label: 'AndyMark NeveRest',
       dyno: 'neverest', dflt: String(byRpm(AM_FREE, 340)),
-      note: 'Back-solved from each box’s published rpm. AndyMark sells the 19.2:1 as “Orbital 20”, which is the same rounding habit.',
-      // The one brand that publishes both a bare motor and a geared one, so it
-      // is the one place this page can name what a gearbox costs in length.
-      bareNote: 'AndyMark publishes 83.8 mm for the bare am-3104 against 133.4 mm for the geared Classic 40.',
       boxes: [
         { label: 'Bare am-3104, no gearbox (6600 rpm)', short: 'direct', v: 1 },
         { label: 'Orbital 3.7:1 (1784 rpm)', short: 'Orbital 3.7:1', v: byRpm(AM_FREE, 1784) },
@@ -2566,7 +1993,6 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     custom: {
       label: 'Custom bare motor',
       dyno: 'custom', dflt: '1',
-      note: 'Set the bare motor numbers in the fine-tune fold, and the ratio below it.',
       boxes: [
         { label: 'Bare motor, direct drive (1:1)', short: 'direct', v: 1 },
         { label: 'Custom ratio…', short: 'custom', v: 'custom' },
@@ -2574,21 +2000,14 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     },
   };
   // WHAT THE RECOMMENDATION IS ALLOWED TO CHANGE.
-  // A gearbox is not a setting. Fitting one, or swapping one for another,
-  // changes the length and the mass of the motor assembly, so it is a rebuild
-  // of the drive pod, not a drop-in. A button labelled "build the
-  // recommendation" must therefore never move it. External stages are the
-  // opposite case: they bolt to the chassis and never touch the motor, so the
-  // recommendation reaches its ratio through those.
-  // One exception survived checking, and only one. REV publishes the
-  // UltraPlanetary assembly at 90, 100, 110 and 120 mm for zero to three
-  // cartridges, a flat 10 mm a cartridge, so two stacks carrying the SAME
-  // number of cartridges are the same length and swapping between them is a
-  // same-size change. Nothing else is verifiable: goBILDA publishes no body
-  // length at any ratio, AndyMark's bare am-3104 (83.8 mm) against its geared
-  // Classic 40 (133.4 mm) proves bare and geared are different parts, and the
-  // Core Hex is a sealed right-angle gearmotor with a female output, so it is
-  // interchangeable with nothing at any dimension.
+  // A cartridge on the platform in front of the reader, and one external
+  // stage behind it. The recipe pool is the whole platform (see recompute),
+  // so "build the recommendation" writes a gearbox and a tooth pair into the
+  // gearing fields and moves nothing else: not the weight, not the wheels,
+  // not the battery, not the path. A tool that rewrote the robot to win its
+  // own argument would not be answering the question it was asked. The one
+  // rung it never proposes across is a sealed gearmotor, because that is a
+  // motor swap rather than a ratio.
   // Provenance: docs/drivetrain-research-notes.md.
   // Old share links and stored pins name the motor, not the platform.
   const LEGACY_MOTOR: Record<string, { plat: string; basis: 'spec' | 'dyno' }> = {
@@ -2662,14 +2081,13 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
 
   interface Cfg {
     rpm0: number; tau0: number; is0: number; if0: number; n: number;
-    Gtot: number; gb: number; eta: number; etaGb: number; r: number;
+    Gtot: number; eta: number; etaGb: number; r: number;
     mu: number; crr: number; m: number; lb: number;
     voc: number; rint: number; ilim: number; iburst: number; tburst: number;
     fuse: 'hard' | 'burst';
-    mode: 'path' | 'sprint'; dist: number;
+    dist: number;
     stopAtEnd: boolean; brakeFrac: number; strafe: boolean;
     dia: number; cgH: number; cgX: number;
-    preset: string;
   }
   interface Sim { T: number[]; V: number[]; X: number[]; I: number[]; thermalHit: boolean }
 
@@ -2783,8 +2201,12 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
   // fresh 13.5 V pack at 12.5 V and never pretends a broken cell. Pack
   // resistance is left where the reader set it: that is a health axis, not a
   // charge one.
+  // The floor only stops the drop going under 12.0; it never lifts a pack.
+  // A reader who types 11.8 in the panel would otherwise get a "drained"
+  // state resting HIGHER than the pack it drained from, which makes the
+  // second half of the ladder the easier half and inverts the whole point.
   const DRAIN_DROP = 1.0, DRAIN_FLOOR = 12.0;
-  const drained = (voc: number) => Math.max(DRAIN_FLOOR, voc - DRAIN_DROP);
+  const drained = (voc: number) => Math.min(voc, Math.max(DRAIN_FLOOR, voc - DRAIN_DROP));
   const LADDER_MAX = Math.max(...LADDER) * TILE;
   const overall = (c: Cfg) => {
     let sum = 0;
@@ -2875,7 +2297,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
 
   // A recipe names its gearbox by carrying the PART, never a ratio flattened
   // into a picker value: the two are only ever compared as parts.
-  interface Recipe { label: string; stage: string | null; G: number; N: number; t: number; gb: number; box: Box; st: StageOpt | null }
+  interface Recipe { label: string; stage: string | null; G: number; N: number; t: number; box: Box; st: StageOpt | null }
   // Recipes only name gearboxes that mount on the platform in front of the
   // reader: no recipe ever tells a goBILDA team to buy an UltraPlanetary.
   // The caller passes which of that platform's rungs are on the table.
@@ -2907,7 +2329,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
       if (!isFinite(t)) continue;
       out.push({
         label: cb.box.short, stage: cb.stage, G: cb.G, N, t,
-        gb: cb.box.v as number, box: cb.box, st: cb.st,
+        box: cb.box, st: cb.st,
       });
     }
     out.sort((a, b) => a.t - b.t || a.G - b.G);
@@ -3684,7 +3106,10 @@ follower.followPath(lane);`,
     }
     const rawLines = Array.isArray(data.lines) ? (data.lines as Record<string, unknown>[]) : [];
     if (!rawLines.length) throw new PathSyntaxError(1, 'the file has a startPoint but no lines to drive');
-    const withIds = rawLines.map((l, i) => ({ ...l, id: typeof l.id === 'string' ? l.id : `line-${i + 1}` }));
+    // Annotated: spreading a Record<string, unknown> into an object literal
+    // drops the index signature, so the rows below would lose endPoint and
+    // controlPoints to the type checker while still carrying them at runtime.
+    const withIds: Record<string, unknown>[] = rawLines.map((l, i) => ({ ...l, id: typeof l.id === 'string' ? l.id : `line-${i + 1}` }));
     let ordered = withIds;
     if (Array.isArray(data.sequence)) {
       const byId = new Map(withIds.map((l) => [l.id as string, l]));
@@ -4039,8 +3464,8 @@ follower.followPath(lane);`,
     interface Pin { label: string; obj: string; top: string; a0: string; t: string; cfg: Record<string, unknown> }
     const state: {
       fuse: 'hard' | 'burst'; basis: 'spec' | 'dyno';
-      pins: Pin[]; csv: { t: number; v: number }[];
-    } = { fuse: 'burst', basis: 'spec', pins: [], csv: [] };
+      pins: Pin[];
+    } = { fuse: 'burst', basis: 'spec', pins: [] };
     let last: { c: Cfg; met: ReturnType<typeof metrics>; sw: Sweep; sens: ReturnType<typeof sensitivity>; recipes: Recipe[] } | null = null;
 
     // Config I/O
@@ -4065,7 +3490,7 @@ follower.followPath(lane);`,
       stages: [] as string[][],
       fields: {
         mPreset: 'gb', mFree: '6000', mTau: '0.144', mIs: '9.2', mIf: '0.25', nMotors: '4',
-        gbSel: String(byRpm(YJ_FREE, 435)), gbEff: '93', gbCustom: String(byRpm(YJ_FREE, 435)),
+        gbSel: String(byRpm(YJ_FREE, 435)), gbEff: String(GB_EFF_PCT), gbCustom: String(byRpm(YJ_FREE, 435)),
         wPreset: 'gb96mec', wDia: '96', wType: 'mecanum', mu: '0.7', crr: '0.045',
         wt: '29', cgH: '5', cgX: '5',
         voc: '13.5', packIR: '100', rint: '0.14', ilim: '20', iburst: '35', tburst: '1.5',
@@ -4103,20 +3528,16 @@ follower.followPath(lane);`,
     interface Meas {
       vFwd: number | null; vStr: number | null; aFwd: number | null; aLat: number | null;
       pull: number | null; vIdle: number | null; vLoad: number | null; iLoad: number | null;
-      wtLb: number; mu: number | null; crr: number | null; rint: number | null; strafeDrag: number | null;
+      mu: number | null; crr: number | null; rint: number | null; strafeDrag: number | null;
     }
     // Nothing is measured any more: the pit-protocol section that fed these is
     // gone, so every constant stays on its published value. The shape survives
     // because readCfg and the charts below still branch on it.
-    const readMeasured = (): Meas => {
-      const wtRaw = parseFloat(($('wt') as HTMLInputElement).value);
-      const wtLb = isFinite(wtRaw) && wtRaw > 0 ? wtRaw : 29;
-      return {
-        vFwd: null, vStr: null, aFwd: null, aLat: null,
-        pull: null, vIdle: null, vLoad: null, iLoad: null,
-        wtLb, mu: null, crr: null, rint: null, strafeDrag: null,
-      };
-    };
+    const readMeasured = (): Meas => ({
+      vFwd: null, vStr: null, aFwd: null, aLat: null,
+      pull: null, vIdle: null, vLoad: null, iLoad: null,
+      mu: null, crr: null, rint: null, strafeDrag: null,
+    });
 
     const readCfg = (): Cfg => {
       const num = (id: string, fb: number) => { const v = parseFloat(($(id) as HTMLInputElement).value); return isFinite(v) ? v : fb; };
@@ -4137,7 +3558,7 @@ follower.followPath(lane);`,
           eff: clamp(isFinite(eff) ? eff : 96, 30, 100) / 100,
         };
       });
-      const etaGb = clamp(num('gbEff', 93), 30, 100) / 100;
+      const etaGb = clamp(num('gbEff', GB_EFF_PCT), 30, 100) / 100;
       // A garbage cartridge value (hand-edited share link) must not NaN the
       // whole model; fall back to the stock 435 rpm cartridge.
       let Gtot = isFinite(gbRatio) && gbRatio > 0 ? gbRatio : gbDflt;
@@ -4147,9 +3568,8 @@ follower.followPath(lane);`,
         rpm0: Math.max(200, num('mFree', 6000)), tau0: Math.max(0.01, num('mTau', 0.144)),
         is0: Math.max(0.5, num('mIs', 9.2)), if0: Math.max(0, num('mIf', 0.25)),
         n: clamp(Math.round(num('nMotors', 4)), 1, 8),
-        // Gtot is the whole train; gb is the gearbox on its own, which is what
-        // the recommendation is forbidden to move.
-        Gtot: Math.max(0.05, Gtot), gb: Math.max(0.05, isFinite(gbRatio) && gbRatio > 0 ? gbRatio : gbDflt),
+        // Gtot is the whole train: the gearbox and every external stage.
+        Gtot: Math.max(0.05, Gtot),
         eta: clamp(eta, 0.2, 1), etaGb,
         r: Math.max(0.01, num('wDia', 96)) / 2000,
         mu: clamp(ms.mu ?? num('mu', 0.7), 0.05, 2.5), crr: clamp(ms.crr ?? num('crr', 0.045), 0, 0.3),
@@ -4162,14 +3582,13 @@ follower.followPath(lane);`,
         // The chain is the one objective now. dist and brakeFrac survive as
         // constants: the stopping figures still quote a three-tile reference
         // leg, and the sprint machinery underneath still compiles.
-        mode: 'path' as const, dist: 3,
+        dist: 3,
         // A Pedro chain ends where it ends: the follower brakes onto its
         // last pose, so the stop is always charged.
         stopAtEnd: true,
         brakeFrac: 0.6,
         strafe: false,
         dia: num('wDia', 96), cgH: num('cgH', 5), cgX: num('cgX', 5),
-        preset: motorKey(),
       };
     };
 
@@ -4774,14 +4193,26 @@ follower.followPath(lane);`,
     // a chip can never name a phase the engine no longer emits. Each model
     // shows only the phases it can actually produce.
     const M_PER_IN = 0.0254;
-    // PedroPathing 2.1.2 FollowerConstants.defaults(): the robot's measured
-    // coast-down rate (shipped as a placeholder; every team is told to
-    // measure it), and the multiplier the quickstart ships with it. The
-    // follower predicts its stopping distance from ZPA times the multiplier
-    // and drives the deceleration to match, so the braking the real robot
-    // runs is the product, not the bare coast.
-    const ZPA_IN_S2 = 41.278;
-    const ZPA_MULT = 4;
+    // What the follower actually brakes at, from PedroPathing 2.1.2, which is
+    // the current release: `main` still reads version=2.1.2 and the quickstart
+    // still pins com.pedropathing:ftc:2.1.2. Three numbers multiply:
+    //   · forwardZeroPowerAcceleration, the robot's own coast-down rate, set
+    //     to -41.278 in/s² by FollowerConstants.defaults(). It is a
+    //     placeholder: the javadoc sends every team to
+    //     ForwardZeroPowerAccelerationTuner for their own.
+    //   · brakingStrength on PathConstraints, "a multiplier for the zero power
+    //     acceleration to change the speed the robot decelerates at the end of
+    //     paths". Default 1, and 1 in the quickstart's own Constants.java.
+    //     This is what the old zeroPowerAccelerationMultiplier became at
+    //     2.0.0; the rename is the whole of the change.
+    //   · a hard 4 that ErrorCalculator applies on top, which is why the docs
+    //     say a brakingStrength of 1 IS the retired ZPAM of 4. The library
+    //     line is forwardZeroPowerAcceleration * (getBrakingStrength() * 4).
+    // Product: 41.278 x 1 x 4 = 165.1 in/s². Provenance and URLs:
+    // docs/drivetrain-research-notes.md.
+    const ZPA_IN_S2 = 41.278;        // FollowerConstants.defaults()
+    const BRAKING_STRENGTH = 1;      // PathConstraints default, and the quickstart's
+    const BRAKING_SCALE = 4;         // ErrorCalculator's own multiplier on it
     // A joint between two paths is a corner of zero radius, which nothing can
     // drive. Round it over half a robot and cap on that radius; what survives a
     // direction change of psi is cos(psi/2) of it, so a chain that doubles
@@ -4958,19 +4389,20 @@ follower.followPath(lane);`,
       const n = S.length;
       if (n < 2) { pv.data = null; return; }
 
-      // ONE model: the Pedro 2.x follower on this drivetrain's physics.
+      // ONE model: the Pedro 2.1.2 follower on this drivetrain's physics.
       // The real follower holds speed down in corners with its centripetal
       // correction (the same grip circle, with Pedro's own margin) and slows
       // for what is ahead by predictive braking: its stopping distance is
-      // computed from the zero-power deceleration TIMES the quickstart's
-      // multiplier, and the drive vector brakes to hold that profile onto
-      // corners and onto the end pose. That is the backward pass below.
+      // computed from the zero-power coast-down rate scaled by
+      // brakingStrength and the library's own factor of 4, and the drive
+      // vector brakes to hold that profile onto corners and onto the end
+      // pose. That is the backward pass below.
       const muEff = c.strafe ? c.mu * STRAFE_MU : c.mu;
       const aLat = muEff * GRAV;              // the grip circle's radius
       const vtop = met.vtop;
       const drag = c.crr * c.m * GRAV;
       const iCap = capAt(c, budget0(c));
-      const abBrake = ZPA_IN_S2 * ZPA_MULT * M_PER_IN; // what the follower actually brakes at
+      const abBrake = ZPA_IN_S2 * BRAKING_STRENGTH * BRAKING_SCALE * M_PER_IN;
 
       const kM = new Array<number>(n);        // curvature per metre
       const vCap = new Array<number>(n);      // centripetal ceiling per sample
@@ -5002,8 +4434,8 @@ follower.followPath(lane);`,
         vf[i] = Math.min(raw, vCap[i]);
       }
       // Backward from a dead stop at the end: predictive braking. The decel
-      // is the follower's braking rate (ZPA times the quickstart multiplier)
-      // plus rolling drag, never more than grip could hold. forCorner
+      // is the follower's braking rate (abBrake above) plus rolling drag,
+      // never more than grip could hold. forCorner
       // remembers WHAT the braking is braking for: a corner ahead, or the
       // end of the chain. That is the difference between "turn-limited" and
       // "braking" on the badge, and it is why the corner stays named for the
@@ -5245,10 +4677,13 @@ follower.followPath(lane);`,
     const drawStrip = (fr: PvSample | null) => {
       const cv = $('cSpeed') as HTMLCanvasElement;
       const box = cv.parentElement as HTMLElement;
-      if (!stripGeo || stripGeo.bw !== box.clientWidth || stripGeo.bh !== box.clientHeight) drawStripStatic();
-      if (!stripGeo || !fr) return;
+      // Same order as drawPath: size first, then test the cached layer, so a
+      // pixel-ratio change under an unchanged box still rebuilds the strip.
       const sc = sizeCanvas(cv);
       if (!sc) return;
+      if (!stripGeo || stripGeo.bw !== box.clientWidth || stripGeo.bh !== box.clientHeight
+        || stripLayer.width !== cv.width || stripLayer.height !== cv.height) drawStripStatic();
+      if (!stripGeo || !fr) return;
       const { g } = sc;
       const { X, Y, t, ph } = stripGeo;
       g.save();
@@ -5434,10 +4869,15 @@ follower.followPath(lane);`,
       const pd = pv.data;
       if (!pd) return;
       const cv = $('cPath') as HTMLCanvasElement;
-      if (!pathGeo || pathLayer.width !== cv.width || pathLayer.height !== cv.height) drawPathStatic();
-      if (!pathGeo) return;
+      // Size the buffer BEFORE testing the cached layer against it. A box
+      // resize (or a move to a screen with a different pixel ratio) only
+      // reaches cv.width once sizeCanvas has run, so testing first compares
+      // two stale numbers, keeps the old layer, and blits the previous
+      // field into a buffer that is no longer that size.
       const sc = sizeCanvas(cv);
       if (!sc) return;
+      if (!pathGeo || pathLayer.width !== cv.width || pathLayer.height !== cv.height) drawPathStatic();
+      if (!pathGeo) return;
       const { g } = sc;
       const { ox, oy, ppi } = pathGeo;
       const SX = (x: number) => ox + x * ppi;
@@ -5530,13 +4970,17 @@ follower.followPath(lane);`,
       // Units live in the column headers; a pin saved before that carried
       // them in its cells, so they are stripped on the way out.
       const bare = (s: string) => String(s).replace(/ (t\/s²|t\/s|s)$/, '');
+      // A pin's objective line carries the chain's NAME, and a saved chain is
+      // named by the reader, so nothing off a pin reaches markup unescaped.
+      const ESC: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' };
+      const esc = (s: string) => String(s).replace(/[&<>"]/g, (ch) => ESC[ch]);
       tb.innerHTML = state.pins.map((p, i) => `<tr${newest && i === state.pins.length - 1 ? ' class="dt-pin-row-new"' : ''}>
-        <td class="dt-pin-lbl">${p.label}<span class="dt-pin-obj">${p.obj}</span></td>
-        <td>${bare(p.top)}</td><td>${bare(p.a0)}</td><td>${bare(p.t)}</td>
+        <td class="dt-pin-lbl">${esc(p.label)}<span class="dt-pin-obj">${esc(p.obj)}</span></td>
+        <td>${esc(bare(p.top))}</td><td>${esc(bare(p.a0))}</td><td>${esc(bare(p.t))}</td>
         <td class="dt-pin-acts">
-          <button type="button" class="dt-pin-act" data-restore="${i}" aria-label="Restore ${p.label}">restore</button>
-          <button type="button" class="dt-pin-act" data-share="${i}" aria-label="Share ${p.label}">share</button>
-          <button type="button" class="dt-pin-act dt-pin-rm" data-rm="${i}" aria-label="Remove ${p.label}">×</button>
+          <button type="button" class="dt-pin-act" data-restore="${i}" aria-label="Restore ${esc(p.label)}">restore</button>
+          <button type="button" class="dt-pin-act" data-share="${i}" aria-label="Share ${esc(p.label)}">share</button>
+          <button type="button" class="dt-pin-act dt-pin-rm" data-rm="${i}" aria-label="Remove ${esc(p.label)}">×</button>
         </td></tr>`).join('');
       // An empty ledger shows its prompt, not a header row over nothing.
       ($('pinEmpty') as HTMLElement).style.display = state.pins.length ? 'none' : 'block';
@@ -5631,6 +5075,19 @@ follower.followPath(lane);`,
     // Restore: URL hash beats localStorage; both get a visible note
     const restore = () => {
       const note = $('sessionNote'), noteText = $('sessionNoteText');
+      // Pins are this browser's own saves and never ride in a share payload,
+      // so they are read BEFORE the hash is looked at. A link opened over a
+      // saved session used to leave state.pins empty, and the first persist()
+      // after it wrote that emptiness straight over the reader's ledger.
+      let stored: Record<string, unknown> | null = null;
+      try {
+        const raw = localStorage.getItem('dt-cfg');
+        const d = raw ? JSON.parse(raw) : null;
+        if (d && typeof d === 'object' && d.v === 2) stored = d as Record<string, unknown>;
+      } catch { /* private mode, or a corrupt entry: start clean */ }
+      if (stored && Array.isArray(stored.pins)) {
+        state.pins = (stored.pins as Pin[]).filter((p) => p && p.cfg);
+      }
       const hash = location.hash.match(/[#&]s=([A-Za-z0-9_-]+)/);
       if (hash) {
         const data = decodeShare(hash[1]);
@@ -5643,13 +5100,9 @@ follower.followPath(lane);`,
           return;
         }
       }
+      if (!stored) return; // nothing saved, or the v1 schema: start clean
       try {
-        const raw = localStorage.getItem('dt-cfg');
-        if (!raw) return;
-        const data = JSON.parse(raw);
-        if (!data || data.v !== 2) return; // v1 schema: start clean
-        applySnapshot(data);
-        state.pins = Array.isArray(data.pins) ? data.pins.filter((p: Pin) => p && p.cfg) : [];
+        applySnapshot(stored);
         note.hidden = false;
         noteText.textContent = 'Restored your last session.';
       } catch { /* fresh */ }

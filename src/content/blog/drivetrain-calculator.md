@@ -9,7 +9,7 @@ Every drive team has the same argument in the pit: gear for speed or gear for pu
 
 So we built a calculator that models all of it, and we are giving it to everyone. You can [use it now](/GNCE-Onyx/drivetrain/), free, in the browser, nothing to install.
 
-Tell it your robot: weight, wheels, battery, motor, gearing. It runs your sprint or cycle in field tiles, names the limit that is actually holding you back, and recommends gearing you can order, a cartridge plus a tooth pair, not a motor speed nobody sells. Verdicts come as windows instead of decimal points, because the constants underneath are honest ranges.
+Tell it your robot: weight, wheels, battery, motor, gearing. Then give it a path. It reads real Pedro Pathing chains, the quickstart examples or the pathBuilder code you wrote yourself, and drives them across a full field on your drivetrain. You get the time for that run, the stretches where the corners and not the motors are costing you, and gearing you can order: a cartridge plus a tooth pair, not a motor speed nobody sells. Verdicts come as windows instead of decimal points, because the constants underneath are honest ranges.
 
 Ethan wrote the first version for our own drive team in July. A reviewer took it apart, fourteen numbered flaws, three of them fatal, and the rebuild is what you see today. The whole story is in [his write-up](https://darkelights.pages.dev/blog/calculating-the-ideal-drivetrain).
 
