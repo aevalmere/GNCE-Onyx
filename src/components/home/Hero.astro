@@ -4,9 +4,11 @@
  * off it.
  *
  * Two registers, not three: the headline sitting above the middle of the
- * frame, and one line along the bottom edge with the team mark at the left
- * and the two calls to action at the right. Nothing sits along the top, so
- * the first thing on the page is the sentence.
+ * frame with the team mark and the team number holding its top corners, and
+ * one line along the bottom edge with the two calls to action at the right.
+ * The corners are small, so the first thing on the page is the sentence.
+ * The mark's corner is also where the intro cover's part flies home to on
+ * the desktop cut (see BaseLayout), so it stays a plain box in this file.
  *
  * The bottom line stops short of the true corner: the nav toggle is a 56px
  * square pinned flush to the bottom right of every page, and the foot's own
@@ -37,8 +39,20 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
 <section class="hero band-deep" aria-label="GNCE Onyx">
   <div class="hero-inner mx-auto w-full max-w-[88rem] px-5 sm:px-8" data-reveal-group>
     <div class="hero-stage">
-      <div class="hero-deep" data-cover-deep aria-hidden="true">
-        <span class="hero-deep-word">ONYX</span>
+      <div class="hero-deep" data-cover-deep>
+        <span class="hero-deep-word" aria-hidden="true">ONYX</span>
+        <!-- The circle-of-hands mark (public/logo.svg): one line, five loops,
+             closing where it began. It holds the frame's top left corner: its
+             top on the number's line, its left on the headline's, as tall as
+             the headline's capitals. It lives on the far plane with the word
+             so the two scroll off together under the wipe. The same artwork
+             draws itself on the intro cover and sits in the favicon's paper
+             tile. -->
+        <div class="hero-logo">
+          <Reveal variant="up">
+            <img src={`${base}/logo.svg`} alt="GNCE Onyx" width="512" height="512" />
+          </Reveal>
+        </div>
       </div>
       <!-- The team number holds the frame's top right corner, the third
            anchor of the composition. On the wipe it is the NEAR plane: it
@@ -51,19 +65,10 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
       </h1>
     </div>
 
-    <!-- The reveals sit inside the two ends rather than being them: a
+    <!-- The reveals sit inside the controls rather than being them: a
          component's root element does not carry this file's style scope, so
          anything the layout depends on is authored here. -->
     <div class="hero-foot">
-      <!-- The circle-of-hands mark (public/logo.svg): one line, five loops,
-           closing where it began. The same artwork draws itself on the
-           intro cover and sits in the favicon's paper tile. -->
-      <div class="hero-logo">
-        <Reveal variant="up">
-          <img src={`${base}/logo.svg`} alt="GNCE Onyx" width="512" height="512" />
-        </Reveal>
-      </div>
-
       <div class="hero-actions">
         <Reveal variant="up">
           <a href="#sponsors" class="btn btn-solid">Sponsor the team</a>
@@ -164,10 +169,8 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     max-width: 25ch;
   }
 
-  /* The bottom line: mark at one end, controls at the other, bottoms level.
-     Aligned on the ends rather than centred, so the mark and the button sit
-     on one line however tall the mark turns out to be. Where the line cannot
-     hold both, the controls take the next line and stay on the right. */
+  /* The bottom line: the controls, hard right. The actions box grows into
+     the whole line (see below) and justifies its own contents right. */
   .hero-foot {
     display: flex;
     flex-wrap: wrap;
@@ -176,18 +179,21 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     gap: 1.5rem clamp(1.5rem, 4vw, 3rem);
   }
 
+  /* The mark holds the stage's top left corner, its top on the number's line
+     and its left on the headline's, and it takes the headline's type size so
+     it stands as tall as the headline's capitals. Height, not width: the mark
+     keeps its own proportions whatever shape the file turns out to be. It is
+     positioned inside the far plane, whose box is the stage's. */
   .hero-logo {
-    display: block;
-    flex: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    font-size: clamp(2.25rem, 6.2vw, 6rem);
   }
 
-  /* Height, not width: the mark keeps its own proportions and the line keeps
-     its measure whatever shape the file turns out to be. */
   .hero-logo img {
     display: block;
-    /* Sized off the button at the other end of the line, so the two ends
-       weigh the same instead of one being a dot opposite a block. */
-    height: clamp(3.25rem, 6.5svh, 4.75rem);
+    height: 0.74em;
     width: auto;
   }
 
@@ -229,6 +235,16 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
   @media (max-width: 40rem) {
     .hero-stage {
       justify-items: center;
+    }
+
+    /* The mark centres under the number, above the headline, at a size the
+       phone can read. Margin centring is not available to an absolute box,
+       so this is the one transform on it; nothing else drives it. */
+    .hero-logo {
+      top: 3.25rem;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 3rem;
     }
 
     /* The phone hero is one centred column, so the number joins its axis

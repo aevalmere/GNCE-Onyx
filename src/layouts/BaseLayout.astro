@@ -141,11 +141,16 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
             // phone or tablet keeps the plain cover. The meter script
             // takes the class back off if any part of the cut is missing.
             if (matchMedia('(min-width: 48rem) and (hover: hover) and (pointer: fine)').matches) {
-              document.documentElement.classList.add('intro-cine');
+              // intro-flight hides the hero's own mark while the part is on
+              // its way to it; the meter script drops it on landing.
+              document.documentElement.classList.add('intro-cine', 'intro-flight');
             }
             setTimeout(function () {
               document.documentElement.classList.remove('loading');
             }, 4500);
+            setTimeout(function () {
+              document.documentElement.classList.remove('intro-flight');
+            }, 7000);
           }
         }
       } catch (e) {
@@ -161,87 +166,51 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     {
       intro && (
         <Fragment>
-          <!-- Intro cover. On a phone: the team mark drawing itself over one
-               centered count, both climbing in time with the fonts, then the
-               cover lifts into the hero's entrance. On a desktop
-               (html.intro-cine) the same cover is a cut: the sheet is scored
-               by a raked seam and four registration marks, a scan line makes
-               one pass, and the part starts big and off true in the top-left
-               and travels into its seat while a tool head cuts its line and
-               throws chips; the count rolls on three reels bottom-right. On
-               100 the stroke flashes grape, the tool retracts, a latch runs
-               the seam, and the two doors part into the hero.
+          <!-- Intro cover. On a phone: the team mark drawing itself in the
+               middle of the cover in time with the fonts, then the cover
+               lifts into the hero's entrance. On a desktop (html.intro-cine)
+               the same cover is a cut: the part rises from the foot of the
+               screen into the dead centre while its line is cut and throws
+               chips, and a seam is scored corner to corner through it with
+               four flat bands of water stepping out each side. On 100 the
+               mark takes the hero's ink and pops, ink chips fly off the
+               whole ring, a grape dart runs the seam from the top right and
+               the doors open above and below in its wake with the water
+               riding on them, and the part leaves with the wave for the
+               hero's mark in the top left.
                The path here is the same unicursal line as public/logo.svg;
                the meter script below plays its stroke out to match the
-               counted progress, so the ring closes exactly as the count
-               lands on 100. -->
+               real font loading, so the ring closes exactly as the fonts
+               land. -->
           <div class="intro" data-intro aria-hidden="true">
-            <!-- Left door: carries the part. On the phone both doors are
-                 display: contents, so the mark and the count fall straight
-                 into the cover's own centered column. -->
-            <div class="intro-door intro-door-l">
-              <span class="intro-reg intro-reg-tl"></span>
-              <span class="intro-reg intro-reg-bl"></span>
-              <div class="intro-part" data-intro-part>
-                <svg class="intro-mark" data-intro-mark viewBox="0 0 64 64" aria-hidden="true">
-                  <path
-                    data-intro-path
-                d="M32.0,9.0 C30.8,9.0 29.7,9.7 28.9,10.9 C28.0,12.1 27.6,13.9 27.7,15.9 C27.8,18.0 28.5,20.2 29.7,22.4 C30.9,24.5 32.7,26.5 34.9,28.1 C37.0,29.6 39.4,30.7 41.9,31.2 C44.3,31.7 46.6,31.7 48.6,31.1 C50.6,30.6 52.1,29.6 53.0,28.5 C54.0,27.3 54.2,26.0 53.9,24.9 C53.5,23.8 52.5,22.9 51.1,22.5 C49.7,22.1 47.8,22.2 45.9,22.9 C44.0,23.7 42.1,25.0 40.4,26.9 C38.8,28.7 37.5,31.0 36.6,33.5 C35.8,36.0 35.5,38.7 35.8,41.1 C36.1,43.6 36.8,45.8 38.0,47.5 C39.1,49.2 40.5,50.4 41.9,50.9 C43.2,51.4 44.6,51.3 45.5,50.6 C46.5,49.9 47.0,48.7 46.9,47.2 C46.9,45.7 46.2,44.0 44.9,42.5 C43.6,40.9 41.8,39.4 39.5,38.4 C37.3,37.4 34.6,36.9 32.0,36.9 C29.4,36.9 26.7,37.4 24.5,38.4 C22.2,39.4 20.4,40.9 19.1,42.5 C17.8,44.0 17.1,45.7 17.1,47.2 C17.0,48.7 17.5,49.9 18.5,50.6 C19.4,51.3 20.8,51.4 22.1,50.9 C23.5,50.4 24.9,49.2 26.0,47.5 C27.2,45.8 27.9,43.6 28.2,41.1 C28.5,38.7 28.2,36.0 27.4,33.5 C26.5,31.0 25.2,28.7 23.6,26.9 C21.9,25.0 20.0,23.7 18.1,22.9 C16.2,22.2 14.3,22.1 12.9,22.5 C11.5,22.9 10.5,23.8 10.1,24.9 C9.8,26.0 10.0,27.3 11.0,28.5 C11.9,29.6 13.4,30.6 15.4,31.1 C17.4,31.7 19.7,31.7 22.1,31.2 C24.6,30.7 27.0,29.6 29.1,28.1 C31.3,26.5 33.1,24.5 34.3,22.4 C35.5,20.2 36.2,18.0 36.3,15.9 C36.4,13.9 36.0,12.1 35.1,10.9 C34.3,9.7 33.2,9.0 32.0,9.0 Z"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="4.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"></path>
-                  <!-- The tool head: a reticle riding the pen tip, turned to
-                       the tangent. Desktop only; the script positions the
-                       outer group and retracts the inner one on 100. -->
-                  <g class="intro-tool" data-intro-tool>
-                    <g class="intro-tool-in" data-intro-tool-in>
-                      <circle r="3.3"></circle>
-                      <path d="M-5.6,0 H-4.2 M4.2,0 H5.6 M0,-5.6 V-4.2 M0,4.2 V5.6"></path>
-                    </g>
-                  </g>
-                </svg>
-              </div>
-            </div>
-            <!-- Right door: carries the readout. The plain number is the
-                 phone's; the three reels are the desktop's odometer, and
-                 the leading reels start on a blank so 47 reads as 47. -->
-            <div class="intro-door intro-door-r">
-              <span class="intro-reg intro-reg-tr"></span>
-              <span class="intro-reg intro-reg-br"></span>
-              <p class="intro-count">
-                <span class="intro-rule"></span>
-                <span class="intro-line">
-                  <span class="intro-num" data-intro-num>0</span>
-                  <span class="intro-reels" data-intro-reels>
-                    <span class="intro-reel">
-                      <span class="intro-reel-col" data-intro-reel="h"><i>&nbsp;</i><i>1</i></span>
-                    </span>
-                    <span class="intro-reel">
-                      <span class="intro-reel-col" data-intro-reel="t">
-                        <i>&nbsp;</i><i>1</i><i>2</i><i>3</i><i>4</i><i>5</i><i>6</i><i>7</i><i>8</i><i>9</i><i>0</i>
-                      </span>
-                    </span>
-                    <span class="intro-reel">
-                      <span class="intro-reel-col" data-intro-reel="o">
-                        <i>0</i><i>1</i><i>2</i><i>3</i><i>4</i><i>5</i><i>6</i><i>7</i><i>8</i><i>9</i><i>0</i>
-                      </span>
-                    </span>
-                  </span>
-                  <span class="intro-pct">%</span>
-                </span>
-              </p>
-            </div>
-            <!-- The sheet: seam, scan pass and latch in one SVG. Desktop
-                 only; the script sets the viewBox in pixels and the line
-                 ends from the door geometry, so a hairline is one pixel on
-                 every screen and the seam sits exactly on the doors' edge. -->
+            <!-- The doors: filled by the script with strips of solid indigo
+                 above and below the seam, and the water's bands, all moved
+                 by transform alone. Desktop only; on the phone the cover's
+                 own indigo is the sheet. -->
+            <div class="intro-doors" data-intro-doors></div>
+            <!-- The lines on the seam: the hairline, its scoring head and
+                 the grape dart, in one SVG the script sizes in pixels.
+                 Desktop only. -->
             <svg class="intro-frame" data-intro-frame viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
               <line class="intro-seam" data-intro-seam></line>
-              <line class="intro-scan" data-intro-scan></line>
-              <line class="intro-latch" data-intro-latch></line>
+              <line class="intro-seam-head" data-intro-seam-head></line>
+              <line class="intro-dart" data-intro-dart></line>
             </svg>
+            <!-- The part. Above the doors, so it can ride the wave home
+                 while they open. On the phone this box is display: contents
+                 and the mark is the cover's one flex item. -->
+            <div class="intro-part" data-intro-part>
+              <svg class="intro-mark" data-intro-mark viewBox="0 0 64 64" aria-hidden="true">
+                <path
+                  data-intro-path
+                  d="M32.0,9.0 C30.8,9.0 29.7,9.7 28.9,10.9 C28.0,12.1 27.6,13.9 27.7,15.9 C27.8,18.0 28.5,20.2 29.7,22.4 C30.9,24.5 32.7,26.5 34.9,28.1 C37.0,29.6 39.4,30.7 41.9,31.2 C44.3,31.7 46.6,31.7 48.6,31.1 C50.6,30.6 52.1,29.6 53.0,28.5 C54.0,27.3 54.2,26.0 53.9,24.9 C53.5,23.8 52.5,22.9 51.1,22.5 C49.7,22.1 47.8,22.2 45.9,22.9 C44.0,23.7 42.1,25.0 40.4,26.9 C38.8,28.7 37.5,31.0 36.6,33.5 C35.8,36.0 35.5,38.7 35.8,41.1 C36.1,43.6 36.8,45.8 38.0,47.5 C39.1,49.2 40.5,50.4 41.9,50.9 C43.2,51.4 44.6,51.3 45.5,50.6 C46.5,49.9 47.0,48.7 46.9,47.2 C46.9,45.7 46.2,44.0 44.9,42.5 C43.6,40.9 41.8,39.4 39.5,38.4 C37.3,37.4 34.6,36.9 32.0,36.9 C29.4,36.9 26.7,37.4 24.5,38.4 C22.2,39.4 20.4,40.9 19.1,42.5 C17.8,44.0 17.1,45.7 17.1,47.2 C17.0,48.7 17.5,49.9 18.5,50.6 C19.4,51.3 20.8,51.4 22.1,50.9 C23.5,50.4 24.9,49.2 26.0,47.5 C27.2,45.8 27.9,43.6 28.2,41.1 C28.5,38.7 28.2,36.0 27.4,33.5 C26.5,31.0 25.2,28.7 23.6,26.9 C21.9,25.0 20.0,23.7 18.1,22.9 C16.2,22.2 14.3,22.1 12.9,22.5 C11.5,22.9 10.5,23.8 10.1,24.9 C9.8,26.0 10.0,27.3 11.0,28.5 C11.9,29.6 13.4,30.6 15.4,31.1 C17.4,31.7 19.7,31.7 22.1,31.2 C24.6,30.7 27.0,29.6 29.1,28.1 C31.3,26.5 33.1,24.5 34.3,22.4 C35.5,20.2 36.2,18.0 36.3,15.9 C36.4,13.9 36.0,12.1 35.1,10.9 C34.3,9.7 33.2,9.0 32.0,9.0 Z"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="4.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"></path>
+              </svg>
+            </div>
             <!-- Chips off the cut. Desktop only. -->
             <canvas class="intro-fx" data-intro-fx></canvas>
           </div>
@@ -255,8 +224,6 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
             (function () {
               var root = document.documentElement;
               if (!root.classList.contains('loading')) return;
-              var numEl = document.querySelector('[data-intro-num]');
-              if (!numEl) return;
 
               // The mark draws itself in step with the count: the stroke is
               // one continuous line, so playing its dash out to `shown` is
@@ -288,7 +255,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
                 } catch (e) {
                   cut = null;
                 }
-                if (!cut) root.classList.remove('intro-cine');
+                if (!cut) root.classList.remove('intro-cine', 'intro-flight');
               }
 
               function setupCut() {
@@ -296,20 +263,19 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
                 var intro = document.querySelector('[data-intro]');
                 var part = document.querySelector('[data-intro-part]');
                 var svg = document.querySelector('[data-intro-mark]');
-                var tool = document.querySelector('[data-intro-tool]');
-                var toolIn = document.querySelector('[data-intro-tool-in]');
                 var frame = document.querySelector('[data-intro-frame]');
+                var doors = document.querySelector('[data-intro-doors]');
                 var seam = document.querySelector('[data-intro-seam]');
-                var scan = document.querySelector('[data-intro-scan]');
-                var latch = document.querySelector('[data-intro-latch]');
+                var seamHead = document.querySelector('[data-intro-seam-head]');
+                var dartEl = document.querySelector('[data-intro-dart]');
                 var canvas = document.querySelector('[data-intro-fx]');
-                var reelH = document.querySelector('[data-intro-reel="h"]');
-                var reelT = document.querySelector('[data-intro-reel="t"]');
-                var reelO = document.querySelector('[data-intro-reel="o"]');
-                if (
-                  !intro || !part || !svg || !tool || !toolIn || !frame || !seam || !scan ||
-                  !latch || !canvas || !reelH || !reelT || !reelO || !part.animate
-                ) {
+                // Where the part flies home to: the hero's own mark. Looked
+                // up when the wake starts, not here: this script runs
+                // during parse, before the hero exists. Measured live during
+                // the flight, so the landing is exact whatever the page has
+                // done to its layout in the meantime.
+                var hero = null;
+                if (!intro || !part || !svg || !frame || !doors || !seam || !seamHead || !dartEl || !canvas || !part.animate) {
                   return null;
                 }
                 var ctx = canvas.getContext('2d');
@@ -317,6 +283,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
                 var W = intro.clientWidth;
                 var H = intro.clientHeight;
                 if (!W || !H) return null;
+                var born = performance.now();
 
                 // Colors and curves come from the theme, never restated.
                 var theme = getComputedStyle(root);
@@ -326,13 +293,63 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
                 };
                 var PAPER = read('--color-paper', '#C9CFDD');
                 var GRAPE = read('--color-accent', '#823A80');
+                var INK = read('--color-surface', '#10254F');
                 var OUT = read('--ease-out-strong', 'cubic-bezier(0.23, 1, 0.32, 1)');
                 var INOUT = read('--ease-in-out-strong', 'cubic-bezier(0.77, 0, 0.175, 1)');
+                // The same two curves as functions, for the movements the
+                // script drives itself: the scoring, the dart and its wake,
+                // and the ride home, which re-aims every frame.
+                var out = bezier(OUT, [0.23, 1, 0.32, 1]);
+                var inOut = bezier(INOUT, [0.77, 0, 0.175, 1]);
+                function bezier(spec, fallback) {
+                  var m = /cubic-bezier\(([^)]+)\)/.exec(spec || '');
+                  var p = m ? m[1].split(',').map(parseFloat) : fallback;
+                  if (p.length !== 4 || p.some(isNaN)) p = fallback;
+                  var x1 = p[0], y1 = p[1], x2 = p[2], y2 = p[3];
+                  var at = function (t, a, b) {
+                    return 3 * a * (1 - t) * (1 - t) * t + 3 * b * (1 - t) * t * t + t * t * t;
+                  };
+                  return function (x) {
+                    if (x <= 0) return 0;
+                    if (x >= 1) return 1;
+                    var t = x;
+                    for (var i = 0; i < 8; i++) {
+                      var err = at(t, x1, x2) - x;
+                      if (Math.abs(err) < 1e-5) break;
+                      var slope = 3 * (1 - t) * (1 - t) * x1 + 6 * (1 - t) * t * (x2 - x1) + 3 * t * t * (1 - x2);
+                      if (Math.abs(slope) < 1e-6) break;
+                      t = Math.min(1, Math.max(0, t - err / slope));
+                    }
+                    return at(t, y1, y2);
+                  };
+                }
+                // The two colours as channels, for the water's steps.
+                function rgb(hex, fallback) {
+                  var m = /^#([0-9a-f]{6})$/i.exec(hex);
+                  if (!m) return fallback;
+                  var n = parseInt(m[1], 16);
+                  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+                }
+                var PAPER_RGB = rgb(PAPER, [201, 207, 221]);
+                var GRAPE_RGB = rgb(GRAPE, [130, 58, 128]);
+                var INK_RGB = rgb(INK, [16, 37, 79]);
+                function mix(a, b, t) {
+                  return (
+                    'rgb(' +
+                    Math.round(a[0] + (b[0] - a[0]) * t) + ',' +
+                    Math.round(a[1] + (b[1] - a[1]) * t) + ',' +
+                    Math.round(a[2] + (b[2] - a[2]) * t) + ')'
+                  );
+                }
+                function px(v) {
+                  return v.toFixed(1);
+                }
+                var DEG = 180 / Math.PI;
 
-                // The seat: where the part comes to rest, measured before
-                // anything moves it. Chips are placed from this box and
-                // the pose, so the CSS seat and the script's math are one
-                // set of numbers.
+                // The seat: the exact centre, measured before anything
+                // moves the part. Chips are placed from this box and the
+                // pose, so the CSS seat and the script's math are one set
+                // of numbers.
                 var ir = intro.getBoundingClientRect();
                 var pr = part.getBoundingClientRect();
                 var seatX = pr.left - ir.left + pr.width / 2;
@@ -340,17 +357,23 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
                 var size = pr.width;
                 if (!size) return null;
 
-                // Start pose: 2.6x, high and left, fourteen degrees off
-                // true. The part rides a straight line into its seat and
-                // is home by 80% of the count, so the ring closes on a
-                // still part. Eased out rather than linear: it arrives,
-                // it does not stop.
+                // Start pose: 2.6x, fourteen degrees off true, wholly below
+                // the foot of the screen. The part rises straight up into
+                // its seat and is home by 80% of the count, so the ring
+                // closes on a still part. Eased out rather than linear: it
+                // arrives, it does not stop.
                 var S0 = 2.6;
                 var R0 = -14;
-                var dx0 = W * 0.16 - seatX;
-                var dy0 = H * 0.24 - seatY;
+                var dx0 = 0;
+                var dy0 = H + (S0 * size) / 2 + 8 - seatY;
                 var pose = { x: dx0, y: dy0, s: S0, r: R0 };
 
+                function writePose() {
+                  part.style.transform =
+                    'translate(-50%, -50%) translate(' +
+                    pose.x.toFixed(2) + 'px, ' + pose.y.toFixed(2) + 'px) rotate(' +
+                    pose.r.toFixed(3) + 'deg) scale(' + pose.s.toFixed(4) + ')';
+                }
                 function travel(t) {
                   var u = Math.min(1, t / 0.8);
                   u = 1 - Math.pow(1 - u, 3);
@@ -358,18 +381,15 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
                   pose.y = dy0 * (1 - u);
                   pose.s = S0 + (1 - S0) * u;
                   pose.r = R0 * (1 - u);
-                  part.style.transform =
-                    'translate(-50%, -50%) translate(' +
-                    pose.x.toFixed(2) + 'px, ' + pose.y.toFixed(2) + 'px) rotate(' +
-                    pose.r.toFixed(3) + 'deg) scale(' + pose.s.toFixed(4) + ')';
+                  writePose();
                 }
 
                 // A point in the mark's 64-unit box, on the screen, given
                 // the current pose (same order the transform applies).
-                function toScreen(px, py) {
+                function toScreen(qx, qy) {
                   var k = (size / 64) * pose.s;
-                  var lx = (px - 32) * k;
-                  var ly = (py - 32) * k;
+                  var lx = (qx - 32) * k;
+                  var ly = (qy - 32) * k;
                   var a = (pose.r * Math.PI) / 180;
                   var c = Math.cos(a);
                   var s = Math.sin(a);
@@ -382,9 +402,10 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
                   return { x: vx * c - vy * s, y: vx * s + vy * c };
                 }
 
-                // The tool head rides the pen tip, turned to the tangent.
+                // The pen tip and its tangent: where the chips come from,
+                // and the line they fly back along.
                 var tip = { x: 32, y: 9, tx: 0, ty: 1 };
-                function toolAt(t) {
+                function tipAt(t) {
                   var l = markLen * t;
                   var p = mark.getPointAtLength(l);
                   var a = mark.getPointAtLength(Math.max(0, l - 0.5));
@@ -396,40 +417,19 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
                   tip.y = p.y;
                   tip.tx = tx / n;
                   tip.ty = ty / n;
-                  tool.setAttribute(
-                    'transform',
-                    'translate(' + p.x.toFixed(2) + ' ' + p.y.toFixed(2) + ') rotate(' +
-                      ((Math.atan2(ty, tx) * 180) / Math.PI).toFixed(1) + ')'
-                  );
-                }
-
-                // The odometer. Each reel is a column of digits one em
-                // tall, moved by a whole number of ems plus the carry: the
-                // ones reel turns continuously, the tens reel only while
-                // the ones passes 9, the hundreds only on the last unit.
-                // The leading columns start on a blank, and 100 lands on
-                // the trailing zero of each column, so the wrap from 9 to
-                // 0 is the same glyph in the same place.
-                function reelsAt(v) {
-                  var o = v % 10;
-                  var t = v >= 100 ? 10 : (Math.floor(v / 10) % 10) + Math.max(0, o - 9);
-                  var h = v >= 100 ? 1 : Math.max(0, v - 99);
-                  reelO.style.transform = 'translateY(' + (-o).toFixed(3) + 'em)';
-                  reelT.style.transform = 'translateY(' + (-t).toFixed(3) + 'em)';
-                  reelH.style.transform = 'translateY(' + (-h).toFixed(3) + 'em)';
                 }
 
                 // Chips: small solid squares thrown off the cut, under
                 // gravity and drag, shrinking to nothing over their last
                 // third rather than fading. Pooled and capped; the canvas
                 // runs at no more than 1.5x so a 3x display does not pay
-                // nine times the fill.
+                // nine times the fill, and is left alone while empty.
                 var dpr = Math.min(window.devicePixelRatio || 1, 1.5);
                 canvas.width = Math.round(W * dpr);
                 canvas.height = Math.round(H * dpr);
                 ctx.scale(dpr, dpr);
                 var chips = [];
-                var CAP = 72;
+                var CAP = 96;
                 var dirty = false;
                 function spawn(n, x, y, dir, spread, v0, v1, l0, l1, s0, s1, g, color) {
                   for (var i = 0; i < n; i++) {
@@ -486,12 +486,11 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
                 }
 
                 // One chip every 2.5% of the count, thrown back along the
-                // line the tool just cut.
+                // line the pen just cut.
                 var lastSpawn = 0;
                 function render(t) {
                   travel(t);
-                  toolAt(t);
-                  reelsAt(t * 100);
+                  tipAt(t);
                   if (t < 1 && t - lastSpawn >= 0.025) {
                     lastSpawn = t;
                     var p = toScreen(tip.x, tip.y);
@@ -500,96 +499,378 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
                   }
                 }
 
-                // The sheet. The seam runs where the doors' clip edges
-                // meet (60% at the top, 48% at the foot; keep in step with
-                // the CSS), drawn in once. The scan line is the same line
-                // making one pass across the sheet. The latch is a short
-                // grape dash on the seam, hidden in its gap until 100.
+                // The sheet. The seam runs corner to corner, from the top
+                // right down to the bottom left, straight through the centre
+                // and so through the mark. Everything that runs the seam
+                // runs it right to left, from the high end down. All in
+                // pixels: the viewBox is the box.
                 frame.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
-                var x1 = W * 0.6;
-                var x2 = W * 0.48;
-                [seam, scan, latch].forEach(function (el) {
-                  el.setAttribute('x1', String(x1));
-                  el.setAttribute('y1', '0');
-                  el.setAttribute('x2', String(x2));
-                  el.setAttribute('y2', String(H));
-                });
-                var L = Math.sqrt((x1 - x2) * (x1 - x2) + H * H);
-                seam.style.strokeDasharray = L + ' ' + L;
-                seam.style.strokeDashoffset = String(L);
-                seam.animate([{ strokeDashoffset: String(L) }, { strokeDashoffset: '0' }], {
-                  duration: 560,
-                  delay: 80,
-                  easing: OUT,
-                  fill: 'both',
-                });
-                // The pass parks just past the right edge, and the sheet
-                // later rides left with the door, which would carry the
-                // parked line back across the page: it is put away when
-                // the pass is over.
-                var pass = scan.animate(
-                  [
-                    { transform: 'translateX(' + (-0.72 * W).toFixed(1) + 'px)' },
-                    { transform: 'translateX(' + (0.56 * W).toFixed(1) + 'px)' },
-                  ],
-                  { duration: 680, delay: 240, easing: INOUT, fill: 'both' }
-                );
-                pass.onfinish = function () {
-                  scan.style.display = 'none';
-                };
-                var bolt = 0.16 * L;
-                latch.style.strokeDasharray = bolt + ' ' + L;
-                latch.style.strokeDashoffset = String(bolt);
+                var yR = 0;
+                var yL = H;
+                var DROP = H;
+                var L = Math.sqrt(W * W + H * H);
+                // The seam falls to the left; as a skew about a point on its
+                // right end, this is the angle that lays a box along it.
+                var skewSeam = 'skewY(' + (Math.atan(-DROP / W) * DEG).toFixed(4) + 'deg)';
+                // The bottom door runs a hair up past the seam: two edges
+                // that meet exactly leave an antialiased crack of page.
+                var OVER = Math.max(2, 0.003 * H);
+                // The seam sampled right to left; each sample carries how
+                // far the doors have opened there. MID is the sample under
+                // the mark.
+                var N = 20;
+                var MID = N / 2;
+                var gaps = [];
+                var passAt = [];
+                for (var i = 0; i <= N; i++) {
+                  gaps.push(0);
+                  passAt.push(-1);
+                }
+                function sx(i) {
+                  return W - (W * i) / N;
+                }
+                function sy(i) {
+                  return yR + (DROP * i) / N;
+                }
 
-                // 100: the stroke flashes grape and cuts back (a hard cut,
-                // not a fade), the tool retracts, the part recoils, the
-                // last chips burst grape, and the latch runs the seam. The
-                // doors follow from lift().
+                // The doors: 2N vertical strips of solid indigo, one column
+                // per seam segment above the seam and one below. Each strip
+                // is a plain box whose seam-side edge is skewed to run from
+                // one sample's edge to the next, and per frame only its
+                // transform changes (a translate up or down by the opening
+                // at its outer sample, and the skew that joins it to its
+                // neighbour), so the whole wake is composited without a
+                // single repaint. Strips overlap by a pixel: adjacent edges
+                // meeting exactly leave a crack. They reach far above and
+                // below the box so the skew never uncovers a corner.
+                var stripW = W / N;
+                var tops = [];
+                var bots = [];
+                for (i = 0; i < N; i++) {
+                  // Strip i runs from sample i + 1 (its left) to sample i.
+                  var left = sx(i + 1);
+                  var t = document.createElement('div');
+                  t.style.cssText =
+                    'position:absolute;left:' + px(left - 0.5) + 'px;width:' + px(stripW + 1) +
+                    'px;top:' + px(-2 * H) + 'px;height:' + px(2 * H + sy(i + 1)) + 'px;background:' + INK +
+                    ';transform-origin:0 100%;will-change:transform;';
+                  var b = document.createElement('div');
+                  b.style.cssText =
+                    'position:absolute;left:' + px(left - 0.5) + 'px;width:' + px(stripW + 1) +
+                    'px;top:' + px(sy(i + 1) - OVER) + 'px;height:' + px(3 * H) + 'px;background:' + INK +
+                    ';transform-origin:0 0;will-change:transform;';
+                  doors.appendChild(t);
+                  doors.appendChild(b);
+                  tops.push(t);
+                  bots.push(b);
+                }
+                function shape() {
+                  for (var i = 0; i < N; i++) {
+                    var gl = gaps[i + 1];
+                    var gr = gaps[i];
+                    var tanT = (sy(i) - gr - (sy(i + 1) - gl)) / stripW;
+                    tops[i].style.transform =
+                      'translateY(' + px(-gl) + 'px) skewY(' + (Math.atan(tanT) * DEG).toFixed(3) + 'deg)';
+                    var tanB = (sy(i) + gr - (sy(i + 1) + gl)) / stripW;
+                    bots[i].style.transform =
+                      'translateY(' + px(gl) + 'px) skewY(' + (Math.atan(tanB) * DEG).toFixed(3) + 'deg)';
+                  }
+                }
+                shape();
+
+                // The water: four flat bands each side of the seam, the
+                // lightest against the line and each step darker outward
+                // until the indigo takes over, no soft edges anywhere, and
+                // each band half again as wide as the one inside it. While
+                // the seam is scored they are eight boxes laid along the
+                // seam by the same skew as the strips, drawing in from the
+                // right behind the head (a scale about their right end) and
+                // sliding out from the line to their standing distance, all
+                // by transform. Once the dart runs, the same bands are
+                // painted onto the door strips as hard-edged steps, so they
+                // ride the wave as part of the doors, and the boxes go. A
+                // vertical band in a box skewed along the seam is a band
+                // parallel to the seam, so the two agree to the pixel.
+                var BAND0 = Math.max(24, 0.044 * H);
+                var RATIO = 1.5;
+                var STEPS = [0.34, 0.24, 0.15, 0.07];
+                var bandColor = STEPS.map(function (t) {
+                  return mix(INK_RGB, PAPER_RGB, t);
+                });
+                var bandW = [];
+                var bandOff = [];
+                for (var k = 0, acc = 0; k < STEPS.length; k++) {
+                  var w = BAND0 * Math.pow(RATIO, k);
+                  bandW.push(w);
+                  bandOff.push(acc);
+                  acc += w;
+                }
+                var bands = [];
+                for (k = STEPS.length - 1; k >= 0; k--) {
+                  [-1, 1].forEach(function (side) {
+                    var el = document.createElement('div');
+                    el.style.cssText =
+                      'position:absolute;left:0;width:' + px(W) + 'px;height:' + px(bandW[k]) + 'px;top:' +
+                      px(side < 0 ? yR - bandW[k] : yR) + 'px;background:' + bandColor[k] +
+                      ';transform-origin:100% ' + (side < 0 ? '100%' : '0') + ';will-change:transform;';
+                    doors.appendChild(el);
+                    bands.push({ el: el, k: k, side: side });
+                  });
+                }
+                function setBand(b, kx, s) {
+                  b.el.style.transform =
+                    'translateY(' + px(b.side * bandOff[b.k] * s) + 'px) ' + skewSeam + ' scaleX(' + kx.toFixed(4) + ')';
+                }
+                for (i = 0; i < bands.length; i++) setBand(bands[i], 0, 0);
+                function bake(dir) {
+                  var s = [];
+                  for (var i = 0; i < STEPS.length; i++) {
+                    s.push(bandColor[i] + ' ' + px(bandOff[i]) + 'px ' + px(bandOff[i] + bandW[i]) + 'px');
+                  }
+                  s.push(INK + ' ' + px(acc) + 'px');
+                  return 'linear-gradient(to ' + dir + ', ' + s.join(', ') + ')';
+                }
+
+                // The lines on the seam: the hairline itself, the head that
+                // scores it, and the dart. Dash patterns repeat, and the
+                // runners travel further than the line is long: every gap
+                // is several lines long so a previous repeat can never
+                // surface at the start.
+                [seam, seamHead, dartEl].forEach(function (el) {
+                  el.setAttribute('x1', String(W));
+                  el.setAttribute('y1', String(yR));
+                  el.setAttribute('x2', '0');
+                  el.setAttribute('y2', String(yL));
+                });
+                seam.style.strokeDasharray = L + ' ' + 4 * L;
+                seam.style.strokeDashoffset = String(L);
+                var bolt = 0.16 * L;
+                dartEl.style.strokeDasharray = bolt + ' ' + 4 * L;
+                dartEl.style.strokeDashoffset = String(bolt);
+                var headLen = 0.1 * L;
+                seamHead.style.strokeDasharray = headLen + ' ' + 4 * L;
+                seamHead.style.strokeDashoffset = String(headLen);
+
+                // The seam is scored once the blue has settled, not at first
+                // paint: a paper head runs the line right to left on the
+                // same in-out curve the grape dart will take later, and the
+                // hairline is what it leaves behind. The water follows it
+                // out, each band a beat behind the last, drawing itself in
+                // the head's wake while it spreads to its standing distance.
+                var SEAM_AT = 420;
+                var SEAM_DUR = 560;
+                var LAG = 90;
+                var scored = false;
+                var drawn = 0; // how much of the seam has been scored
+                var eaten = 0; // how much of it the dart has taken back
+                function score(now) {
+                  if (scored) return;
+                  var t = now - born - SEAM_AT;
+                  if (t <= 0) return;
+                  var k = Math.min(1, t / SEAM_DUR);
+                  var p = (L + headLen) * inOut(k);
+                  seamHead.style.strokeDashoffset = String(headLen - p);
+                  drawn = Math.max(0, Math.min(L, p - headLen));
+                  seam.style.strokeDashoffset = String(L - drawn);
+                  var done = k >= 1;
+                  for (var i = 0; i < bands.length; i++) {
+                    var b = bands[i];
+                    var kk = Math.min(1, Math.max(0, (t - (b.k + 1) * LAG) / SEAM_DUR));
+                    if (kk < 1) done = false;
+                    var dk = Math.max(0, Math.min(L, (L + headLen) * inOut(kk) - headLen));
+                    setBand(b, dk / L, out(kk));
+                  }
+                  if (done) scored = true;
+                }
+
+                // 100: the mark goes grape with the pop (a real 10%) and
+                // grape chips fly off the whole ring, outward from its
+                // centre, into the water. The grape is a hard cut in and
+                // holds until the wave takes the mark; it fades to the
+                // hero's ink as it starts to move, see steer().
                 function complete() {
                   mark.style.stroke = GRAPE;
-                  setTimeout(function () {
-                    mark.style.stroke = '';
-                  }, 120);
-                  toolIn.animate([{ transform: 'scale(1)' }, { transform: 'scale(0)' }], {
-                    duration: 200,
-                    easing: INOUT,
-                    fill: 'forwards',
-                  });
                   svg.animate(
-                    [{ transform: 'scale(1)' }, { transform: 'scale(1.04)', offset: 0.3 }, { transform: 'scale(1)' }],
-                    { duration: 320, easing: OUT }
+                    [
+                      { transform: 'scale(1)', easing: OUT },
+                      { transform: 'scale(1.1)', offset: 0.4, easing: INOUT },
+                      { transform: 'scale(1)' },
+                    ],
+                    { duration: 520 }
                   );
-                  var p = toScreen(tip.x, tip.y);
-                  spawn(34, p.x, p.y, 0, Math.PI * 2, 240, 720, 0.16, 0.26, 3, 6, 900, GRAPE);
-                  setTimeout(function () {
-                    latch.animate([{ strokeDashoffset: String(bolt) }, { strokeDashoffset: String(-L) }], {
-                      duration: 220,
-                      easing: INOUT,
-                      fill: 'forwards',
-                    });
-                  }, 110);
+                  for (var i = 0; i < 56; i++) {
+                    var q = mark.getPointAtLength(Math.random() * markLen);
+                    var p = toScreen(q.x, q.y);
+                    var d = turn(q.x - 32, q.y - 32);
+                    spawn(1, p.x, p.y, Math.atan2(d.y, d.x), 0.9, 180, 560, 0.18, 0.34, 3, 6, 700, GRAPE);
+                  }
                 }
 
-                // After the doors have gone the cover is an empty fixed
-                // layer; take it out of the way entirely.
-                var ended = false;
-                function end() {
-                  ended = true;
+                // The dart and the wake. The grape dart runs the seam corner
+                // to corner, taking the hairline back as it goes, and the
+                // doors open behind it the way water parts behind a hull,
+                // the bands riding with them: each sample of the seam starts
+                // to open once the dart is a dart's length and a bit past
+                // it, then widens on its own clock, so the wake trails the
+                // dart with a short gap and the right is wide open before
+                // the left has begun. The dart runs on the in-out curve,
+                // pulled from rest and eased to the far corner; each opening
+                // runs on the out curve, quick then settling. FULL is enough
+                // to carry either door clear of the box from any corner.
+                var DART = 640;
+                var OPENING = 760;
+                var FULL = H * 1.05;
+                var LEAD = 1.25 * bolt;
+                var RUN = L + bolt + LEAD;
+                var dart = null;
+                var opened = false;
+
+                // The ride home. The part leaves with the wave: the moment
+                // the top door under the mark starts to rise, the part
+                // starts too, on the door's own clock and curve, so the two
+                // move as one; the door goes on past the top while the part
+                // settles on the hero's mark in the top left, two turns
+                // counterclockwise on the way (the ring has five-fold
+                // symmetry, so whole turns land where they started),
+                // re-aimed every frame at where the mark really is. Over the
+                // first third of the ride it goes from grape to the hero's
+                // ink, fast, so it is that ink well before it seats and the
+                // swap at the end is nothing but a change of hands. With no
+                // hero mark on the page the part shrinks away where it sits.
+                var flight = null;
+                var landed = false;
+
+                function open() {
+                  // From here the script owns the sheet: the CSS failsafe
+                  // that drops it when the cover lifts stands down, and the
+                  // cover's own indigo gives way to the doors' (the same
+                  // colour, so nothing shows).
+                  root.classList.add('intro-open');
+                  intro.style.background = 'transparent';
+                  // The seam and its water are whole from here, however far
+                  // the head got, and the water moves onto the doors.
+                  scored = true;
+                  drawn = L;
+                  seam.style.strokeDashoffset = '0';
+                  seamHead.style.display = 'none';
+                  var topBg = bake('top');
+                  var botBg = bake('bottom');
+                  for (var i = 0; i < N; i++) {
+                    tops[i].style.background = topBg;
+                    bots[i].style.background = botBg;
+                  }
+                  for (i = 0; i < bands.length; i++) bands[i].el.style.display = 'none';
                   chips.length = 0;
-                  ctx.clearRect(0, 0, W, H);
-                  setTimeout(function () {
-                    intro.style.display = 'none';
-                  }, 720);
+                  var now = performance.now();
+                  dart = { t0: now, tPrev: now, p: 0 };
+                  hero = document.querySelector('.hero-logo');
+                }
+                function wake(now) {
+                  if (!dart) {
+                    score(now);
+                    return;
+                  }
+                  var k = Math.min(1, (now - dart.t0) / DART);
+                  var p = RUN * inOut(k);
+                  dartEl.style.strokeDashoffset = String(bolt - p);
+                  eaten = Math.min(L, p);
+                  seam.style.strokeDashoffset = String(-eaten);
+                  // Stamp each sample with the moment the tip got LEAD past
+                  // it, placed between this frame and the last.
+                  for (var i = 0; i <= N; i++) {
+                    var s = L * (i / N) + LEAD;
+                    if (passAt[i] < 0 && p >= s) {
+                      var f = p > dart.p ? (s - dart.p) / (p - dart.p) : 1;
+                      passAt[i] = dart.tPrev + (now - dart.tPrev) * Math.max(0, Math.min(1, f));
+                    }
+                  }
+                  dart.p = p;
+                  dart.tPrev = now;
+                  var all = k >= 1;
+                  for (i = 0; i <= N; i++) {
+                    var g = passAt[i] < 0 ? 0 : FULL * out(Math.min(1, (now - passAt[i]) / OPENING));
+                    if (g < FULL) all = false;
+                    gaps[i] = g;
+                  }
+                  shape();
+                  // The wave has reached the mark: the part leaves with it.
+                  if (!flight && passAt[MID] >= 0) {
+                    flight = { t0: passAt[MID], dur: OPENING, from: { x: pose.x, y: pose.y, s: pose.s } };
+                  }
+                  if (all) {
+                    dart = null;
+                    opened = true;
+                    frame.style.display = 'none';
+                    doors.style.display = 'none';
+                    if (landed) intro.style.display = 'none';
+                  }
+                }
+                function home() {
+                  if (!hero) return null;
+                  var hr = hero.getBoundingClientRect();
+                  if (!hr.width || !hr.height) return null;
+                  return {
+                    x: hr.left - ir.left + hr.width / 2 - seatX,
+                    y: hr.top - ir.top + hr.height / 2 - seatY,
+                    s: hr.width / size,
+                  };
+                }
+                function steer(now) {
+                  if (!flight) return;
+                  var k = Math.min(1, Math.max(0, (now - flight.t0) / flight.dur));
+                  var e = out(k);
+                  var to = home();
+                  if (to) {
+                    pose.x = flight.from.x + (to.x - flight.from.x) * e;
+                    pose.y = flight.from.y + (to.y - flight.from.y) * e;
+                    pose.s = flight.from.s + (to.s - flight.from.s) * e;
+                  } else {
+                    pose.s = flight.from.s * (1 - e);
+                  }
+                  pose.r = -720 * e;
+                  mark.style.stroke = mix(GRAPE_RGB, INK_RGB, out(Math.min(1, k / 0.35)));
+                  writePose();
+                  if (k >= 1) {
+                    flight = null;
+                    land();
+                  }
+                }
+                // The hero's mark shows and the part goes in the same
+                // frame, so the swap is one artwork, already the same
+                // colour, changing hands.
+                function land() {
+                  if (landed) return;
+                  landed = true;
+                  part.style.visibility = 'hidden';
+                  root.classList.remove('intro-flight');
+                  if (opened) intro.style.display = 'none';
+                }
+                // Failsafe: whatever is still in motion, the page is the
+                // page and the hero has its mark.
+                function finish() {
+                  land();
+                  dart = null;
+                  flight = null;
+                  opened = true;
+                  intro.style.display = 'none';
                 }
                 function busy() {
-                  return !ended && chips.length > 0;
+                  return !(landed && opened);
                 }
 
                 // First paint already shows the start pose.
                 travel(0);
-                toolAt(0);
-                reelsAt(0);
-                return { render: render, tick: tick, complete: complete, busy: busy, end: end };
+                tipAt(0);
+                return {
+                  render: render,
+                  tick: tick,
+                  steer: steer,
+                  wake: wake,
+                  complete: complete,
+                  busy: busy,
+                  open: open,
+                  finish: finish,
+                };
               }
 
               // Real progress: the fraction of the site's font faces that
@@ -634,16 +915,18 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
               var finished = false;
 
               // A beat on 100 before the cover lifts: 160ms for the plain
-              // cover; the cut holds 320ms so the flash, the retract and
-              // the latch have played before the doors move.
+              // cover; the cut holds 300ms of the pop, then the dart runs
+              // and the doors open in its wake while the part flies home.
               function lift(delay) {
                 if (done) return;
                 done = true;
                 setTimeout(function () {
+                  if (cut) cut.open();
                   window.__introDone = true;
                   root.classList.remove('loading');
                   document.dispatchEvent(new Event('intro:done'));
-                  if (cut) cut.end();
+                  // Never leave the hero without its mark.
+                  if (cut) setTimeout(cut.finish, 3200);
                 }, delay);
               }
 
@@ -663,22 +946,25 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
                   if (shown < 0) shown = 0;
                   if (shown >= 1) {
                     finished = true;
-                    numEl.textContent = '100';
                     draw(1);
                     if (cut) {
                       cut.render(1);
                       cut.complete();
                     }
-                    lift(cut ? 320 : 160);
+                    lift(cut ? 300 : 160);
                   } else {
-                    numEl.textContent = String(Math.max(0, Math.round(shown * 100)));
                     draw(shown);
                     if (cut) cut.render(shown);
                   }
                 }
-                // Chips keep falling after the count lands; the loop runs
-                // until the last one is gone.
-                if (cut) cut.tick(dt);
+                // The chips, the wake and the flight home run past the
+                // count; the loop stays up until the doors are open and
+                // the part has seated.
+                if (cut) {
+                  cut.tick(dt);
+                  cut.wake(now);
+                  cut.steer(now);
+                }
                 if (!finished || (cut && cut.busy())) requestAnimationFrame(frame);
               }
               requestAnimationFrame(frame);
@@ -727,20 +1013,16 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
         pointer-events: none;
       }
 
-      /* On the phone the doors and the part are not boxes at all: the mark
-         and the count fall straight into the cover's own column, and every
-         piece of the cut stays out of the tree. */
-      .intro-door,
+      /* On the phone the part is not a box at all: the mark falls straight
+         into the cover's own column, and every piece of the cut stays out of
+         the tree. */
       .intro-part {
         display: contents;
       }
 
-      .intro-reg,
-      .intro-rule,
-      .intro-reels,
+      .intro-doors,
       .intro-frame,
-      .intro-fx,
-      .intro-tool {
+      .intro-fx {
         display: none;
       }
 
@@ -762,102 +1044,39 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
         display: none;
       }
 
-      /* The mask. Full leading plus padding is real headroom: the clip
-         edge stands clear of the glyphs on every side, so the digits and
-         the % print whole. Tabular figures so the digits hold their box
-         while the number climbs. */
-      .intro-count {
-        overflow: clip;
-        padding: 0.14em 0.1em;
-        font-family: var(--font-text);
-        font-weight: 700;
-        font-size: clamp(3rem, 11vw, 7rem);
-        line-height: 1;
-        color: var(--color-paper);
-        font-variant-numeric: tabular-nums lining-nums;
-        font-feature-settings: 'tnum' 1, 'lnum' 1;
-      }
-
-      /* Number and % rise as one line, so both clear the mask by the same
-         distance. Held apart they did not: a percentage translate reads
-         the element's own box, and the small % box never travelled far
-         enough to hide, leaving its top edge showing. The animation is
-         unconditional and fills forwards, so the count stays landed while
-         the cover lifts instead of snapping back down with the class. */
-      .intro-line {
-        display: flex;
-        align-items: baseline;
-        justify-content: center;
-        transform: translateY(135%);
-        animation: intro-rise 620ms var(--ease-out-strong) 120ms both;
-      }
-
-      .intro-num {
-        min-width: 3ch;
-        text-align: right;
-      }
-
-      .intro-pct {
-        margin-left: 0.12em;
-        font-size: clamp(1.25rem, 4vw, 2.25rem);
-        color: color-mix(in srgb, var(--color-paper) 60%, transparent);
-      }
-
-      @keyframes intro-rise {
-        to {
-          transform: translateY(0);
-        }
-      }
-
-      /* Reduced motion never raises the cover, so the count simply sits
-         where it lands. */
-      @media (prefers-reduced-motion: reduce) {
-        .intro-line {
-          transform: none;
-          animation: none;
-        }
-      }
-
       /* ---- The cut (desktop, html.intro-cine) ---------------------- */
-      /* One sheet, two doors. The cover is scored by a raked seam (60% at
-         the top, 48% at the foot) that the doors part along; the left door
-         carries the part and the right one the readout, so each leaves
-         with its door. The seam, the scan pass and the latch share one SVG
-         whose viewBox the meter script sets in pixels, so a hairline is one
-         pixel on every screen and the seam sits exactly on the doors' edge.
-         The part's pose (2.6x, high and left, off true at the start; its
-         seat at rest) is written by the script every frame from the load
-         count; the CSS only gives it the seat. Transforms, clip-path and
-         stroke-dash throughout; no opacity anywhere. */
+      /* One sheet, two doors. The mark sits dead centre on a seam that
+         runs corner to corner, with four flat bands of water each side,
+         lightest against the line and darker and wider outward. The doors
+         are strips of solid indigo above and below the seam, built by the
+         meter script and moved by transform alone, so the wake is
+         composited and never repainted. On 100 the mark takes the hero's
+         ink, then a grape dart runs the seam from the top right and the
+         doors open in its wake, the way water parts behind a hull,
+         carrying the water with them, and the part leaves with the wave
+         for the hero's mark, top left. Transforms and stroke-dash
+         throughout; flat colour only, no opacity anywhere. */
       :global(html.intro-cine) .intro {
         display: block;
-        background: transparent;
+        /* The cover's own indigo until the script hands over to the doors,
+           which are the same colour, so no frame can show the page. */
+        background: var(--color-surface);
         transform: none;
         transition: none;
       }
 
-      :global(html.intro-cine) .intro-door {
+      /* Failsafe: if the meter script never took the sheet over and the
+         head's timer has lifted the cover, the sheet simply goes. */
+      :global(html.intro-cine:not(.loading):not(.intro-open)) .intro {
+        display: none;
+      }
+
+      :global(html.intro-cine) .intro-doors {
         display: block;
         position: absolute;
         inset: 0;
-        background: var(--color-surface);
-        transform: translateX(-100%);
-        transition: transform 560ms var(--ease-in-out-strong);
-        will-change: transform;
       }
 
-      :global(html.intro-cine) .intro-door-l {
-        clip-path: polygon(0 0, 60% 0, 48% 100%, 0 100%);
-      }
-
-      /* The right door overlaps the left by a hair: two clip edges meeting
-         exactly leave an antialiased crack of page between them. */
-      :global(html.intro-cine) .intro-door-r {
-        clip-path: polygon(59.8% 0, 100% 0, 100% 100%, 47.8% 100%);
-        transform: translateX(100%);
-      }
-
-      /* The sheet rides out with the left door, whose edge the seam is. */
       :global(html.intro-cine) .intro-frame {
         display: block;
         position: absolute;
@@ -865,28 +1084,25 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
         width: 100%;
         height: 100%;
         overflow: visible;
-        fill: none;
-        transform: translateX(-100%);
-        transition: transform 560ms var(--ease-in-out-strong);
       }
 
-      :global(html.intro-cine.loading) .intro-door,
-      :global(html.intro-cine.loading) .intro-frame {
-        transform: none;
-        transition: none;
-      }
-
+      /* The one thin line the water steps out from. */
       .intro-seam {
-        stroke: color-mix(in srgb, var(--color-paper) 35%, transparent);
-        stroke-width: 1;
+        fill: none;
+        stroke: color-mix(in srgb, var(--color-paper) 55%, transparent);
+        stroke-width: 2;
       }
 
-      .intro-scan {
-        stroke: color-mix(in srgb, var(--color-paper) 70%, transparent);
-        stroke-width: 1;
+      /* The head that scores the seam: the hairline's own width, brighter,
+         gone once the line is whole. */
+      .intro-seam-head {
+        fill: none;
+        stroke: color-mix(in srgb, var(--color-paper) 85%, transparent);
+        stroke-width: 2;
       }
 
-      .intro-latch {
+      .intro-dart {
+        fill: none;
         stroke: var(--color-accent);
         stroke-width: 6;
       }
@@ -899,96 +1115,16 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
         height: 100%;
       }
 
-      /* Registration marks: a hairline cross in each corner, drawn in one
-         after another and leaving with its door. */
-      :global(html.intro-cine) .intro-reg {
-        --reg-inset: clamp(1.5rem, 3vw, 3rem);
-        display: block;
-        position: absolute;
-        width: 22px;
-        height: 22px;
-      }
-
-      .intro-reg-tl {
-        top: var(--reg-inset);
-        left: var(--reg-inset);
-      }
-
-      .intro-reg-tr {
-        top: var(--reg-inset);
-        right: var(--reg-inset);
-      }
-
-      .intro-reg-br {
-        right: var(--reg-inset);
-        bottom: var(--reg-inset);
-      }
-
-      .intro-reg-bl {
-        bottom: var(--reg-inset);
-        left: var(--reg-inset);
-      }
-
-      .intro-reg::before,
-      .intro-reg::after {
-        content: '';
-        position: absolute;
-        background: color-mix(in srgb, var(--color-paper) 55%, transparent);
-      }
-
-      .intro-reg::before {
-        top: 50%;
-        right: 0;
-        left: 0;
-        height: 1px;
-        transform: scaleX(0);
-        animation: intro-reg-x 320ms var(--ease-out-strong) both;
-      }
-
-      .intro-reg::after {
-        top: 0;
-        bottom: 0;
-        left: 50%;
-        width: 1px;
-        transform: scaleY(0);
-        animation: intro-reg-y 320ms var(--ease-out-strong) both;
-      }
-
-      .intro-reg-tr::before,
-      .intro-reg-tr::after {
-        animation-delay: 70ms;
-      }
-
-      .intro-reg-br::before,
-      .intro-reg-br::after {
-        animation-delay: 140ms;
-      }
-
-      .intro-reg-bl::before,
-      .intro-reg-bl::after {
-        animation-delay: 210ms;
-      }
-
-      @keyframes intro-reg-x {
-        to {
-          transform: scaleX(1);
-        }
-      }
-
-      @keyframes intro-reg-y {
-        to {
-          transform: scaleY(1);
-        }
-      }
-
-      /* The part's seat: left of the seam, on the centre line. The script
-         composes its travel on top of the centring translate. */
+      /* The part's seat: dead centre, above the doors. The script composes
+         its rise and its ride home on top of the centring translate. Sized
+         off the shorter side too, so a short or narrow window gets a part
+         that fits its frame rather than one cut to a wide one. */
       :global(html.intro-cine) .intro-part {
         display: block;
         position: absolute;
         top: 50%;
-        left: 42vw;
-        width: clamp(6rem, 15vw, 9.5rem);
+        left: 50%;
+        width: clamp(4.5rem, min(15vw, 20svh), 9.5rem);
         aspect-ratio: 1;
         transform: translate(-50%, -50%);
       }
@@ -998,70 +1134,29 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
         width: 100%;
       }
 
-      :global(html.intro-cine) .intro-tool {
-        display: inline;
-        fill: none;
-        stroke: currentColor;
-        stroke-width: 1.1;
-        stroke-linecap: square;
+      /* The handoff. On the cut the hero is already set when the doors
+         open: the doors are its entrance. Its headline's character cascade
+         and its reveals are stood down (their inline motion styles
+         overruled), and the mark is the one exception: hidden until the
+         part seats on it, since the intro delivers it. The meter script
+         drops intro-flight on landing, and the head drops it regardless a
+         few seconds in. */
+      :global(html.intro-cine .hero [data-reveal]) {
+        opacity: 1 !important;
+        clip-path: none !important;
+        transform: none !important;
       }
 
-      /* Retracts about its own centre on 100. */
-      .intro-tool-in {
-        transform-box: fill-box;
-        transform-origin: center;
+      :global(html.intro-cine .hero [data-split]) {
+        opacity: 1 !important;
       }
 
-      /* The readout: bottom right, three reels under a dimension rule. */
-      :global(html.intro-cine) .intro-count {
-        position: absolute;
-        right: clamp(2.5rem, 6vw, 7rem);
-        bottom: clamp(2.5rem, 7vh, 6rem);
-        font-size: clamp(3.5rem, 7vw, 6.5rem);
+      :global(html.intro-cine .hero .split-char) {
+        transform: none !important;
       }
 
-      :global(html.intro-cine) .intro-num {
-        display: none;
-      }
-
-      :global(html.intro-cine) .intro-reels {
-        display: inline-flex;
-      }
-
-      /* One digit tall, one digit wide (tabular figures make 1ch exact),
-         showing whichever row the script has scrolled to. */
-      .intro-reel {
-        display: block;
-        width: 1ch;
-        height: 1em;
-        overflow: clip;
-      }
-
-      .intro-reel-col {
-        display: block;
-        will-change: transform;
-      }
-
-      .intro-reel-col i {
-        display: block;
-        height: 1em;
-        font-style: normal;
-      }
-
-      :global(html.intro-cine) .intro-rule {
-        display: block;
-        height: 1px;
-        margin-bottom: 0.22em;
-        background: color-mix(in srgb, var(--color-paper) 40%, transparent);
-        transform: scaleX(0);
-        transform-origin: right;
-        animation: intro-rule 620ms var(--ease-out-strong) 200ms both;
-      }
-
-      @keyframes intro-rule {
-        to {
-          transform: scaleX(1);
-        }
+      :global(html.intro-flight .hero-logo) {
+        visibility: hidden;
       }
 
       /* ---- Heat rail ---------------------------------------------- */
