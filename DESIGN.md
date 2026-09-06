@@ -25,9 +25,9 @@ touching UI.
    ramp, a deeper grape that clears AA as small text, and one burnt-orange
    warning hue for limits). It is declared and justified inside that page.
 2. **No idle glows. No gradient fills. No blur.** Life comes from motion
-   and solid color; content is sharp from its first painted frame (reveals
-   are clip wipes and drift, never a blur-in), and nothing frosted sits
-   over anything. Texture is film grain alone, used sparingly.
+   and solid color; content is sharp from its first painted frame, and
+   nothing frosted sits over anything. Texture is film grain alone, used
+   sparingly.
 3. **Type is the imagery.** LEMON MILK Medium (display; the italic exists
    for rare emphasis), Grey Qo (one script flourish per page), Ubuntu
    (body). Push display scale hard; keep body readable (Ubuntu is a plain
@@ -42,9 +42,12 @@ touching UI.
 4. **Machined edges.** Radius 0, no exceptions. Hairline rules and negative
    space over cards; glass panels where a surface is warranted.
 5. **Every animation is scroll-driven and motivated.** It communicates
-   hierarchy, story, or feedback, never decoration. Reveals are clip-path
-   wipes and masked character rises, never opacity cross-fades. Everything
-   respects `prefers-reduced-motion` and degrades without JS.
+   hierarchy, story, or feedback, never decoration. **Text never animates
+   into place**: headings, body copy, labels and buttons are printed and
+   finished on the first painted frame. Motion belongs to the page's own
+   travel (the cover wipe, the curtain, the drifting gallery columns) and to
+   the pointer, never to individual words sliding up or in from a side.
+   Everything respects `prefers-reduced-motion` and degrades without JS.
 6. **Placeholders are markers, not chrome.** The page never advertises what
    it is missing. `<Placeholder name="...">` renders nothing visible: it
    only stamps `data-placeholder` so every open slot is one grep away
@@ -95,20 +98,16 @@ either band.
 
 ## Motion engine — `src/scripts/motion.ts`
 
-One GSAP + ScrollTrigger layer wired to Lenis. The head sets
-`html.will-animate` synchronously (no first-paint flash); the module clears
-it on boot, and failsafes clear it (and reveal everything) if it never does.
-Under reduced motion the module bows out and static CSS stands in.
+One GSAP + ScrollTrigger layer wired to Lenis. Nothing on the page is
+hidden waiting for the module, so there is no rescue path and no first-paint
+flash to guard against: under reduced motion, or if the engine throws, the
+page simply stands as authored.
+
+There are no entrance primitives. Text and controls do not animate in, so
+there is no `[data-split]`, no `[data-reveal]` and no `Reveal.astro`; a
+heading is just a heading. What is left is the pointer work and the scenes.
 
 **Primitives** (data attributes, work on any page):
-- `[data-split]` — headings split into masked lines of characters that rise
-  from behind the line, scroll-locked; re-split on resize.
-- `[data-reveal]` (up/left/right/scale/diag) — crisp clip-path wipe on
-  enter, opacity held at 1 (no fade); `diag` is a corner wipe. Lists
-  alternate variants instead of repeating one. `data-reveal-group` staggers
-  children off the group's own line, and a `delay` is only read on a reveal
-  that stands alone. Watched with IntersectionObserver, with a timer-and-
-  rect backstop under it that opens anything left clipped.
   Nothing follows the cursor on buttons: hover on a control is a 1px rise
   and the fill turning grape, and display type never answers the pointer.
 - `[data-cursor-card="id"]` — hover detail that rides the pointer: the
@@ -174,9 +173,11 @@ they can never disagree), and a phone simply scrolls straight down the
 page with only the finale's sticky curtain reveal intact. One trick per
 section:
 
-- **Hero**: nothing along the top · the split intro headline sitting above
-  centre on an oversized indigo-watermark ONYX running edge to edge, only
-  its outer serifs shaved by the frame · one line along the bottom edge, team mark at the left and the two
+- **Hero**: nothing along the top · the headline sitting above centre on
+  the same axis as an oversized indigo-watermark ONYX running edge to edge,
+  only its outer serifs shaved by the frame (the word's trailing letter-space
+  is cancelled with a negative margin, so the two centre on the INK) · one
+  line along the bottom edge, team mark at the left and the two
   CTAs at the right, bottoms level and clear of the corner nav toggle. The
   wordmark is the cover wipe's far plane (`[data-cover-deep]`): it gives up
   almost half the sheet's travel on the same scrub, so the exit reads as
@@ -287,9 +288,9 @@ BaseLayout).
 | `scripts/motion.ts` | Motion engine: primitives + scenes. Reduced-motion safe. |
 | `layouts/BaseLayout.astro` | Shell: fonts, intro cover (the mark drawing itself over the count), heat rail, view transitions, GearNav, footer (`hideFooter` on home), imports motion. |
 | `components/home/*.astro` | The six one-page sections, composed by `pages/index.astro`. |
-| `components/Reveal.astro` | `[data-reveal]` wrapper. Variants and timing live in `motion.ts`, not here. |
 | `components/GearNav.astro` | Corner toggle (two rules that cross) + right-side drawer: paper panel, bare display-type links that zoom in (hover turns them grape, nothing floats), Lenis smooth anchors. Old filename, no gear. |
 | `components/Placeholder.astro` / `Footer.astro` | Invisible slot markers / the shared small print (blog pages only; home ends on the finale's contact line). |
+| `pages/privacy.astro` | The policy. The same paper page as a blog post (column, rule and back link all shared from `global.css`), last in the nav drawer, and last in the Footer's print line (the no-JS way in). Every claim on it is a fact about the build, so a form, an analytics script or a third-party font would each make it wrong. |
 
 ## Conventions
 

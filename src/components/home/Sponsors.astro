@@ -5,7 +5,6 @@
  * copy. Rungs wipe in one at a time on scrub via [data-ladder]/[data-rung].
  * Closes on the CTA into the contact section.
  */
-import Reveal from '../Reveal.astro';
 
 const rungs = [
   {
@@ -30,8 +29,8 @@ const rungs = [
     class="mx-auto flex min-h-[calc(100svh-9rem)] max-w-[88rem] flex-col justify-center px-5 pt-[clamp(3rem,9svh,8rem)] pb-[clamp(2.5rem,7svh,6rem)] sm:px-8"
   >
     <span class="mark" aria-hidden="true"></span>
-    <h2 id="sponsors-title" class="type-display text-[clamp(2.25rem,min(7vw,9svh),5.5rem)]" data-split>
-      Back the build.
+    <h2 id="sponsors-title" class="type-display text-[clamp(2.25rem,min(7vw,9svh),5.5rem)]">
+      Back the build
     </h2>
 
     <dl class="ladder mt-[clamp(1.5rem,4svh,2.5rem)]" data-ladder>
@@ -45,9 +44,9 @@ const rungs = [
       }
     </dl>
 
-    <Reveal variant="up" class="mt-[clamp(1.5rem,4svh,2.5rem)]">
+    <div class="mt-[clamp(1.5rem,4svh,2.5rem)]">
       <a href="#contact" class="btn btn-solid">Get in touch</a>
-    </Reveal>
+    </div>
   </div>
 </section>
 

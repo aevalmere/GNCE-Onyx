@@ -41,16 +41,23 @@ Manage the background server with `astro dev stop`, `astro dev status`, and `ast
   gradient fills. See `DESIGN.md`.
 - One shared shell: `src/layouts/BaseLayout.astro` (fonts, GearNav, Footer,
   intro cover, heat rail). It imports the motion engine
-  `src/scripts/motion.ts` (GSAP + ScrollTrigger + Lenis): generic
-  primitives (`[data-split]` masked lines, `[data-reveal]` clip wipes,
-  `[data-cursor-card]`) plus named scenes
-  (`[data-cover-wipe]`, `[data-drift]`, `[data-ladder]`,
+  `src/scripts/motion.ts` (GSAP + ScrollTrigger + Lenis): `[data-cursor-card]`
+  plus named scenes (`[data-cover-wipe]`, `[data-drift]`, `[data-ladder]`,
   `[data-progress]`). The engine carries nothing it does not use: a scene
-  whose markup is gone gets deleted, not parked. The cover wipe and the finale
+  whose markup is gone gets deleted, not parked. **Text never animates into
+  place.** Headings, body copy, labels and buttons are printed and finished
+  on the first frame; there is no entrance primitive and no `Reveal.astro`.
+  Do not reintroduce one. The cover wipe and the finale
   gesture lock run on fine pointers only; touch scrolls the page straight
   through, with just the finale's sticky curtain reveal. Nothing follows
   the cursor on buttons and display type never answers the pointer. All reduced-motion
   safe. No opacity cross-fades.
+- The page cannot be scrolled while the intro cover is down: `html.loading`
+  locks the document's overflow (`global.css`) and `motion.ts` stops Lenis
+  in the same breath, since Lenis scrolls by script and would otherwise
+  spend its stored wheel momentum the instant the lock came off. The head
+  script drops `loading` after 4.5s no matter what, so the lock cannot
+  stick.
 - The FTC drivetrain calculator (`src/pages/drivetrain.astro`, ported whole
   from Ethan Zhang's personal site and re-skinned to this site's tokens) is
   a self-contained tool page: every style is `.dt-` prefixed or declared in
@@ -109,14 +116,20 @@ Manage the background server with `astro dev stop`, `astro dev status`, and `ast
 - Design tokens live in the `@theme` block of `src/styles/global.css`;
   Tailwind v4 derives utilities from them (`bg-bg`, `text-accent`,
   `ease-out-strong`, ...). There is no `tailwind.config.*`.
-- Scroll entrances: wrap content in `components/Reveal.astro`; stagger
-  siblings by putting `data-reveal-group` on their parent. For a heading
-  that should fly in per character, add `data-split` to it instead (plain
-  text only, no inner markup). See `DESIGN.md` "Motion engine".
-  A component's own root element does NOT inherit the calling file's style
-  scope, so a scoped rule can never target a class passed to `<Reveal>`
-  (only Tailwind utilities work there). Put the reveal inside the element
-  the layout depends on, not around it.
+- Grape (`--color-accent`) is the highlight, and it is carried by TYPE, not
+  by frames: a hovered roster portrait turns its name grape (the plate wears
+  no border at all, in either state), a hovered event row turns its name, its
+  plus and its rule together, and a back link turns its arrow and its word
+  together. Hover is the only thing that colours a season title: an open row
+  keeps its name in the ink and lets its plus and rule carry the state. Nothing moves on hover except the roster's own scale.
+- Privacy lives at `src/pages/privacy.astro`: the same paper page as a blog
+  post, so `.post-col`, `.post-rule` and the `.back*` set are declared once
+  in `global.css` rather than in either file. Do not re-scope them into a
+  page. It is the last link in `GearNav`'s `links` array, set exactly like
+  the section anchors, and it closes the blog `Footer.astro` print line
+  (the no-JS way in). It states that the site has no form, no analytics, no
+  cookie and no third-party font, so adding any of those means editing that
+  page in the same commit.
 - Blog: posts are markdown in `src/content/blog/` (collection defined in
   `src/content.config.ts`), rendered by `src/pages/outreach/[id].astro`.
   Photos live in `src/assets/blog/` and go in with markdown image syntax

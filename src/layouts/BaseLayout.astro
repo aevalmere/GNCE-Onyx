@@ -114,15 +114,10 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
         /* history locked down: the browser keeps its own restore */
       }
 
-      // Set motion flags synchronously, before first paint, so the page
-      // never flashes the pre-animation state. The motion module clears
-      // these once it boots; the failsafes clear them if it never does.
+      // Set the intro flag synchronously, before first paint, so the cover
+      // is down on the first frame rather than a beat into the page.
       try {
         if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
-          document.documentElement.classList.add('will-animate');
-          setTimeout(function () {
-            document.documentElement.classList.remove('will-animate');
-          }, 2600);
           // Intro cover: home page only, and only with motion allowed.
           // The load meter (just below <body>) counts up with real font
           // loading and lifts the cover itself; this timeout is only a
@@ -984,8 +979,8 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     <GearNav />
 
     <!-- The motion engine: GSAP + ScrollTrigger + Lenis, the pinned hero
-         and roster, masked split-text, and clip-wipe reveals. Bows out
-         under reduced motion (static CSS stands in). -->
+         and roster, and the scrubbed scenes. Bows out under reduced motion
+         (the page is already complete without it). -->
     <script>
       import '../scripts/motion';
     </script>
@@ -1103,7 +1098,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
 
       .intro-dart {
         fill: none;
-        stroke: var(--color-accent);
+        stroke: var(--color-surface);
         stroke-width: 6;
       }
 
@@ -1135,26 +1130,10 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
       }
 
       /* The handoff. On the cut the hero is already set when the doors
-         open: the doors are its entrance. Its headline's character cascade
-         and its reveals are stood down (their inline motion styles
-         overruled), and the mark is the one exception: hidden until the
-         part seats on it, since the intro delivers it. The meter script
-         drops intro-flight on landing, and the head drops it regardless a
-         few seconds in. */
-      :global(html.intro-cine .hero [data-reveal]) {
-        opacity: 1 !important;
-        clip-path: none !important;
-        transform: none !important;
-      }
-
-      :global(html.intro-cine .hero [data-split]) {
-        opacity: 1 !important;
-      }
-
-      :global(html.intro-cine .hero .split-char) {
-        transform: none !important;
-      }
-
+         open: the doors are its entrance. The mark is the one exception:
+         hidden until the part seats on it, since the intro delivers it. The
+         meter script drops intro-flight on landing, and the head drops it
+         regardless a few seconds in. */
       :global(html.intro-flight .hero-logo) {
         visibility: hidden;
       }

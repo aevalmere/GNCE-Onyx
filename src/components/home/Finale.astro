@@ -190,6 +190,10 @@
      above it; it is also the page's sign-off, footer and all. Wraps into a
      centred stack where one line cannot hold it. */
   .reach {
+    /* Published so the key row can measure its drop against the headline's
+       size rather than its own (the row sets at body size). */
+    --reach-head-size: clamp(2.25rem, min(5.2vw, 9svh), 4.75rem);
+
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -226,13 +230,18 @@
      the two together have to clear the 88rem frame with air to spare, and
      the svh cap keeps a short landscape screen from stacking them. */
   .reach-head {
-    font-size: clamp(2.25rem, min(5.2vw, 9svh), 4.75rem);
+    font-size: var(--reach-head-size);
   }
 
   /* One family, one gap. The three keys share --key-h and the same 14px on
      every side, so the row reads as one machined strip. */
   .reach-row {
     --key-h: 3.375rem;
+    /* Centred on the CAPITALS, not on the line box. The display face carries
+       descender room under a line of all-caps, so box-centring parks the keys
+       high by that half: measured at 2px against a 74.9px headline, which is
+       the 0.027em below. Horizontal placement is untouched. */
+    transform: translateY(calc(var(--reach-head-size) * 0.027));
 
     display: flex;
     flex-wrap: wrap;
@@ -560,15 +569,39 @@
     const REV_MIN = 15;
     // Push one is answered with the tug; a push that keeps coming after it
     // has accumulated this much swallowed travel is not asking twice
-    // politely, and the curtain opens without a second gesture.
-    const OPEN_ACC = 320;
+    // politely, and the curtain opens without a second gesture. Held at 320
+    // this was most of a second of a trackpad pour before anything happened,
+    // which read as the page ignoring the hand rather than resisting it.
+    const OPEN_ACC = 200;
     // Deliberate leave/return thresholds, in accumulated pixels: about a
     // finger's twitch on a trackpad, well under one wheel notch.
     const UP_RELEASE = 26;
 
-    // Matches --ease-out-strong closely enough for a move this long: all the
-    // speed at the front, the last few pixels laid down rather than stopped.
-    const outStrong = (t: number) => 1 - Math.pow(1 - t, 4);
+    // --ease-out-strong itself, solved rather than approximated. The old
+    // quartic stood in for it and read softer at the front, which is most of
+    // what made the lift feel slow: the token front-loads harder than any
+    // 1-(1-t)^n does. Now the curtain and every CSS transition on the site
+    // are on one curve. Newton from t=x converges in a couple of steps here
+    // (the x slope never touches zero on this curve), and the ends are
+    // returned flat so the solver is never asked about them.
+    const bezier = (x1: number, y1: number, x2: number, y2: number) => {
+      const a = (u: number, v: number) => 1 - 3 * v + 3 * u;
+      const b = (u: number, v: number) => 3 * v - 6 * u;
+      const at = (t: number, u: number, v: number) => ((a(u, v) * t + b(u, v)) * t + 3 * u) * t;
+      const dx = (t: number) => 3 * a(x1, x2) * t * t + 2 * b(x1, x2) * t + 3 * x1;
+      return (x: number) => {
+        if (x <= 0) return 0;
+        if (x >= 1) return 1;
+        let t = x;
+        for (let i = 0; i < 6; i++) {
+          const d = dx(t);
+          if (!d) break;
+          t -= (at(t, x1, x2) - x) / d;
+        }
+        return at(t, y1, y2);
+      };
+    };
+    const outStrong = bezier(0.23, 1, 0.32, 1);
 
     let state: Level = 'free';
     let pushes = 0;
@@ -776,10 +809,14 @@
       const id = begin();
       // The move's own end, or a backstop if it never reports one: either way
       // the state is handed on exactly once.
-      guard = window.setTimeout(() => settle(id, next, spent), lenis?.scrollTo ? 1500 : 900);
+      guard = window.setTimeout(() => settle(id, next, spent), lenis?.scrollTo ? 1100 : 900);
       if (lenis?.scrollTo) {
         lenis.scrollTo(target, {
-          duration: 0.95,
+          // One viewport of travel, so it can afford to be brisk: on the real
+          // curve almost all of this is spent in the first third and the rest
+          // is the sponsors coming to rest under the reader. At 0.95 the move
+          // was legible twice over and the second half was just waiting.
+          duration: 0.62,
           easing: outStrong,
           lock: true,
           force: true,
@@ -802,13 +839,13 @@
       const id = begin();
       guard = window.setTimeout(() => settle(id), 900);
       lenis.scrollTo(reach + give, {
-        duration: 0.13,
+        duration: 0.11,
         easing: (t: number) => 1 - Math.pow(1 - t, 2),
         force: true,
         onComplete: () => {
           if (id !== token) return;
           lenis.scrollTo(reach, {
-            duration: 0.32,
+            duration: 0.24,
             easing: outStrong,
             force: true,
             onComplete: () => settle(id),

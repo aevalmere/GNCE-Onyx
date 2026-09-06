@@ -30,7 +30,6 @@
  * the motion engine, so it still opens when that engine is off.
  */
 import Placeholder from '../Placeholder.astro';
-import Reveal from '../Reveal.astro';
 
 const events = [
   { key: 'q1', name: 'Qualifier 1' },
@@ -51,10 +50,8 @@ const galleryCols = [
 <section id="season" class="season" aria-labelledby="season-title">
   <div class="season-frame mx-auto max-w-[88rem] px-5 sm:px-8">
     <span class="mark" aria-hidden="true"></span>
-    <h2 id="season-title" class="season-title type-display" data-split>Biobuzz</h2>
-    <Reveal variant="up" class="mt-6">
-      <p class="season-line text-muted">Our rookie season: 2026-2027, presented by RTX.</p>
-    </Reveal>
+    <h2 id="season-title" class="season-title type-display">Biobuzz</h2>
+    <p class="season-line text-muted mt-6">Our rookie season: 2026-2027, presented by RTX.</p>
 
     <div class="events mt-[clamp(2.5rem,7svh,5rem)]" data-cursor-lane-root>
       {
@@ -161,6 +158,7 @@ const galleryCols = [
   /* ---- Event rows ------------------------------------------------- */
   .events {
     border-bottom: 1px solid var(--color-line);
+    transition: border-color 220ms ease;
   }
 
   /* Positioned so the flying poster can be parked in here: a clone inside
@@ -169,6 +167,21 @@ const galleryCols = [
   .event {
     position: relative;
     border-top: 1px solid var(--color-line);
+    transition: border-color 220ms ease;
+  }
+
+  /* The row's own rule takes the grape with the name it belongs to, so a
+     live event is bracketed rather than just recoloured. :has, because the
+     rule hangs on the row's parent and the pointer is on the button. */
+  .event:has(button.event-row:hover),
+  .event:has(.event-row[aria-expanded='true']) {
+    border-top-color: var(--color-accent);
+  }
+
+  /* The last rule under the list belongs to the last row the same way. */
+  .events:has(.event:last-child button.event-row:hover),
+  .events:has(.event:last-child .event-row[aria-expanded='true']) {
+    border-bottom-color: var(--color-accent);
   }
 
   .event-head {
@@ -194,7 +207,9 @@ const galleryCols = [
   .event-name {
     display: block;
     font-size: clamp(1.75rem, 5.6vw, 3.75rem);
-    transition: transform 260ms var(--ease-out-strong);
+    transition:
+      transform 260ms var(--ease-out-strong),
+      color 200ms ease;
   }
 
   /* Closed row reads as a plus, open row as a minus: the bar turns, it
@@ -239,10 +254,15 @@ const galleryCols = [
     cursor: default;
   }
 
-  /* Hover moves nothing, here as everywhere: the plus turning grape is the
-     whole hover, and the small nudge is saved for the press itself. */
+  /* Hover moves nothing, here as everywhere: the name turns grape with the
+     plus and the rule, and the small nudge is saved for the press. Hover is
+     the ONLY thing that colours a title. An open row keeps its name in the
+     ink: the panel under it is already saying which event is live, and a
+     second grape title sitting there while the reader looks at the poster
+     reads as a control stuck mid-press. */
   @media (hover: hover) and (pointer: fine) {
-    button.event-row:hover .event-mark {
+    button.event-row:hover .event-mark,
+    button.event-row:hover .event-name {
       color: var(--color-accent);
     }
   }

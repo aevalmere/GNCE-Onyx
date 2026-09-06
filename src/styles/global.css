@@ -241,70 +241,17 @@ body {
 }
 
 /* ==================================================================
-   REVEALS — crisp clip-path wipes. Opacity held at 1 so nothing
-   cross-fades (no "ombre"). Directional. Driven by motion.ts; hidden
-   states gated behind html.js so no-JS shows everything.
+   THE LOAD COVER — nothing scrolls while it is down. The page under it
+   is not the reader's yet, and a wheel or a swipe over the cover used to
+   run the whole page past the hero before the lift ever happened. The
+   class is set in <head> and is taken back by the meter script (and by a
+   4.5s failsafe in the same head script), so this can never stick.
    ================================================================== */
-html.js [data-reveal] {
-  opacity: 0;
-  /* The rescue: if the motion module never loads (bundle failure), nothing
-     would ever lift this opacity. The animation forces it after 4s; a booted
-     module writes inline opacity long before then, making this a no-op. */
-  animation: reveal-rescue 0s linear 4s forwards;
-}
-
-@keyframes reveal-rescue {
-  to {
-    opacity: 1;
-  }
-}
-
-/* Stay hidden until motion.ts clips each reveal in initReveals (which sets
-   opacity 1 + clip-path together). Flipping to opacity 1 here, at boot, made
-   reveals flash fully visible for the ~second before initReveals ran. */
-html.gsap [data-reveal] {
-  transition: none !important;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html.js [data-reveal] {
-    opacity: 1;
-  }
-}
-
-/* ==================================================================
-   SPLIT TEXT — masked lines of characters that rise from behind the
-   line. Crisp mask reveal, never a fade.
-   ================================================================== */
-.split-line {
-  display: block;
-  overflow: clip;
-  padding-bottom: 0.08em;
-}
-
-.split-line-inner {
-  display: block;
-}
-
-.split-word {
-  display: inline-block;
-  white-space: nowrap;
-}
-
-.split-char {
-  display: inline-block;
-  will-change: transform;
-}
-
-[data-split] {
-  perspective: 700px;
-}
-
-/* No-flash: hide what is about to move before first paint. Set
-   synchronously in <head>; cleared when motion.ts boots (failsafe clears
-   it otherwise). */
-html.will-animate [data-split] {
-  opacity: 0;
+html.loading,
+html.loading body {
+  overflow: hidden;
+  touch-action: none;
+  overscroll-behavior: none;
 }
 
 /* Display type does not answer the pointer: headings, subtitles and the
@@ -381,6 +328,66 @@ html.no-js .cursor-card {
     border-color: var(--color-accent);
     color: var(--color-paper);
   }
+}
+
+/* ==================================================================
+   PAPER PAGES — the blog post and /privacy/, which are the same page
+   with different content in it. Declared here rather than in either
+   file so the two cannot drift: a reading column, the rule under the
+   masthead, and the back link at the top of it.
+   ================================================================== */
+/* Sized off the body: the text inside the padding runs near seventy
+   characters, which is the whole reason the column is not simply as wide as
+   the page. The header and the body share it, so the dateline, the title and
+   the first paragraph hang off the same margin. */
+.post-col {
+  max-width: 44rem;
+}
+
+.post-rule {
+  margin-top: clamp(2.25rem, 4.5vw, 3.25rem);
+  border: 0;
+  border-top: 1px solid var(--color-line);
+}
+
+/* Back link: the arrow leads, the word follows, and the pair turns grape
+   together on hover. Nothing slides. */
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0;
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+/* On the label's own optical centre. The arrow is set larger than the small
+   caps beside it, so the two line boxes centre together while the glyphs do
+   not: this is that difference (2px at the arrow's 20px), and it holds at
+   every size because it is written in the arrow's own em. Relative, so
+   nothing in the line moves to make room for it. */
+.back-arrow {
+  position: relative;
+  top: -0.1em;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.back-arrow,
+.back-label {
+  transition: color 200ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .back:hover .back-arrow,
+  .back:hover .back-label {
+    color: var(--color-accent);
+  }
+}
+
+.back:focus-visible .back-arrow,
+.back:focus-visible .back-label {
+  color: var(--color-accent);
 }
 
 /* ==================================================================

@@ -10,7 +10,6 @@
  */
 import { getCollection, render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import Reveal from '../../components/Reveal.astro';
 
 export async function getStaticPaths() {
   const posts = await getCollection('blog');
@@ -34,20 +33,16 @@ const dateStr = post.data.date.toLocaleDateString('en-US', {
     <!-- POST HEADER -->
     <header class="pt-32 pb-10 sm:pt-40">
       <div class="post-col mx-auto px-5 sm:px-8">
-        <Reveal>
-          <p>
-            <a class="back" href={`${base}/#outreach`}>
-              <span class="back-arrow" aria-hidden="true">&larr;</span>
-              <span class="back-label type-label">Outreach</span>
-            </a>
-          </p>
-        </Reveal>
+        <p>
+          <a class="back" href={`${base}/#outreach`}>
+            <span class="back-arrow" aria-hidden="true">&larr;</span>
+            <span class="back-label type-label">Outreach</span>
+          </a>
+        </p>
 
-        <Reveal delay={90} class="mt-10">
-          <p class="type-label text-faint">{dateStr}</p>
-        </Reveal>
+        <p class="type-label text-faint mt-10">{dateStr}</p>
 
-        <h1 class="type-display mt-4 text-[clamp(2rem,5vw,3.5rem)]" data-split>
+        <h1 class="type-display mt-4 text-[clamp(2rem,5vw,3.5rem)]">
           {post.data.title}
         </h1>
 
@@ -67,20 +62,9 @@ const dateStr = post.data.date.toLocaleDateString('en-US', {
 </BaseLayout>
 
 <style>
-  /* One reading column for the header and the body both, so the dateline,
-     the title and the first paragraph hang off the same margin. Sized off
-     the body: the text inside the padding runs near seventy characters,
-     which is the whole reason the column is not simply as wide as the page. */
-  .post-col {
-    max-width: 44rem;
-  }
-
-  .post-rule {
-    margin-top: clamp(2.25rem, 4.5vw, 3.25rem);
-    border: 0;
-    border-top: 1px solid var(--color-line);
-  }
-
+  /* The column, the rule and the back link are in global.css: this page and
+     /privacy/ are the same paper page and share one declaration of it. The
+     reading bar is the only thing here that is the post's alone. */
   .read-progress {
     position: fixed;
     top: 0;
@@ -93,40 +77,4 @@ const dateStr = post.data.date.toLocaleDateString('en-US', {
     transform-origin: 0 0;
   }
 
-  /* Back button: the arrow leads, the word follows; the arrow's short
-     slide is the whole hover. */
-  .back {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.6rem;
-    padding: 0.4rem 0;
-    color: var(--color-ink);
-    text-decoration: none;
-  }
-
-  .back-arrow {
-    font-size: 1.25rem;
-    line-height: 1;
-    transition: transform 300ms var(--ease-out-strong);
-  }
-
-  .back-label {
-    transition: color 200ms ease;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .back:hover .back-arrow {
-      transform: translateX(-0.4rem);
-    }
-
-    .back:hover .back-label {
-      color: var(--color-accent);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .back-arrow {
-      transition: none;
-    }
-  }
 </style>

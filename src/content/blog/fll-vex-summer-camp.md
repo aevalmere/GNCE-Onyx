@@ -1,20 +1,20 @@
 ---
 title: Our FLL and VEX summer camp
 date: 2026-08-21
-description: Five days of FLL mission work with GNCE Mercury running VEX next door, and why both tracks were in the same building.
+description: Two weeks of mission work on the BIOGLOW season, an engineering challenge at noon every day, and a VEX track in the next room for anyone who had never opened a kit.
 author: GNCE Onyx
 ---
 
-Our summer camp ran Monday through Friday, 9 to 1, and closed with a scrimmage. We hosted it with GNCE Mercury 26413. They ran VEX, we ran FLL, and the split is the whole point of the week.
+Our summer camp ran two weeks, Monday through Friday, 9 to 1. The first week was all FLL, run with GNCE Organized Anarchy 26112, and we were in the room to help. The second week we split the building with GNCE Mercury 26413: FLL was ours to run, VEX was theirs, and we worked their side too.
 
-The FLL track was an advanced one, built on SPIKE Prime kits around BIOGLOW, the 2026-2027 season. Students worked missions against the real ruleset, which means programming and mechanism design scored the way a tournament scores them. That is the gap between a team that can build a robot and a team that can score with one, and five days is just enough to see across it.
+The FLL track was an advanced one, built on SPIKE Prime kits around BIOGLOW, the 2026-2027 season. Students worked missions against the real ruleset, so programming and mechanism design were scored the way a tournament scores them. That is the difference between a team that can build a robot and a team that can score with one, and a week is just enough time to see across it.
 
-Every day at noon the mission work stopped for an engineering challenge. One problem, a clock, no worksheets. Breaking the rhythm was deliberate. A mission is something you cannot fail at quickly, and the noon challenge is something you can, so students got to be wrong at 12:15 and right by 12:45 and take that back to the table with them.
+Every day at noon the mission work stopped for an engineering challenge. One problem, a clock, no worksheets. Breaking up the morning was on purpose: a mission is something you cannot fail at quickly, and the noon challenge is something you can, so students got to be wrong at 12:15, right by 12:45, and carry that back to the table with them.
 
-Mentors were in the room at 8:45 every morning, which is the part of a camp nobody photographs.
+The VEX track in the second week was for students who had never opened a VEX kit. Same schedule, same noon challenges, different parts in the bin. It is there because of who an FLL-only camp loses. A student who spends a week on SPIKE Prime and likes it has to go find the next thing alone, and most of them never do. With VEX in the next room, the next thing is already in the building, run by people they have already met.
 
-Mercury ran the same week on VEX hardware, for students who had never opened a VEX kit. Same schedule, same noon challenges, different parts in the bin. That track exists because of who the FLL track otherwise loses. A kid who spends a week on SPIKE Prime and likes it has to go find the next thing alone, and most of them never do. Putting VEX in the next room means the next thing is already in the building, run by people they have already met.
+Mentors were in at 8:45 every morning, before any of it started, which is the part of a camp nobody photographs.
 
-So the camp sits in the middle of a longer plan. [August 15](/GNCE-Onyx/outreach/summer-robotics-seminar/) was the front door: three hours at the Weston Public Library, free, no experience asked for. This week was five days and a real ruleset. In the fall we expect to run VEX alongside FLL instead of as a summer experiment, and the FTC side is getting an academy, the same shape as these sessions but far deeper and running long enough to actually build somebody.
+Both weeks closed with a scrimmage, robot against robot, which is the only score that has ever really mattered in this sport.
 
-Friday closed with the scrimmage, robot against robot, which is the only score that has ever really mattered in this sport. But a student who walked in on August 15 knowing nothing now has somewhere to be in October. Last summer, they had a good afternoon and no second step.
+We also ran a free afternoon at the Weston Public Library this summer, for anyone with no robotics experience at all. That one has [its own post](/GNCE-Onyx/outreach/summer-robotics-seminar/). This fall we expect to run VEX alongside FLL instead of as a summer experiment, and the FTC side is getting an academy: the same shape as these sessions, far deeper, and running long enough to actually build somebody.

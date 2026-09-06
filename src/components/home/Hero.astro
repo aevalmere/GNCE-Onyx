@@ -23,21 +23,14 @@
  * reads as two planes at two speeds. Desktop only; a phone scrolls straight
  * past and gets its own centred composition (media query below).
  *
- * The entrances hang off one `data-reveal-group` rather than hand-set
- * delays. That is not only tidier: a standalone reveal waits for its own top
- * to climb past 86% of the viewport, and the foot sits below that line on a
- * tall screen, so on its own it would sit clipped and never open. The group
- * fires off the group's box, which starts at the top of the page.
- *
  * Both calls to action are in-page anchors: Lenis smooth-scrolls them.
  */
-import Reveal from '../Reveal.astro';
 
 const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
 ---
 
 <section class="hero band-deep" aria-label="GNCE Onyx">
-  <div class="hero-inner mx-auto w-full max-w-[88rem] px-5 sm:px-8" data-reveal-group>
+  <div class="hero-inner mx-auto w-full max-w-[88rem] px-5 sm:px-8">
     <div class="hero-stage">
       <div class="hero-deep" data-cover-deep>
         <span class="hero-deep-word" aria-hidden="true">ONYX</span>
@@ -49,9 +42,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
              draws itself on the intro cover and sits in the favicon's paper
              tile. -->
         <div class="hero-logo">
-          <Reveal variant="up">
-            <img src={`${base}/logo.svg`} alt="GNCE Onyx" width="512" height="512" />
-          </Reveal>
+          <img src={`${base}/logo.svg`} alt="GNCE Onyx" width="512" height="512" />
         </div>
       </div>
       <!-- The team number holds the frame's top right corner, the third
@@ -60,22 +51,15 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
            launches from the far right and is the first thing fully off,
            three planes at three speeds. -->
       <p class="hero-team type-display" data-cover-fast>Team 37122</p>
-      <h1 class="hero-title type-display" data-split="intro">
-        A rookie team of championship veterans.
+      <h1 class="hero-title type-display">
+        A rookie team of championship veterans
       </h1>
     </div>
 
-    <!-- The reveals sit inside the controls rather than being them: a
-         component's root element does not carry this file's style scope, so
-         anything the layout depends on is authored here. -->
     <div class="hero-foot">
       <div class="hero-actions">
-        <Reveal variant="up">
-          <a href="#sponsors" class="btn btn-solid">Sponsor the team</a>
-        </Reveal>
-        <Reveal variant="up">
-          <a href="#season" class="hero-link">Our first season</a>
-        </Reveal>
+        <a href="#sponsors" class="btn btn-solid">Sponsor the team</a>
+        <a href="#season" class="hero-link">Our first season</a>
       </div>
     </div>
   </div>
@@ -141,7 +125,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     color: color-mix(in srgb, var(--color-surface) 16%, transparent);
   }
 
-  /* Pinned to the stage's top right: the headline reads high-left, the foot
+  /* Pinned to the stage's top right: the headline holds the centre, the foot
      holds the bottom line, and the number squares the frame's empty corner. */
   .hero-team {
     position: absolute;
@@ -160,6 +144,12 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
   .hero-title {
     position: relative;
     z-index: 1;
+    /* On the wordmark's own axis. The sentence and the ONYX behind it are
+       one object, and a headline that started at the left margin while the
+       word ran edge to edge read as two things that happened to overlap.
+       Both ends of the measure now answer to the same centre line. */
+    margin-inline: auto;
+    text-align: center;
     /* The headline owns the wide measure: it scales until it breaks into two
        long lines across the 88rem column, so a 1920 viewport gets a headline
        and not a headline with a field of empty band beside it. The ch cap is what
@@ -255,10 +245,6 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
       right: 0;
       width: fit-content;
       margin-inline: auto;
-    }
-
-    .hero-title {
-      text-align: center;
     }
 
     .hero-foot {

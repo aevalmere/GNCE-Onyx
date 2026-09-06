@@ -13,7 +13,6 @@
  * under each entry, and three columns that repeat exactly down the list.
  */
 import { getCollection } from 'astro:content';
-import Reveal from '../Reveal.astro';
 
 const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
 const posts = (await getCollection('blog')).sort(
@@ -26,23 +25,21 @@ const shortDate = (d: Date) =>
 
 <section id="outreach" class="band-deep" aria-labelledby="outreach-title">
   <div class="outreach-frame mx-auto w-full max-w-[88rem] px-5 sm:px-8">
-    <h2 id="outreach-title" class="type-display text-[clamp(2.5rem,7vw,6.5rem)]" data-split>
+    <h2 id="outreach-title" class="type-display text-[clamp(2.5rem,7vw,6.5rem)]">
       Outreach
     </h2>
 
     <!-- POSTS: a ruled index. One entry per post, columns aligned across
          every row, so a season with one post reads the same as a season
          with ten. -->
-    <div class="posts" data-reveal-group>
+    <div class="posts">
       {
         posts.map((post) => (
-          <Reveal variant="up">
-            <a class="post-row" href={`${base}/outreach/${post.id}/`}>
-              <span class="post-date type-label">{shortDate(post.data.date)}</span>
-              <span class="post-title type-display">{post.data.title}</span>
-              <span class="post-desc">{post.data.description}</span>
-            </a>
-          </Reveal>
+          <a class="post-row" href={`${base}/outreach/${post.id}/`}>
+            <span class="post-date type-label">{shortDate(post.data.date)}</span>
+            <span class="post-title type-display">{post.data.title}</span>
+            <span class="post-desc">{post.data.description}</span>
+          </a>
         ))
       }
       {posts.length === 0 && <p class="post-empty text-muted">No posts yet.</p>}
@@ -52,12 +49,10 @@ const shortDate = (d: Date) =>
          button finishes the sentence rather than sitting under it, so the two
          share one baseline and one line (see .ask). -->
     <div class="ask">
-      <h3 class="type-display text-[clamp(2rem,4.5vw,4.5rem)]" data-split>
-        Got an event? We want in.
+      <h3 class="type-display text-[clamp(2rem,4.5vw,4.5rem)]">
+        Got an event? We want in!
       </h3>
-      <Reveal variant="up" delay={90}>
-        <a href="#contact" class="btn btn-solid">Invite us</a>
-      </Reveal>
+      <a href="#contact" class="btn btn-solid">Invite us</a>
     </div>
   </div>
 </section>
@@ -167,9 +162,7 @@ const shortDate = (d: Date) =>
      is what leaves room for the button on a laptop line; it still wraps and
      balances on its own below that.
 
-     Both children are placed by this rule alone. The reveal wrapper comes
-     out of Reveal.astro, so it never carries this component's scope and
-     cannot be selected by class from here; flex defaults do the rest.
+     Both children are placed by this rule alone; flex defaults do the rest.
 
      Centred, not baselined: on the text's own baseline the button's box
      hung below the sentence, and a control that sags off the line it

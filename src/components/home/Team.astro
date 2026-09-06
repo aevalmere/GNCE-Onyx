@@ -22,7 +22,6 @@
  * attention falling off with distance.
  */
 import { Image } from 'astro:assets';
-import Reveal from '../Reveal.astro';
 
 // Previous GNCE team numbers only; the record lives in git history.
 // Both orders below are the team's own and neither is a ranking: the roster
@@ -74,9 +73,9 @@ const photoFor = (name: string) => {
 
 <section id="team" aria-labelledby="team-title">
   <div class="team-frame mx-auto w-full max-w-[88rem] px-5 sm:px-8">
-    <h2 id="team-title" class="team-head type-display" data-split>Team members</h2>
+    <h2 id="team-title" class="team-head type-display">Team members</h2>
 
-    <ul class="roster" data-reveal-group style={`--columns:${columns};--rows:${rowCount}`}>
+    <ul class="roster" style={`--columns:${columns};--rows:${rowCount}`}>
       {
         roster.map((member) => {
           const photo = photoFor(member.name);
@@ -92,39 +91,37 @@ const photoFor = (name: string) => {
           // alt repeats nothing: the photo is labelled by that text.
           return (
             <li class="member">
-              <Reveal variant="up">
-                <div
-                  class="slot member-plate"
-                  data-placeholder={photo ? undefined : `member-photo-${slug(member.name)}`}
-                >
-                  {photo ? (
-                    <Image
-                      class="member-photo"
-                      src={photo}
-                      alt=""
-                      widths={[...new Set([260, Math.min(520, photo.width)])]}
-                      sizes="(min-width: 90rem) 245px, (min-width: 40rem) 18vw, 45vw"
-                      loading="eager"
-                    />
-                  ) : (
-                    // Stand-in portrait until the photo lands: head and
-                    // shoulders in the plate's own edge tone, the shoulders
-                    // running off the bottom the way every default avatar
-                    // does.
-                    <svg class="member-avatar" viewBox="0 0 64 64" aria-hidden="true">
-                      <circle cx="32" cy="25" r="11" />
-                      <path d="M8 68 C8 49 18 41 32 41 C46 41 56 49 56 68 Z" />
-                    </svg>
-                  )}
-                </div>
-                <p class="member-name">{member.name}</p>
-                <p class="member-teams">
-                  {member.teams.length ? member.teams.join(' · ') : 'Rookie'}
-                  <span class="sr-only">
-                    {member.teams.length ? ' previous GNCE teams' : ', no previous teams'}
-                  </span>
-                </p>
-              </Reveal>
+              <div
+                class="slot member-plate"
+                data-placeholder={photo ? undefined : `member-photo-${slug(member.name)}`}
+              >
+                {photo ? (
+                  <Image
+                    class="member-photo"
+                    src={photo}
+                    alt=""
+                    widths={[...new Set([260, Math.min(520, photo.width)])]}
+                    sizes="(min-width: 90rem) 245px, (min-width: 40rem) 18vw, 45vw"
+                    loading="eager"
+                  />
+                ) : (
+                  // Stand-in portrait until the photo lands: head and
+                  // shoulders in the plate's own edge tone, the shoulders
+                  // running off the bottom the way every default avatar
+                  // does.
+                  <svg class="member-avatar" viewBox="0 0 64 64" aria-hidden="true">
+                    <circle cx="32" cy="25" r="11" />
+                    <path d="M8 68 C8 49 18 41 32 41 C46 41 56 49 56 68 Z" />
+                  </svg>
+                )}
+              </div>
+              <p class="member-name">{member.name}</p>
+              <p class="member-teams">
+                {member.teams.length ? member.teams.join(' · ') : 'Rookie'}
+                <span class="sr-only">
+                  {member.teams.length ? ' previous GNCE teams' : ', no previous teams'}
+                </span>
+              </p>
             </li>
           );
         })
@@ -166,10 +163,15 @@ const photoFor = (name: string) => {
      everyone. The cell width sets the size, so the names below sit on one
      line across the whole grid. The fill and the edge come from .slot
      (global.css), so a portrait plate and a media plate are the same object. */
+  /* No edge, in either state. A photograph cropped square on a plain ground
+     is already a shape, and the frame the shared .slot rule draws was only
+     ever there to hold the empty placeholder together. The name under it
+     carries the highlight instead. */
   .member-plate {
     position: relative;
     width: 100%;
     aspect-ratio: 1 / 1;
+    border: 0;
   }
 
   /* The silhouette fills the plate; anything past the viewBox (the
@@ -219,6 +221,7 @@ const photoFor = (name: string) => {
 
   .member-name {
     margin-top: 0.85rem;
+    transition: color 200ms ease;
     font-weight: 700;
     font-size: clamp(0.9375rem, 1.05vw, 1.125rem);
     line-height: 1.25;
@@ -247,6 +250,10 @@ const photoFor = (name: string) => {
       transform: scale(1.045);
     }
 
+    .member:hover .member-name {
+      color: var(--color-accent);
+    }
+
     .member[data-near] .member-plate {
       transform: scale(1.022);
     }
@@ -254,6 +261,10 @@ const photoFor = (name: string) => {
 
   @media (prefers-reduced-motion: reduce) {
     .member-plate {
+      transition: none;
+    }
+
+    .member-name {
       transition: none;
     }
 

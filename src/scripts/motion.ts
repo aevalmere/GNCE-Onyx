@@ -4,12 +4,14 @@
  * One GSAP + ScrollTrigger layer wired to Lenis so smooth scroll and
  * scroll-driven animation share a single clock. Everything is:
  *   - motivated (each effect communicates hierarchy, story, or feedback)
- *   - crisp and scroll-locked (clip-path wipes and masked rises, no fades)
- *   - reduced-motion safe (the module bows out; static CSS stands in)
+ *   - scroll-locked (the page's own travel drives it, never a timer)
+ *   - reduced-motion safe (the module bows out; the page is already whole)
  *   - transform / opacity / clip-path only (GPU, no layout thrash)
  *
- * Structure: generic primitives ([data-*] attributes) + named scenes that
- * only run when their element is on the page. See DESIGN.md.
+ * Nothing here animates text into place: headings, body copy and buttons
+ * are printed and finished on the first frame. What is left is the
+ * pointer-following cards plus the named scroll scenes, each of which only
+ * runs when its element is on the page. See DESIGN.md.
  */
 import Lenis from 'lenis';
 import { gsap } from 'gsap';
@@ -21,34 +23,14 @@ const root = document.documentElement;
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const FINE = matchMedia('(hover: hover) and (pointer: fine)').matches;
 
-/** Reveal everything immediately — the reduced-motion / failure path.
- *  Clears the transforms too: an element parked at its pre-reveal offset is
- *  as broken as one still clipped, and split headings hide by pushing their
- *  characters below the mask rather than by touching the heading itself. */
-function showEverything() {
-  root.classList.remove('will-animate');
-  document
-    .querySelectorAll<HTMLElement>('[data-split],[data-reveal]')
-    .forEach((el) => {
-      el.style.opacity = '1';
-      el.style.clipPath = 'none';
-      el.style.filter = 'none';
-      el.style.transform = '';
-      el.style.willChange = '';
-      if (el.hasAttribute('data-reveal')) el.dataset.revealed = '1';
-    });
-  document
-    .querySelectorAll<HTMLElement>('.split-char')
-    .forEach((c) => (c.style.transform = ''));
-}
-
-if (REDUCED) {
-  showEverything();
-} else {
+/* Nothing on the page is hidden waiting for this module, so there is no
+   rescue path to run: under reduced motion, or if the engine throws on the
+   way up, the page simply stands as authored. */
+if (!REDUCED) {
   try {
     boot();
   } catch (err) {
-    showEverything();
+    root.classList.remove('gsap');
   }
 }
 
@@ -62,6 +44,11 @@ function boot() {
 
   const lenis = new Lenis({ lerp: 0.1, wheelMultiplier: 1, anchors: true });
   lenis.on('scroll', ScrollTrigger.update);
+  // The cover is down: hold the page still under it. global.css locks the
+  // document's own overflow; this is the same instruction to Lenis, which
+  // scrolls by script and would otherwise keep its own wheel momentum and
+  // spend it the moment the lock came off.
+  if (root.classList.contains('loading')) lenis.stop();
   gsap.ticker.add((t) => lenis.raf(t * 1000));
   gsap.ticker.lagSmoothing(0);
   (window as any).__motion = { lenis, ScrollTrigger, gsap, refresh: scheduleRefresh };
@@ -74,9 +61,6 @@ function boot() {
 
   const run = () => {
     try {
-      // primitives
-      initReveals();
-      initSplits();
       if (FINE) initCursorCards();
       // scenes (each no-ops if its element is absent)
       initCoverWipe();
@@ -86,11 +70,10 @@ function boot() {
       initTierLadder();
       initProgress();
       root.classList.add('motion-booted');
-      root.classList.remove('will-animate');
       ScrollTrigger.refresh();
       watchLayout();
     } catch (err) {
-      showEverything();
+      /* a scene failed to build; the rest of the page is unaffected */
     }
   };
 
@@ -99,6 +82,7 @@ function boot() {
   const kick = () => {
     if (started) return;
     started = true;
+    lenis.start();
     setTimeout(run, startDelay);
   };
   if (introActive) {
@@ -110,16 +94,16 @@ function boot() {
     fontsReady.then(kick);
     setTimeout(kick, 1400);
   }
-  const revealFailsafe = introActive ? 6800 : startDelay + 2800;
-  setTimeout(() => {
-    if (!root.classList.contains('motion-booted')) showEverything();
-  }, revealFailsafe);
+  // Hard floor under the scroll lock: if the meter script never signals and
+  // the head's own 4.5s failsafe is the thing that lifts the cover, Lenis
+  // still has to be told. Idempotent with kick().
+  setTimeout(() => lenis.start(), 5000);
 
-  // Re-split headings on width change so masked lines stay correct.
+  // Re-measure on width change so the scrubbed scenes stay honest.
   // WIDTH change only: on a phone the URL bar collapsing mid-scroll fires
-  // resize with the width untouched, and re-splitting plus a full trigger
-  // refresh in the middle of a live scroll is a visible stutter. Nothing
-  // about the line boxes changes when only the height does.
+  // resize with the width untouched, and a full trigger refresh in the
+  // middle of a live scroll is a visible stutter. Nothing about the
+  // geometry changes when only the height does.
   let lastW = window.innerWidth;
   let rz: number | undefined;
   addEventListener(
@@ -129,10 +113,7 @@ function boot() {
       clearTimeout(rz);
       rz = window.setTimeout(() => {
         lastW = window.innerWidth;
-        if (root.classList.contains('motion-booted')) {
-          resplitAll();
-          ScrollTrigger.refresh();
-        }
+        if (root.classList.contains('motion-booted')) ScrollTrigger.refresh();
       }, 250);
     },
     { passive: true }
@@ -179,333 +160,6 @@ function watchLayout() {
   // A public knock for anything that changes its own height and knows when
   // it has finished doing so: document.dispatchEvent(new Event('motion:refresh')).
   document.addEventListener('motion:refresh', scheduleRefresh);
-}
-
-/* ================================================================== */
-/* Split text into masked lines of characters.                        */
-/* ================================================================== */
-function splitToLines(el: HTMLElement): HTMLElement[] {
-  const text = el.dataset.splitText ?? (el.textContent ?? '').replace(/\s+/g, ' ').trim();
-  el.dataset.splitText = text;
-  el.setAttribute('aria-label', text);
-  el.textContent = '';
-
-  const words = text.split(' ').map((word) => {
-    const w = document.createElement('span');
-    w.className = 'split-word';
-    w.setAttribute('aria-hidden', 'true');
-    for (const ch of word) {
-      const c = document.createElement('span');
-      c.className = 'split-char';
-      c.textContent = ch;
-      w.appendChild(c);
-    }
-    return w;
-  });
-  words.forEach((w, i) => {
-    el.appendChild(w);
-    if (i < words.length - 1) el.appendChild(document.createTextNode(' '));
-  });
-
-  const groups: HTMLElement[][] = [];
-  let top: number | null = null;
-  words.forEach((w) => {
-    const t = w.offsetTop;
-    if (top === null || Math.abs(t - top) > 4) {
-      groups.push([]);
-      top = t;
-    }
-    groups[groups.length - 1].push(w);
-  });
-
-  el.textContent = '';
-  const chars: HTMLElement[] = [];
-  groups.forEach((line) => {
-    const wrap = document.createElement('span');
-    wrap.className = 'split-line';
-    wrap.setAttribute('aria-hidden', 'true');
-    const inner = document.createElement('span');
-    inner.className = 'split-line-inner';
-    line.forEach((w, i) => {
-      inner.appendChild(w);
-      if (i < line.length - 1) inner.appendChild(document.createTextNode(' '));
-      w.querySelectorAll<HTMLElement>('.split-char').forEach((c) => chars.push(c));
-    });
-    wrap.appendChild(inner);
-    el.appendChild(wrap);
-  });
-  return chars;
-}
-
-function buildSplit(el: HTMLElement) {
-  el.dataset.splitDone = '1';
-  const chars = splitToLines(el);
-  el.style.opacity = '1';
-  gsap.set(chars, { yPercent: 115 });
-
-  // Above-the-fold headings (data-split="intro") cascade once on load, timed
-  // to land as the intro cover lifts. Everything else is scrubbed to scroll.
-  if (el.dataset.split === 'intro') {
-    gsap.to(chars, {
-      yPercent: 0,
-      ease: 'power3.out',
-      duration: 1.25,
-      delay: 0.12,
-      stagger: { each: 0.035, from: 'start' },
-    });
-    return;
-  }
-
-  const tween = gsap.to(chars, {
-    yPercent: 0,
-    ease: 'power4.out',
-    stagger: { each: 0.018, from: 'start' },
-    scrollTrigger: { trigger: el, start: 'top 90%', end: 'top 50%', scrub: 0.6 },
-  });
-  (el as any)._st = tween.scrollTrigger;
-}
-
-function initSplits() {
-  document.querySelectorAll<HTMLElement>('[data-split]').forEach((el) => {
-    if (!el.dataset.splitDone) buildSplit(el);
-  });
-}
-
-function resplitAll() {
-  document.querySelectorAll<HTMLElement>('[data-split]').forEach((el) => {
-    (el as any)._st?.kill();
-    (el as any)._hover?.kill(); // the characters it was holding are about to go
-    delete el.dataset.splitDone;
-    buildSplit(el);
-  });
-}
-
-/* ================================================================== */
-/* [data-reveal] — crisp clip-path wipes, opacity held at 1.          */
-/*                                                                    */
-/* Entrances are watched with IntersectionObserver, not ScrollTrigger. */
-/* A reveal only ever asks one question — has this arrived yet — and   */
-/* an observer answers it against the layout as it stands, every       */
-/* frame, with nothing cached to fall out of date. The sweep at the    */
-/* bottom of this block is the hard backstop under both.               */
-/* ================================================================== */
-
-/** Fully open. Every slot of every inset here carries a unit, in the from
- *  AND the to, and that is not cosmetic: GSAP tweens a clip-path by pulling
- *  the NUMBERS out of the two strings and reprinting them inside the target
- *  string's punctuation. Animate `100%` toward a bare `0` and the frames in
- *  between read `inset(0% 50 0% 0)` — not valid CSS, so the browser throws
- *  the whole declaration away and the element keeps the last value that did
- *  parse: the fully clipped one. It sits there invisible for the length of
- *  the tween and snaps open on the final frame, which is exactly the flicker
- *  this block used to produce on every left/right/diag reveal. */
-const REVEAL_OPEN = 'inset(0% 0% 0% 0%)';
-const REVEAL_DUR = 1.15;
-const REVEAL_STEP = 0.09; // cascade spacing inside a group
-const GROUP_LINE = 0.8; // a group starts when its top passes 80% of the viewport
-const SOLO_LINE = 0.86; // a lone reveal waits a little longer
-/** How long a reveal may sit past its own line, still clipped, before the
- *  sweep opens it outright. Twice the length of the tween, plus whatever
- *  cascade the element is owed on top (see guardReveal), so a healthy
- *  entrance never races it. */
-const REVEAL_GRACE = 2600;
-
-/** Pre-reveal state for a variant: clipped and offset, opacity forced to 1
- *  (global.css holds every reveal at 0 until we get here) so nothing ever
- *  cross-fades. The will-change belongs to the tween, not to this: a reveal
- *  can sit armed for the whole life of the page, and a page of permanently
- *  promoted layers costs real frames. */
-function revealFrom(v: string): gsap.TweenVars {
-  const from: gsap.TweenVars = { opacity: 1 };
-  if (v === 'left') {
-    from.clipPath = 'inset(0% 100% 0% 0%)';
-    from.x = -42;
-  } else if (v === 'right') {
-    from.clipPath = 'inset(0% 0% 0% 100%)';
-    from.x = 42;
-  } else if (v === 'scale') {
-    from.clipPath = 'inset(100% 0% 0% 0%)';
-    from.scale = 0.9;
-    from.y = 26;
-  } else if (v === 'diag') {
-    // Corner wipe: opens from the top-left, drifting in from the same corner.
-    from.clipPath = 'inset(0% 100% 100% 0%)';
-    from.x = -30;
-    from.y = -30;
-  } else {
-    // up (default)
-    from.clipPath = 'inset(100% 0% 0% 0%)';
-    from.y = 36;
-    from.scale = 0.99;
-  }
-  return from;
-}
-
-/** Landed: drop the clip and the promotion entirely rather than leaving an
- *  identity transform and a no-op inset behind, so a hovered row can push
- *  past its own box afterwards and a fixed child inside one is still
- *  positioned against the viewport. (filter stays in the clearProps list to
- *  scrub anything an older visit's inline style left behind.) */
-function revealDone(el: HTMLElement) {
-  el.dataset.revealed = '1';
-  gsap.set(el, { clearProps: 'clipPath,filter,willChange,transform' });
-}
-
-/** The buttery settle: clip opens and the offset resolves over a long
- *  gentle decel, never a snap. No blur anywhere in it: the wipe and the
- *  drift are the whole entrance, and content is sharp from its first
- *  painted frame. */
-function revealIn(el: HTMLElement, delay: number) {
-  if (el.dataset.revealed) return;
-  el.dataset.revealed = 'run';
-  gsap.fromTo(
-    el,
-    { willChange: 'clip-path, transform' },
-    {
-      clipPath: REVEAL_OPEN,
-      x: 0,
-      y: 0,
-      scale: 1,
-      duration: REVEAL_DUR,
-      delay,
-      ease: 'power2.out',
-      overwrite: 'auto',
-      onComplete: () => revealDone(el),
-    }
-  );
-}
-
-/** Open with no entrance: for reveals the reader has already scrolled past,
- *  and for the sweep. Idempotent. */
-function revealNow(el: HTMLElement) {
-  if (el.dataset.revealed === '1') return;
-  gsap.killTweensOf(el);
-  el.style.opacity = '1';
-  revealDone(el);
-}
-
-/* --- the entrance watcher ----------------------------------------- */
-/* One observer per line. The negative bottom margin shrinks the root so
-   that "intersecting" means "this element's top has climbed past that
-   fraction of the viewport": the same moment the old ScrollTrigger start
-   described, minus the cached offset it described it with. */
-const enterWatchers = new Map<number, IntersectionObserver>();
-const enterJobs = new WeakMap<Element, () => void>();
-
-function onEnter(el: HTMLElement, line: number, fire: () => void) {
-  enterJobs.set(el, fire);
-  let io = enterWatchers.get(line);
-  if (!io) {
-    io = new IntersectionObserver(
-      (entries, obs) => {
-        for (const entry of entries) {
-          if (!entry.isIntersecting) continue;
-          obs.unobserve(entry.target);
-          const job = enterJobs.get(entry.target);
-          enterJobs.delete(entry.target);
-          job?.();
-        }
-      },
-      { rootMargin: `0px 0px -${Math.round((1 - line) * 100)}% 0px` }
-    );
-    enterWatchers.set(line, io);
-  }
-  io.observe(el);
-}
-
-/* --- the hard backstop -------------------------------------------- */
-/* Whatever the watcher does or fails to do, nothing stays hidden once it
-   has been on screen. Built out of a timer and getBoundingClientRect and
-   nothing else, on purpose: if the observer, GSAP, ScrollTrigger or Lenis
-   is the thing that broke, this still runs. It stops itself the moment the
-   last reveal has landed, so the steady-state cost is zero. */
-const guarded = new Map<HTMLElement, { line: number; grace: number; since: number }>();
-let sweep: number | undefined;
-
-/** `owed` is whatever this element legitimately waits out before its own
- *  tween starts (its place in a cascade, its authored delay), so a long list
- *  can never outrun its own backstop. */
-function guardReveal(el: HTMLElement, line: number, owed = 0) {
-  guarded.set(el, { line, grace: REVEAL_GRACE + owed * 1000, since: 0 });
-}
-
-function startRevealSweep() {
-  if (sweep || !guarded.size) return;
-  sweep = window.setInterval(() => {
-    const now = performance.now();
-    const vh = window.innerHeight || 1;
-    guarded.forEach((state, el) => {
-      if (el.dataset.revealed === '1' || !el.isConnected) {
-        guarded.delete(el);
-        return;
-      }
-      const r = el.getBoundingClientRect();
-      // Collapsed or display:none: not on screen at all, so its entrance is
-      // still owed to it. Restart the clock when it comes back.
-      if (!r.width && !r.height) {
-        state.since = 0;
-        return;
-      }
-      if (r.top > vh * state.line) {
-        state.since = 0; // hasn't reached its own line yet: nothing is wrong
-        return;
-      }
-      if (!state.since) {
-        state.since = now;
-        return;
-      }
-      if (now - state.since < state.grace) return;
-      revealNow(el);
-      guarded.delete(el);
-    });
-    if (!guarded.size) {
-      clearInterval(sweep);
-      sweep = undefined;
-    }
-  }, 400);
-}
-
-function initReveals() {
-  const bound = new WeakSet<HTMLElement>();
-  const passed = (el: HTMLElement) => el.getBoundingClientRect().bottom <= 0;
-
-  // Grouped reveals cascade off the GROUP's line, so siblings stagger as one
-  // wave instead of each racing its own (which reads as a flash). Each item
-  // is guarded against its own line, not the group's, so a long list can
-  // never trip the backstop on the rows it has not reached yet.
-  document.querySelectorAll<HTMLElement>('[data-reveal-group]').forEach((group) => {
-    const items = gsap.utils
-      .toArray<HTMLElement>('[data-reveal]', group)
-      .filter((el) => !bound.has(el)); // nested groups: the outer one doesn't re-claim
-    if (!items.length) return;
-    items.forEach((el) => {
-      bound.add(el);
-      gsap.set(el, revealFrom(el.getAttribute('data-reveal') || 'up'));
-    });
-    if (passed(group)) {
-      // Already scrolled by: play nothing, just be there.
-      items.forEach(revealNow);
-      return;
-    }
-    onEnter(group, GROUP_LINE, () => items.forEach((el, i) => revealIn(el, i * REVEAL_STEP)));
-    items.forEach((el, i) => guardReveal(el, GROUP_LINE, i * REVEAL_STEP));
-  });
-
-  // Standalone reveals.
-  gsap.utils.toArray<HTMLElement>('[data-reveal]').forEach((el) => {
-    if (bound.has(el)) return;
-    bound.add(el);
-    gsap.set(el, revealFrom(el.getAttribute('data-reveal') || 'up'));
-    if (passed(el)) {
-      revealNow(el);
-      return;
-    }
-    const delay = (parseFloat(el.dataset.revealDelay || '0') || 0) / 1000;
-    onEnter(el, SOLO_LINE, () => revealIn(el, delay));
-    guardReveal(el, SOLO_LINE, delay);
-  });
-
-  startRevealSweep();
 }
 
 /* ================================================================== */

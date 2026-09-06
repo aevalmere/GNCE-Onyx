@@ -1,0 +1,105 @@
+---
+/**
+ * Privacy. A paper page on the blog's own 44rem reading column, so the
+ * policy is set like a post rather than like a legal notice.
+ *
+ * Reached from the nav drawer on every page as the last link, and from the
+ * Footer's print line on the blog pages (which is also the no-JS way in,
+ * since the drawer's toggle is hidden without JS).
+ *
+ * Everything on it is a fact about how the site is built, so it only needs
+ * rewriting when the build changes: a form, an analytics script or a
+ * third-party font would each make it wrong.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
+---
+
+<BaseLayout
+  title="Privacy"
+  description="What this site collects, which is nothing, and the two places data touches anything anyway."
+  light
+>
+  <article>
+    <header class="pt-32 pb-10 sm:pt-40">
+      <div class="post-col mx-auto px-5 sm:px-8">
+        <p>
+          <a class="back" href={`${base}/`}>
+            <span class="back-arrow" aria-hidden="true">&larr;</span>
+            <span class="back-label type-label">Home</span>
+          </a>
+        </p>
+
+        <h1 class="type-display mt-10 text-[clamp(2rem,5vw,3.5rem)]">Privacy</h1>
+
+        <hr class="post-rule" />
+      </div>
+    </header>
+
+    <div class="pb-24 sm:pb-32">
+      <div class="post-body post-col mx-auto px-5 sm:px-8">
+        <p>
+          This site collects nothing. There is no form on it, no account to make, no analytics
+          script, and no cookie. Nobody on the team can tell that you were here.
+        </p>
+
+        <p>
+          That is less a policy than a description of how the site is built. It is a stack of static
+          files, and every font it uses is served from the same place the pages are, so opening one
+          does not hand your address to a type foundry or an ad network.
+        </p>
+
+        <p>
+          The host is the exception, and only in the way every host is one. The site sits on GitHub
+          Pages, whose servers record the requests they answer: an IP address, the page asked for,
+          the time. We never see those logs and cannot query them. What GitHub does with them is
+          covered by <a
+            href="https://docs.github.com/en/site-policy/privacy-policies"
+            target="_blank"
+            rel="noopener">GitHub's own privacy statement</a
+          >.
+        </p>
+
+        <p>
+          The <a href={`${base}/drivetrain/`}>drivetrain calculator</a> writes your last configuration
+          to your browser's local storage so the numbers are still there when you come back. That stays
+          on your machine. Clearing site data for this domain deletes it.
+        </p>
+
+        <p>
+          Links to Instagram and YouTube are ordinary links. Follow one and you are on their site
+          under their rules, and neither of them tells us who arrived.
+        </p>
+
+        <p>
+          Email us and we have your email address. Those messages sit in the team's Gmail and we use
+          them to write back. Nobody gets added to a list.
+        </p>
+
+        <p>
+          The roster shows students' names and photographs, published with their permission. If you
+          are on it and want your photo or your name gone, write to <a
+            href="mailto:gnceonyx@gmail.com">gnceonyx@gmail.com</a
+          >. It comes down on the next deploy and you do not have to give a reason.
+        </p>
+
+        <p>Anything else about this page goes to the same address.</p>
+
+        <p class="type-label text-faint">Last updated September 2026</p>
+      </div>
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  /* The column, the rule and the back link all come from global.css: this
+     page is the blog post with a policy in it, and the two share one
+     declaration so they cannot drift apart. Only the closing dateline is
+     this page's own. */
+
+  /* The dateline that closes the page sits off the body's own rhythm. */
+  .post-body .type-label {
+    margin-top: 2.5em;
+  }
+</style>

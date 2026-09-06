@@ -5,24 +5,38 @@
  * way home. The home page carries no footer at all: the finale's contact
  * line is that page's sign-off.
  *
- * The top hairline is the one rule left on it: it seats the colophon under
- * the page proper, which is a real content break rather than decoration.
+ * The top rule is the one line left on it, and it is set at half a band
+ * hairline: it seats the colophon under the page proper without reading as
+ * another section break.
  *
  * Plain body type, not the spaced small caps the rest of the site's metadata
  * wears: this is a sentence about who made the page, and it should read like
  * one. The 64rem column is the blog's own frame, so the two ends land on the
  * same margins as the post above them.
+ *
+ * It also carries the privacy link for machines with no JS, where the nav
+ * toggle is hidden and the drawer's copy of it cannot be reached.
  */
+const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
 ---
 
-<footer class="hairline border-t">
+<footer class="border-t">
   <p class="foot-print mx-auto flex flex-wrap justify-between gap-x-8 gap-y-1 px-5 py-6 text-muted sm:px-8">
     <span>© 2026 GNCE Onyx</span>
     <span>Weston High School · Team&nbsp;#37122</span>
+    <a class="foot-privacy" href={`${base}/privacy/`}>Privacy</a>
   </p>
 </footer>
 
 <style>
+  /* Half a band hairline. The colophon is the quietest thing on the page and
+     the rule over it was reading as a section break: at 9% it seats the
+     print without announcing it. Not .hairline, which is the 18% every real
+     content break on the site is ruled with. */
+  footer {
+    border-top-color: color-mix(in srgb, var(--color-surface) 9%, transparent);
+  }
+
   /* Ubuntu at reading weight, normal case, no tracking. */
   p.foot-print {
     max-width: 64rem;
@@ -42,6 +56,23 @@
      wide screens. Typed with the element to outrank the utilities. */
   p.foot-print {
     padding-inline-end: max(1.25rem, calc(4.5rem - (100vw - min(100vw, 64rem)) / 2));
+  }
+
+  /* Last in the line and the same size as the rest of it: the policy is
+     small print, and small print is where people look for it. */
+  .foot-privacy {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .foot-privacy:hover {
+      color: var(--color-accent);
+    }
+  }
+
+  .foot-privacy:focus-visible {
+    color: var(--color-accent);
   }
 
   @media (min-width: 640px) {

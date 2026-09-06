@@ -22,6 +22,11 @@
  * Blog posts carry the Footer's plain-text links, which is
  * also where navigation goes when there is no JS: a button that cannot open
  * anything is hidden rather than left sitting there dead.
+ *
+ * Privacy is the last link and is set exactly like the others: same display
+ * type, same margin, same stagger. It is the one entry that leaves the
+ * one-page scroll for a page of its own, which the click handler already
+ * covers (it only intercepts fragments; anything else navigates).
  */
 const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
 type NavLink = {
@@ -37,6 +42,7 @@ const links: NavLink[] = [
   { href: `${base}/#outreach`, label: 'Outreach', note: 'Posts and events we show up to' },
   { href: `${base}/#sponsors`, label: 'Sponsors', note: 'Recognition, low to high' },
   { href: `${base}/#contact`, label: 'Contact', note: 'Email, Instagram, YouTube' },
+  { href: `${base}/privacy/`, label: 'Privacy', note: 'What this site collects, which is nothing' },
 ];
 ---
 
