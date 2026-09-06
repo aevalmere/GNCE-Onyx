@@ -9,7 +9,7 @@
  * `hideFooter` drops the Footer for pages that end on their own terms.
  * `intro` opts a page into the load cover; only the home page does.
  */
-import '@fontsource/grey-qo';
+import '@fontsource/grey-qo/400.css';
 import '@fontsource/ubuntu/400.css';
 import '@fontsource/ubuntu/700.css';
 import '@fontsource/ubuntu/400-italic.css';
@@ -683,13 +683,13 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
                   if (done) scored = true;
                 }
 
-                // 100: the mark goes grape with the pop (a real 10%) and
-                // grape chips fly off the whole ring, outward from its
-                // centre, into the water. The grape is a hard cut in and
+                // 100: the mark goes paper-white with the pop (a real 10%)
+                // and paper chips fly off the whole ring, outward from its
+                // centre, into the water. The white is a hard cut in and
                 // holds until the wave takes the mark; it fades to the
                 // hero's ink as it starts to move, see steer().
                 function complete() {
-                  mark.style.stroke = GRAPE;
+                  mark.style.stroke = PAPER;
                   svg.animate(
                     [
                       { transform: 'scale(1)', easing: OUT },
@@ -702,7 +702,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
                     var q = mark.getPointAtLength(Math.random() * markLen);
                     var p = toScreen(q.x, q.y);
                     var d = turn(q.x - 32, q.y - 32);
-                    spawn(1, p.x, p.y, Math.atan2(d.y, d.x), 0.9, 180, 560, 0.18, 0.34, 3, 6, 700, GRAPE);
+                    spawn(1, p.x, p.y, Math.atan2(d.y, d.x), 0.9, 180, 560, 0.18, 0.34, 3, 6, 700, PAPER);
                   }
                 }
 
