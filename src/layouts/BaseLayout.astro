@@ -828,7 +828,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
                     pose.s = flight.from.s * (1 - e);
                   }
                   pose.r = -720 * e;
-                  mark.style.stroke = mix(GRAPE_RGB, INK_RGB, out(Math.min(1, k / 0.35)));
+                  mark.style.stroke = mix(PAPER_RGB, INK_RGB, out(Math.min(1, k / 0.35)));
                   writePose();
                   if (k >= 1) {
                     flight = null;
