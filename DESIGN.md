@@ -28,13 +28,19 @@ touching UI.
    and solid color; content is sharp from its first painted frame, and
    nothing frosted sits over anything. Texture is film grain alone, used
    sparingly.
+   One exception, and it is narrow: the hero's badge sticker casts a
+   single small drop shadow (1px 4px 7px, ink at 30%). A sticker is a
+   physical object lying on paper and the shadow is the only thing that
+   says so. It is light, it is close, and it never moves. This does not
+   open the door to shadows on cards, buttons or type.
 3. **Type is the imagery.** LEMON MILK Medium (display; the italic exists
    for rare emphasis), Grey Qo (one script flourish per page), Ubuntu
    (body). Push display scale hard; keep body readable (Ubuntu is a plain
    modern sans; the display face stays on the titles alone).
 3b. **The mark.** The team logo is the "circle of hands": one unbroken
    indigo line looping five times around a shared centre and closing where
-   it began (`public/logo.svg`, viewBox 64). It sits in the hero's foot,
+   it began (`public/logo.svg`, viewBox 64). It holds the hero stage's top
+   left corner,
    draws itself on the intro cover in step with the load count
    (stroke-dashoffset in BaseLayout's meter script), and lives in the
    favicon on its own paper tile (`favicon.svg` + PNG fallbacks). One
@@ -177,12 +183,19 @@ section:
   the same axis as an oversized indigo-watermark ONYX running edge to edge,
   only its outer serifs shaved by the frame (the word's trailing letter-space
   is cancelled with a negative margin, so the two centre on the INK) · one
-  line along the bottom edge, team mark at the left and the two
+  line along the bottom edge, the team badge at the left and the two
   CTAs at the right, bottoms level and clear of the corner nav toggle. The
+  badge (`src/assets/onyx-badge.webp`) is the team's own drawing, goose and
+  planet and moon on an orbit with the number on it, and it is the one place
+  on the site that runs outside the five colours. It is kept small so it
+  reads as a mark rather than as artwork, and the flat plate it was exported
+  on has been keyed to alpha so it composites on any band with no seam. It
+  is not the circle of hands: the two marks hold opposite corners and are
+  different objects. The
   wordmark is the cover wipe's far plane (`[data-cover-deep]`): it gives up
   almost half the sheet's travel on the same scrub, so the exit reads as
   two planes at two speeds. On a phone the composition centres instead:
-  headline over the word, then the mark and the stacked CTAs on one axis.
+  headline over the word, then the badge and the stacked CTAs on one axis.
 - **Team** (`#team`): the section the hero uncovers, pinned under the
   cover wipe on fine pointers, plain flow on touch. A small "Team members"
   display title over a grid of portrait plates with the name and that

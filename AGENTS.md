@@ -100,6 +100,56 @@ Manage the background server with `astro dev stop`, `astro dev status`, and `ast
   deliberate and separate from the output sharpen below: an upscale needs
   correcting at its own size, and dropping it leaves her visibly soft.
   No contrast or colour correction: portraits stay as shot, per `DESIGN.md`.
+- The hero's badge is a die-cut sticker, generated:
+  `src/assets/onyx-badge.webp` is the drawing as the team exported it, and
+  `node scripts/make-badge-sticker.mjs` cuts `onyx-badge-sticker.webp` from
+  it, which is the file the hero prints. The cut is baked in because CSS can
+  only outline an alpha silhouette with a blurred drop-shadow, and blur is out
+  (`DESIGN.md` rule 2). Re-run it if the drawing is re-exported, and carry the
+  two ratios it prints across to `Hero.astro`, which sizes the sticker off the
+  wordmark's O and so has to know the artwork's share of the file.
+  The cut is a real path: a closed loop of straight segments and circular arcs,
+  and the image is rendered from the exact distance to it. That is where the
+  edge quality comes from and it is not negotiable. Thresholding a pixel mask's
+  distance field cannot be smooth, because the distance to a pixelated edge is
+  not a linear ramp; the nearest pixel centre jumps as you slide along and the
+  half-pixel ripple prints as a scalloped, dotted edge on any long shallow
+  curve. Supersampling does not fix it either: a binary mask sampled at its own
+  resolution is still a binary mask. What is left with the path is 0.05px rms,
+  which is the coverage model, not the encoder (`OUT=x.png` to check that
+  yourself).
+  The shape the path cuts is the convex hull of the paint with a few dips
+  pressed in. The hull gives it straight runs and lets the border stay thin,
+  since a hull has no inward curves to round and a curve of radius R cannot
+  pass within R of a spike. The dips are what make it follow the drawing
+  instead of bridging over it, and they are found, not placed: the script
+  measures every hull edge's clearance down to the paint and presses in the
+  deepest, up to `DIPS`. This drawing ranks 151, 81, 57, 40, 40, 28, so
+  `DIP_MIN` at 50 takes the three that read as hollows. `DIPS` is the "no
+  constant waves" ceiling; raising it does not help, since the shallow ones are
+  noise.
+  `FILLET` is the other lever on how closely it traces, which is not obvious: a
+  fillet cuts its corner back, the paint's clip has to clear the deepest
+  cut-back so no ink is lost, and that offset then applies to the whole
+  contour. A fatter fillet is paid for in paper everywhere. 150 put the median
+  paper at 63px, 105 puts it at 54px and still leaves the tightest turn near
+  100px at the blade line. The run prints that whole distribution.
+  Two approaches that do not work, both tried: tracing the paint's own outline
+  gives fifteen dips and a blob, and band-limiting the outline as a Fourier
+  series (which does cap the wave count by construction) cannot follow the
+  orbit ring's tips, so it needs a 60-120px radial shift and comes out looser
+  than the hull, not tighter.
+  One more trap, already paid for: the drawing is cropped tight (the orbit ring
+  is tangent to the bottom edge), so the mask lives on a padded grid. Run the
+  morphology on the artwork's own grid and the border comes out flat along the
+  bottom and the left, which is the one seam it exists to hide.
+  The sticker carries the site's only blur, which is the narrow exception
+  written into `DESIGN.md` rule 2: one small, light drop shadow, because a
+  sticker is a physical thing lying on paper and nothing else says so. Keep it
+  small and keep it still. On the cover wipe it carries `[data-cover-ride]`, which is not a plane
+  of its own: `motion.ts` hands every rider the deep plane's own travel, so the
+  sticker and the wordmark shear off together as one object.
+
 - Images are built by a custom image service,
   `src/lib/sharpen-image-service.mjs`, wired up in `astro.config.mjs`.
   Astro's stock sharp service resizes straight into the encoder with no

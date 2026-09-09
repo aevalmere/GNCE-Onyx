@@ -416,15 +416,28 @@ function initCoverWipe() {
     },
   });
   tl.to(cover, { xPercent: -100, ease: 'none' }, 0);
-  // 42, not a subtle lag: the word gives up almost half the sheet's travel,
-  // so the two planes visibly shear apart while the wipe runs.
-  if (deep) tl.to(deep, { xPercent: 42, ease: 'none' }, 0);
+  // 42% of the plane's own width, and not a subtle lag: the word gives up
+  // almost half the sheet's travel, so the two visibly shear apart while the
+  // wipe runs. Resolved to a distance rather than left as an xPercent because
+  // [data-cover-ride] below has to be handed the SAME distance off a box of a
+  // different width, and a percentage would hand it a different one.
+  const deepLag = () => (deep ? 0.42 * deep.offsetWidth : 0);
+  if (deep) tl.to(deep, { x: deepLag, ease: 'none' }, 0);
   // [data-cover-fast] is the near plane (the team number): on top of the
   // sheet's travel it spends most of a viewport of its own, so it launches
   // off the far right edge and is fully gone before the sheet is halfway.
-  // Three planes, three speeds.
+  // Three speeds in all, and the slowest of them is shared: see the riders
+  // below.
   const fast = cover.querySelector<HTMLElement>('[data-cover-fast]');
   if (fast) tl.to(fast, { x: () => -window.innerWidth, ease: 'none' }, 0);
+  // [data-cover-ride] is not a plane of its own: it is anything that has to
+  // travel with the wordmark instead of with the sheet it sits on (the hero's
+  // badge sticker). The same distance off the deep plane's own box, so the two
+  // stay locked however either of them is sized, and they shear off together as
+  // one object. Whatever tilt a rider carries lives on a child of it, so
+  // nothing here has to preserve a transform it did not set.
+  const riders = cover.querySelectorAll<HTMLElement>('[data-cover-ride]');
+  if (deep && riders.length) tl.to(riders, { x: deepLag, ease: 'none' }, 0);
 
   // A /#team deep link was resolved by the browser before html.gsap pulled
   // the roster to the document top, which leaves the page parked mid-wipe.
