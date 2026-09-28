@@ -159,10 +159,16 @@ Manage the background server with `astro dev stop`, `astro dev status`, and `ast
   key, and `src/data/q1-seal.json` holds the salt and a check token. Rebuild
   both with `SEAL_PASSWORD=... node scripts/seal-q1-cad.mjs <export.glb>`
   (the header lists the `--no-save` installs it needs). Never commit the
-  password. Nothing loads before the password opens the check token; then
-  the bin downloads and three.js is imported, so no other page carries any
-  of it. Explode follows the assembly tree (top assemblies, then parts and
-  sub-assemblies, then their parts, each on its own overlapping window).
+  password. Locked, the page is titled "Secret" and shows one password field
+  and nothing else (BaseLayout `bare` drops the nav, footer, rail and skip
+  link, and the site name from the title); Enter submits. The bin and the
+  three.js viewer module start downloading unseen the moment the page opens,
+  so the robot appears as soon as the password is right. No other page
+  fetches either. The pack script also stands the robot up (Onshape exports
+  Z-up; it turns the root -90 degrees about X so the mecanum wheels meet the
+  floor) and cuts the two Pollen game pieces. Explode follows the assembly
+  tree (top assemblies, then parts and sub-assemblies, then their parts, each
+  on its own overlapping window).
 
 - Images are built by a custom image service,
   `src/lib/sharpen-image-service.mjs`, wired up in `astro.config.mjs`.

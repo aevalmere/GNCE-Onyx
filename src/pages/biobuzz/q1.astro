@@ -1,118 +1,96 @@
 ---
 /**
- * Qualifier 1 robot: the Onshape assembly as an exploded-view viewer, behind
- * a password.
+ * Secret: the Qualifier 1 robot as an exploded-view viewer, behind a
+ * password.
  *
  * Reached only from the grape bar on Qualifier 1's poster in the Season
- * section; it is in no nav, and noindex keeps it out of search. The model is
- * sealed (AES-GCM, key from the password by PBKDF2) by
+ * section; it is in no nav, and noindex keeps it out of search. Locked, the
+ * page is one password field on bare paper (BaseLayout `bare`: no nav, no
+ * footer, no rail, and a title that does not name the site). Enter submits.
+ *
+ * The model is sealed (AES-GCM, key from the password by PBKDF2) by
  * scripts/seal-q1-cad.mjs, because a static host has nowhere to check a
- * password: public/biobuzz/q1.bin is public and useless without it. Nothing
- * heavy loads until the password opens the check token: then the sealed
- * file downloads with a progress rule, opens in the browser, and the viewer
- * module (three, loaders, BVH) is imported. No other page carries any of it.
+ * password: public/biobuzz/q1.bin is public and useless without it. The
+ * sealed file and the viewer module start downloading the moment this page
+ * opens, out of sight, so by the time a password is typed the robot is
+ * usually already here and appears at once. Only this page fetches either;
+ * the rest of the site never does.
  */
 import BaseLayout from '../../layouts/BaseLayout.astro';
 
 const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
 ---
 
-<BaseLayout title="Qualifier 1" description="Qualifier 1 robot assembly." light noindex>
+<BaseLayout title="Secret" description="Secret." light noindex bare>
   <section class="q1" data-q1 data-base={base}>
-    <header class="q1-frame mx-auto max-w-[88rem] px-5 pt-32 sm:px-8 sm:pt-40">
-      <p>
-        <a class="back" href={`${base}/#season`}>
-          <span class="back-arrow" aria-hidden="true">&larr;</span>
-          <span class="back-label type-label">Season</span>
-        </a>
-      </p>
-      <span class="mark mt-10" aria-hidden="true"></span>
-      <h1 class="q1-title type-display">Qualifier 1</h1>
-      <p class="q1-line text-muted mt-5">Robot assembly, exported from Onshape.</p>
-    </header>
+    <form class="q1-lock" data-q1-lock novalidate>
+      <input
+        id="q1-pass"
+        name="password"
+        type="password"
+        aria-label="Password"
+        autocomplete="current-password"
+        enterkeyhint="go"
+        autofocus
+        required
+      />
+      <p class="sr-only" role="status" aria-live="polite" data-q1-msg></p>
+    </form>
 
-    <div class="q1-frame mx-auto max-w-[88rem] px-5 pb-24 sm:px-8 sm:pb-32">
-      <form class="q1-lock" data-q1-lock novalidate>
-        <label class="type-label" for="q1-pass">Password</label>
-        <div class="q1-lock-row">
-          <input
-            id="q1-pass"
-            name="password"
-            type="password"
-            autocomplete="current-password"
-            required
-            aria-describedby="q1-lock-msg"
-          />
-          <button type="submit" class="q1-btn q1-btn-solid" data-q1-open>Open</button>
+    <div class="q1-viewer" data-q1-viewer hidden>
+      <div class="q1-stage" data-q1-stage data-lenis-prevent>
+        <div class="q1-load" data-q1-load>
+          <span class="q1-load-rule" aria-hidden="true"><span data-q1-bar></span></span>
+          <span class="type-label" data-q1-status role="status" aria-live="polite">Loading</span>
         </div>
-        <p id="q1-lock-msg" class="q1-lock-msg" role="status" aria-live="polite" data-q1-msg></p>
-      </form>
+        <div class="q1-part" data-q1-label hidden>
+          <span class="q1-part-name type-display" data-q1-label-name></span>
+          <span class="q1-part-path type-label" data-q1-label-path></span>
+        </div>
+      </div>
 
-      <div class="q1-viewer" data-q1-viewer hidden>
-        <div class="q1-stage" data-q1-stage>
-          <div class="q1-load" data-q1-load>
-            <span class="q1-load-rule" aria-hidden="true"><span data-q1-bar></span></span>
-            <span class="type-label" data-q1-status role="status" aria-live="polite">Loading 0%</span>
-          </div>
-          <div class="q1-part" data-q1-label hidden>
-            <span class="q1-part-name type-display" data-q1-label-name></span>
-            <span class="q1-part-path type-label" data-q1-label-path></span>
-          </div>
-        </div>
-
-        <div class="q1-controls" data-q1-controls hidden>
-          <button type="button" class="q1-btn q1-btn-solid" data-q1-toggle>Explode</button>
-          <label class="q1-slider">
-            <span class="type-label">Explode</span>
-            <input type="range" min="0" max="1" step="0.001" value="0" data-q1-slider />
-          </label>
-          <button type="button" class="q1-btn" data-q1-reset>Reset view</button>
-        </div>
-        <p class="q1-hint text-faint" data-q1-hint hidden>
-          <span class="q1-hint-fine">Drag to orbit, right-drag to pan, scroll to zoom. Click a part to isolate it.</span>
-          <span class="q1-hint-touch">One finger to orbit, two to pan and zoom. Tap a part to isolate it.</span>
-        </p>
+      <div class="q1-controls" data-q1-controls hidden>
+        <button type="button" class="q1-btn q1-btn-solid" data-q1-toggle>Explode</button>
+        <label class="q1-slider">
+          <span class="type-label">Explode</span>
+          <input type="range" min="0" max="1" step="0.001" value="0" data-q1-slider />
+        </label>
+        <button type="button" class="q1-btn" data-q1-reset>Reset view</button>
       </div>
     </div>
   </section>
 </BaseLayout>
 
 <style>
-  .q1-title {
-    font-size: clamp(2.75rem, 8vw, 6rem);
+  .q1 {
+    min-height: 100svh;
   }
 
-  .q1-line {
-    max-width: 46ch;
-  }
-
-  /* ---- Lock --------------------------------------------------------- */
+  /* ---- Lock: the field and nothing else ------------------------------- */
   .q1-lock {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    max-width: 28rem;
-    margin-top: clamp(2.5rem, 7svh, 4.5rem);
-    padding-top: 2rem;
-    border-top: 1px solid var(--color-line);
+    display: grid;
+    place-items: center;
+    min-height: 100svh;
+    padding: 0 1.25rem;
   }
 
-  .q1-lock-row {
-    display: flex;
-    gap: 0.5rem;
+  .q1-lock[hidden] {
+    display: none;
   }
 
   .q1-lock input {
-    flex: 1;
-    min-width: 0;
-    height: 44px;
-    padding: 0 0.85rem;
+    width: min(18rem, 100%);
+    height: 48px;
+    padding: 0 0.9rem;
     font: inherit;
+    font-size: 1.0625rem;
+    letter-spacing: 0.12em;
     color: var(--color-ink);
     background: var(--color-deep);
     border: 1px solid var(--color-line);
     border-bottom-color: var(--color-faint);
     border-radius: 0;
+    transition: border-color 200ms ease;
   }
 
   .q1-lock input:focus-visible {
@@ -120,79 +98,38 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     outline-offset: 2px;
   }
 
-  .q1-lock-msg {
-    min-height: 1.7em;
-    font-size: 0.9375rem;
-    color: var(--color-muted);
+  /* A wrong password: the field's edge turns grape until the next key. */
+  .q1-lock input[aria-invalid='true'] {
+    border-color: var(--color-accent);
   }
 
-  .q1-lock-msg[data-error] {
-    color: var(--color-accent);
+  .q1-lock input[aria-invalid='true']:focus-visible {
+    outline-color: var(--color-accent);
   }
 
-  /* ---- Buttons: the calculator's vocabulary, spaced caps and square ---- */
-  .q1-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex: none;
-    height: 44px;
-    padding: 0 1.1rem;
-    font-family: var(--font-text);
-    font-size: 0.8125rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--color-ink);
-    background: transparent;
-    border: 1px solid var(--color-line);
-    border-radius: 0;
-    cursor: pointer;
-    transition:
-      background-color 200ms ease,
-      border-color 200ms ease,
-      color 200ms ease,
-      transform 160ms var(--ease-out-strong);
-  }
-
-  .q1-btn-solid {
-    min-width: 8.5rem;
-    color: var(--color-paper);
-    background: var(--color-ink);
-    border-color: var(--color-ink);
-  }
-
-  .q1-btn:active {
-    transform: scale(0.97);
-  }
-
-  .q1-btn:disabled {
+  .q1-lock input:read-only {
     cursor: progress;
-    opacity: 0.6;
   }
 
-  @media (hover: hover) and (pointer: fine) {
-    .q1-btn:hover {
-      color: var(--color-accent);
-      border-color: var(--color-accent);
-    }
-
-    .q1-btn-solid:hover {
-      color: var(--color-paper);
-      background: var(--color-accent);
-    }
-  }
-
-  /* ---- Stage -------------------------------------------------------- */
+  /* ---- Viewer: the whole screen, controls along the foot -------------- */
   .q1-viewer {
-    margin-top: clamp(2.5rem, 7svh, 4.5rem);
+    display: flex;
+    flex-direction: column;
+    height: 100svh;
+    padding: clamp(0.75rem, 2vw, 1.5rem);
+    gap: 0.75rem;
+  }
+
+  .q1-viewer[hidden] {
+    display: none;
   }
 
   /* A plain plate a step deeper than the paper, so the parts read against
      a quiet ground and the floor shadow has something to fall on. */
   .q1-stage {
     position: relative;
-    height: clamp(24rem, 72svh, 50rem);
+    flex: 1;
+    min-height: 0;
     background: var(--color-deep);
     border: 1px solid var(--color-line);
     overflow: hidden;
@@ -266,17 +203,64 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     display: none;
   }
 
-  /* ---- Controls, under the stage ------------------------------------- */
+  /* ---- Controls -------------------------------------------------------- */
   .q1-controls {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 0.75rem 1.25rem;
-    padding-top: 1rem;
   }
 
   .q1-controls[hidden] {
     display: none;
+  }
+
+  /* The calculator's button vocabulary: spaced caps, square. */
+  .q1-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    height: 44px;
+    padding: 0 1.1rem;
+    font-family: var(--font-text);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-ink);
+    background: transparent;
+    border: 1px solid var(--color-line);
+    border-radius: 0;
+    cursor: pointer;
+    transition:
+      background-color 200ms ease,
+      border-color 200ms ease,
+      color 200ms ease,
+      transform 160ms var(--ease-out-strong);
+  }
+
+  .q1-btn-solid {
+    min-width: 8.5rem;
+    color: var(--color-paper);
+    background: var(--color-ink);
+    border-color: var(--color-ink);
+  }
+
+  .q1-btn:active {
+    transform: scale(0.97);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .q1-btn:hover {
+      color: var(--color-accent);
+      border-color: var(--color-accent);
+    }
+
+    .q1-btn-solid:hover {
+      color: var(--color-paper);
+      background: var(--color-accent);
+    }
   }
 
   .q1-slider {
@@ -334,32 +318,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     border-radius: 2px;
   }
 
-  .q1-hint {
-    margin-top: 0.75rem;
-    font-size: 0.875rem;
-  }
-
-  .q1-hint-touch {
-    display: none;
-  }
-
-  @media (pointer: coarse) {
-    .q1-hint-fine {
-      display: none;
-    }
-
-    .q1-hint-touch {
-      display: inline;
-    }
-  }
-
   @media (max-width: 640px) {
-    /* A phone is tall and narrow, and the robot is wide: past this the
-       stage is only empty ground above and below it. */
-    .q1-stage {
-      height: clamp(22rem, 58svh, 34rem);
-    }
-
     .q1-controls > .q1-btn {
       flex: 1 1 0;
     }
@@ -371,7 +330,8 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .q1-btn {
+    .q1-btn,
+    .q1-lock input {
       transition: none;
     }
   }
@@ -426,7 +386,6 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
 
     const form = $<HTMLFormElement>('[data-q1-lock]');
     const input = $<HTMLInputElement>('#q1-pass');
-    const btn = $<HTMLButtonElement>('[data-q1-open]');
     const msg = $('[data-q1-msg]');
     const viewer = $('[data-q1-viewer]');
     const stage = $('[data-q1-stage]');
@@ -435,39 +394,52 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     const status = $('[data-q1-status]');
     let dispose: (() => void) | null = null;
 
-    const say = (text: string, error = false) => {
-      msg.textContent = text;
-      msg.toggleAttribute('data-error', error);
+    // Everything heavy starts now, unseen: the sealed model and the viewer
+    // code. Progress is kept so that, if the password beats the download,
+    // the stage picks the rule up where it has got to.
+    let progress = 0;
+    const showProgress = () => {
+      bar.style.transform = `scaleX(${progress})`;
+      status.textContent = `Loading ${Math.round(progress * 100)}%`;
     };
+    const fetchBin = () =>
+      download(`${base}/biobuzz/q1.bin`, (f) => {
+        progress = f;
+        if (!viewer.hidden) showProgress();
+      });
+    let bin = fetchBin();
+    let mod = import('../../scripts/q1-viewer');
+    // Held for later; a failure here is retried once the password is in.
+    bin.catch(() => {});
+    mod.catch(() => {});
+
+    input.addEventListener('input', () => input.removeAttribute('aria-invalid'));
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      if (!input.value) return say('Enter the password.', true);
-      btn.disabled = true;
-      say('Checking.');
+      if (!input.value || input.readOnly) return;
+      input.readOnly = true;
       let key: CryptoKey;
       try {
         key = await deriveKey(input.value);
         await open(key, b64(seal.check));
       } catch {
-        btn.disabled = false;
-        say('That password does not match.', true);
-        input.select();
+        input.readOnly = false;
+        input.value = '';
+        input.setAttribute('aria-invalid', 'true');
+        msg.textContent = 'Wrong password.';
+        input.focus();
         return;
       }
 
       form.hidden = true;
       viewer.hidden = false;
-      const viewerModule = import('../../scripts/q1-viewer');
+      showProgress();
       try {
-        const packed = await download(`${base}/biobuzz/q1.bin`, (f) => {
-          bar.style.transform = `scaleX(${f})`;
-          status.textContent = `Loading ${Math.round(f * 100)}%`;
-        });
+        const packed = await bin.catch(() => (bin = fetchBin()));
         status.textContent = 'Opening';
         const glb = await open(key, packed);
-        status.textContent = 'Building';
-        const { mountViewer } = await viewerModule;
+        const { mountViewer } = await mod.catch(() => (mod = import('../../scripts/q1-viewer')));
         dispose = await mountViewer(
           {
             host: stage,
@@ -483,7 +455,6 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
         );
         load.hidden = true;
         $('[data-q1-controls]').hidden = false;
-        $('[data-q1-hint]').hidden = false;
       } catch (err) {
         console.error(err);
         status.textContent = 'The model did not load. Reload the page to try again.';

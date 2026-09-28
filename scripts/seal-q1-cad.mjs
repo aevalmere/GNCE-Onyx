@@ -9,6 +9,11 @@
  * (salt, iteration count and a sealed check token, none of them secret).
  * The password is read from the environment and written nowhere.
  *
+ * Stand it up: Onshape exports Z-up and glTF (and three) are Y-up, so the
+ * robot arrived on its side with the mecanum wheels facing out. The root
+ * turns -90 degrees about X, which sets the wheels on the floor. The two
+ * Pollen game pieces (the balls) are cut, since the page shows the robot.
+ *
  * Pack: every CAD face material collapses into one, since the viewer paints
  * parts by name and Onshape's per-face materials only split draw calls. Then
  * dedup, weld, join primitives inside each part (keepNamed, so every part
@@ -49,6 +54,26 @@ const io = new NodeIO()
 
 const doc = await io.read(src);
 const gltf = doc.getRoot();
+
+const CUT = /^(occurrence of\s*)?pollen(\s|$)/i;
+for (const node of gltf.listNodes()) {
+  if (node.isDisposed() || !CUT.test(node.getName().trim())) continue;
+  // The wrapper and its mesh node both match; dispose the wrapper and let
+  // prune() take the geometry.
+  const parent = node.getParentNode();
+  if (parent && CUT.test(parent.getName().trim())) continue;
+  node.listChildren().forEach((c) => c.dispose());
+  node.dispose();
+}
+
+const s = Math.SQRT1_2;
+for (const top of gltf.listScenes()[0].listChildren()) {
+  const [x, y, z, w] = top.getRotation();
+  // q = rotX(-90deg) * current
+  top.setRotation([-s * w + s * x, s * y + s * z, s * z - s * y, s * w + s * x]);
+  const [tx, ty, tz] = top.getTranslation();
+  top.setTranslation([tx, tz, -ty]);
+}
 const part = doc.createMaterial('part').setBaseColorFactor([0.7, 0.7, 0.7, 1]).setRoughnessFactor(0.6);
 for (const mesh of gltf.listMeshes()) {
   for (const prim of mesh.listPrimitives()) {

@@ -35,6 +35,12 @@ interface Props {
   keepHash?: boolean;
   /** Keep the page out of search results (the password page). */
   noindex?: boolean;
+  /**
+   * No chrome at all: no nav, footer, heat rail or skip link, and the title
+   * stands alone without the site name. The password page, which shows a
+   * single field and nothing that says whose site it is.
+   */
+  bare?: boolean;
 }
 const {
   title,
@@ -44,6 +50,7 @@ const {
   intro = false,
   keepHash = false,
   noindex = false,
+  bare = false,
 } = Astro.props;
 const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
 ---
@@ -63,7 +70,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     <link rel="icon" type="image/png" sizes="32x32" href={`${base}/favicon-32.png`} />
     <link rel="apple-touch-icon" sizes="180x180" href={`${base}/apple-touch-icon.png`} />
     <meta name="generator" content={Astro.generator} />
-    <title>{title ? `${title} · GNCE Onyx` : 'GNCE Onyx'}</title>
+    <title>{bare ? title : title ? `${title} · GNCE Onyx` : 'GNCE Onyx'}</title>
     <script is:inline define:vars={{ intro, keepHash }}>
       document.documentElement.classList.replace('no-js', 'js');
 
@@ -160,7 +167,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
   <body class:list={['min-h-svh antialiased', light ? 'band-light' : 'bg-paper text-ink']}>
     <!-- data-no-glide: skipping the chrome is an escape, not a trip. It
          lands at once, the way a skip link is supposed to. -->
-    <a class="skip-link" href="#main" data-no-glide>Skip to content</a>
+    {!bare && <a class="skip-link" href="#main" data-no-glide>Skip to content</a>}
 
     {
       intro && (
@@ -975,12 +982,12 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
 
     <!-- Heat rail: fills with scroll like a gauge. Scroll-driven CSS;
          browsers without support simply never show it. -->
-    <div class="heat-rail" aria-hidden="true"></div>
+    {!bare && <div class="heat-rail" aria-hidden="true"></div>}
 
     <main id="main"><slot /></main>
 
-    {!hideFooter && <Footer />}
-    <GearNav />
+    {!hideFooter && !bare && <Footer />}
+    {!bare && <GearNav />}
 
     <!-- The motion engine: GSAP + ScrollTrigger + Lenis, the pinned hero
          and roster, and the scrubbed scenes. Bows out under reduced motion
