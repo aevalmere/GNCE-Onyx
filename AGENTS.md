@@ -150,6 +150,20 @@ Manage the background server with `astro dev stop`, `astro dev status`, and `ast
   of its own: `motion.ts` hands every rider the deep plane's own travel, so the
   sticker and the wordmark shear off together as one object.
 
+- The Qualifier 1 robot viewer (`src/pages/biobuzz/q1.astro`, module
+  `src/scripts/q1-viewer.ts`) sits behind a password and is reached only
+  from the grape bar on Qualifier 1's poster in `Season.astro`; it is in no
+  nav and carries `noindex`. A static host cannot check a password, so the
+  model is encrypted instead: `public/biobuzz/q1.bin` is the Onshape GLB
+  packed (meshopt, 137 MB to 3.7 MB) and sealed with AES-GCM under a PBKDF2
+  key, and `src/data/q1-seal.json` holds the salt and a check token. Rebuild
+  both with `SEAL_PASSWORD=... node scripts/seal-q1-cad.mjs <export.glb>`
+  (the header lists the `--no-save` installs it needs). Never commit the
+  password. Nothing loads before the password opens the check token; then
+  the bin downloads and three.js is imported, so no other page carries any
+  of it. Explode follows the assembly tree (top assemblies, then parts and
+  sub-assemblies, then their parts, each on its own overlapping window).
+
 - Images are built by a custom image service,
   `src/lib/sharpen-image-service.mjs`, wired up in `astro.config.mjs`.
   Astro's stock sharp service resizes straight into the encoder with no

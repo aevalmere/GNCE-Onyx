@@ -1,0 +1,505 @@
+---
+/**
+ * Qualifier 1 robot: the Onshape assembly as an exploded-view viewer, behind
+ * a password.
+ *
+ * Reached only from the grape bar on Qualifier 1's poster in the Season
+ * section; it is in no nav, and noindex keeps it out of search. The model is
+ * sealed (AES-GCM, key from the password by PBKDF2) by
+ * scripts/seal-q1-cad.mjs, because a static host has nowhere to check a
+ * password: public/biobuzz/q1.bin is public and useless without it. Nothing
+ * heavy loads until the password opens the check token: then the sealed
+ * file downloads with a progress rule, opens in the browser, and the viewer
+ * module (three, loaders, BVH) is imported. No other page carries any of it.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
+---
+
+<BaseLayout title="Qualifier 1" description="Qualifier 1 robot assembly." light noindex>
+  <section class="q1" data-q1 data-base={base}>
+    <header class="q1-frame mx-auto max-w-[88rem] px-5 pt-32 sm:px-8 sm:pt-40">
+      <p>
+        <a class="back" href={`${base}/#season`}>
+          <span class="back-arrow" aria-hidden="true">&larr;</span>
+          <span class="back-label type-label">Season</span>
+        </a>
+      </p>
+      <span class="mark mt-10" aria-hidden="true"></span>
+      <h1 class="q1-title type-display">Qualifier 1</h1>
+      <p class="q1-line text-muted mt-5">Robot assembly, exported from Onshape.</p>
+    </header>
+
+    <div class="q1-frame mx-auto max-w-[88rem] px-5 pb-24 sm:px-8 sm:pb-32">
+      <form class="q1-lock" data-q1-lock novalidate>
+        <label class="type-label" for="q1-pass">Password</label>
+        <div class="q1-lock-row">
+          <input
+            id="q1-pass"
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            required
+            aria-describedby="q1-lock-msg"
+          />
+          <button type="submit" class="q1-btn q1-btn-solid" data-q1-open>Open</button>
+        </div>
+        <p id="q1-lock-msg" class="q1-lock-msg" role="status" aria-live="polite" data-q1-msg></p>
+      </form>
+
+      <div class="q1-viewer" data-q1-viewer hidden>
+        <div class="q1-stage" data-q1-stage>
+          <div class="q1-load" data-q1-load>
+            <span class="q1-load-rule" aria-hidden="true"><span data-q1-bar></span></span>
+            <span class="type-label" data-q1-status role="status" aria-live="polite">Loading 0%</span>
+          </div>
+          <div class="q1-part" data-q1-label hidden>
+            <span class="q1-part-name type-display" data-q1-label-name></span>
+            <span class="q1-part-path type-label" data-q1-label-path></span>
+          </div>
+        </div>
+
+        <div class="q1-controls" data-q1-controls hidden>
+          <button type="button" class="q1-btn q1-btn-solid" data-q1-toggle>Explode</button>
+          <label class="q1-slider">
+            <span class="type-label">Explode</span>
+            <input type="range" min="0" max="1" step="0.001" value="0" data-q1-slider />
+          </label>
+          <button type="button" class="q1-btn" data-q1-reset>Reset view</button>
+        </div>
+        <p class="q1-hint text-faint" data-q1-hint hidden>
+          <span class="q1-hint-fine">Drag to orbit, right-drag to pan, scroll to zoom. Click a part to isolate it.</span>
+          <span class="q1-hint-touch">One finger to orbit, two to pan and zoom. Tap a part to isolate it.</span>
+        </p>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .q1-title {
+    font-size: clamp(2.75rem, 8vw, 6rem);
+  }
+
+  .q1-line {
+    max-width: 46ch;
+  }
+
+  /* ---- Lock --------------------------------------------------------- */
+  .q1-lock {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    max-width: 28rem;
+    margin-top: clamp(2.5rem, 7svh, 4.5rem);
+    padding-top: 2rem;
+    border-top: 1px solid var(--color-line);
+  }
+
+  .q1-lock-row {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .q1-lock input {
+    flex: 1;
+    min-width: 0;
+    height: 44px;
+    padding: 0 0.85rem;
+    font: inherit;
+    color: var(--color-ink);
+    background: var(--color-deep);
+    border: 1px solid var(--color-line);
+    border-bottom-color: var(--color-faint);
+    border-radius: 0;
+  }
+
+  .q1-lock input:focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 2px;
+  }
+
+  .q1-lock-msg {
+    min-height: 1.7em;
+    font-size: 0.9375rem;
+    color: var(--color-muted);
+  }
+
+  .q1-lock-msg[data-error] {
+    color: var(--color-accent);
+  }
+
+  /* ---- Buttons: the calculator's vocabulary, spaced caps and square ---- */
+  .q1-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    height: 44px;
+    padding: 0 1.1rem;
+    font-family: var(--font-text);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-ink);
+    background: transparent;
+    border: 1px solid var(--color-line);
+    border-radius: 0;
+    cursor: pointer;
+    transition:
+      background-color 200ms ease,
+      border-color 200ms ease,
+      color 200ms ease,
+      transform 160ms var(--ease-out-strong);
+  }
+
+  .q1-btn-solid {
+    min-width: 8.5rem;
+    color: var(--color-paper);
+    background: var(--color-ink);
+    border-color: var(--color-ink);
+  }
+
+  .q1-btn:active {
+    transform: scale(0.97);
+  }
+
+  .q1-btn:disabled {
+    cursor: progress;
+    opacity: 0.6;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .q1-btn:hover {
+      color: var(--color-accent);
+      border-color: var(--color-accent);
+    }
+
+    .q1-btn-solid:hover {
+      color: var(--color-paper);
+      background: var(--color-accent);
+    }
+  }
+
+  /* ---- Stage -------------------------------------------------------- */
+  .q1-viewer {
+    margin-top: clamp(2.5rem, 7svh, 4.5rem);
+  }
+
+  /* A plain plate a step deeper than the paper, so the parts read against
+     a quiet ground and the floor shadow has something to fall on. */
+  .q1-stage {
+    position: relative;
+    height: clamp(24rem, 72svh, 50rem);
+    background: var(--color-deep);
+    border: 1px solid var(--color-line);
+    overflow: hidden;
+  }
+
+  .q1-stage :global(canvas) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+  }
+
+  .q1-load {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    color: var(--color-muted);
+  }
+
+  .q1-load[hidden] {
+    display: none;
+  }
+
+  .q1-load-rule {
+    width: min(14rem, 60%);
+    height: 2px;
+    background: var(--color-line);
+  }
+
+  .q1-load-rule > span {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: var(--color-accent);
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+
+  /* The hovered part's name, pinned top left, out of the model's way. */
+  .q1-part {
+    position: absolute;
+    top: clamp(1rem, 2.5vw, 1.5rem);
+    left: clamp(1rem, 2.5vw, 1.5rem);
+    right: clamp(1rem, 2.5vw, 1.5rem);
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    pointer-events: none;
+  }
+
+  .q1-part[hidden] {
+    display: none;
+  }
+
+  .q1-part-name {
+    font-size: clamp(1.05rem, 2vw, 1.4rem);
+    color: var(--color-accent);
+    max-width: 32ch;
+  }
+
+  .q1-part-path {
+    color: var(--color-muted);
+    font-size: 0.6875rem;
+  }
+
+  .q1-part-path:empty {
+    display: none;
+  }
+
+  /* ---- Controls, under the stage ------------------------------------- */
+  .q1-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1.25rem;
+    padding-top: 1rem;
+  }
+
+  .q1-controls[hidden] {
+    display: none;
+  }
+
+  .q1-slider {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    flex: 1 1 14rem;
+    color: var(--color-muted);
+  }
+
+  /* The calculator's range: a flat track, a small square thumb. */
+  .q1-slider input {
+    flex: 1;
+    min-width: 0;
+    height: 44px;
+    margin: 0;
+    background: transparent;
+    appearance: none;
+    -webkit-appearance: none;
+    accent-color: var(--color-accent);
+    cursor: pointer;
+  }
+
+  .q1-slider input::-webkit-slider-runnable-track {
+    height: 4px;
+    background: var(--color-slot);
+  }
+
+  .q1-slider input::-moz-range-track {
+    height: 4px;
+    background: var(--color-slot);
+  }
+
+  .q1-slider input::-moz-range-progress {
+    height: 4px;
+    background: var(--color-accent);
+  }
+
+  .q1-slider input::-webkit-slider-thumb {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    margin-top: -6px;
+    background: var(--color-ink);
+    border: 0;
+    border-radius: 2px;
+  }
+
+  .q1-slider input::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    background: var(--color-ink);
+    border: 0;
+    border-radius: 2px;
+  }
+
+  .q1-hint {
+    margin-top: 0.75rem;
+    font-size: 0.875rem;
+  }
+
+  .q1-hint-touch {
+    display: none;
+  }
+
+  @media (pointer: coarse) {
+    .q1-hint-fine {
+      display: none;
+    }
+
+    .q1-hint-touch {
+      display: inline;
+    }
+  }
+
+  @media (max-width: 640px) {
+    /* A phone is tall and narrow, and the robot is wide: past this the
+       stage is only empty ground above and below it. */
+    .q1-stage {
+      height: clamp(22rem, 58svh, 34rem);
+    }
+
+    .q1-controls > .q1-btn {
+      flex: 1 1 0;
+    }
+
+    .q1-slider {
+      order: -1;
+      flex-basis: 100%;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .q1-btn {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  import seal from '../../data/q1-seal.json';
+
+  const b64 = (s: string) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+
+  async function deriveKey(password: string) {
+    const raw = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, [
+      'deriveKey',
+    ]);
+    return crypto.subtle.deriveKey(
+      { name: 'PBKDF2', salt: b64(seal.salt), iterations: seal.iterations, hash: 'SHA-256' },
+      raw,
+      { name: 'AES-GCM', length: 256 },
+      false,
+      ['decrypt'],
+    );
+  }
+
+  const open = (key: CryptoKey, packed: Uint8Array) =>
+    crypto.subtle.decrypt({ name: 'AES-GCM', iv: packed.subarray(0, 12) }, key, packed.subarray(12));
+
+  // Byte count from the seal, not Content-Length: a host that gzips the file
+  // reports the compressed size, and the stream hands over decompressed bytes.
+  async function download(url: string, onProgress: (f: number) => void) {
+    const res = await fetch(url);
+    if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
+    const out = new Uint8Array(seal.bytes);
+    const reader = res.body.getReader();
+    let at = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      out.set(value.subarray(0, Math.max(0, out.length - at)), at);
+      at += value.length;
+      onProgress(Math.min(1, at / out.length));
+    }
+    if (at !== out.length) throw new Error('Incomplete download');
+    return out;
+  }
+
+  function init() {
+    const root = document.querySelector<HTMLElement>('[data-q1]');
+    if (!root || root.dataset.ready) return;
+    root.dataset.ready = '1';
+    const base = root.dataset.base || '';
+    const $ = <T extends HTMLElement>(s: string) => root.querySelector<T>(s)!;
+
+    const form = $<HTMLFormElement>('[data-q1-lock]');
+    const input = $<HTMLInputElement>('#q1-pass');
+    const btn = $<HTMLButtonElement>('[data-q1-open]');
+    const msg = $('[data-q1-msg]');
+    const viewer = $('[data-q1-viewer]');
+    const stage = $('[data-q1-stage]');
+    const load = $('[data-q1-load]');
+    const bar = $('[data-q1-bar]');
+    const status = $('[data-q1-status]');
+    let dispose: (() => void) | null = null;
+
+    const say = (text: string, error = false) => {
+      msg.textContent = text;
+      msg.toggleAttribute('data-error', error);
+    };
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!input.value) return say('Enter the password.', true);
+      btn.disabled = true;
+      say('Checking.');
+      let key: CryptoKey;
+      try {
+        key = await deriveKey(input.value);
+        await open(key, b64(seal.check));
+      } catch {
+        btn.disabled = false;
+        say('That password does not match.', true);
+        input.select();
+        return;
+      }
+
+      form.hidden = true;
+      viewer.hidden = false;
+      const viewerModule = import('../../scripts/q1-viewer');
+      try {
+        const packed = await download(`${base}/biobuzz/q1.bin`, (f) => {
+          bar.style.transform = `scaleX(${f})`;
+          status.textContent = `Loading ${Math.round(f * 100)}%`;
+        });
+        status.textContent = 'Opening';
+        const glb = await open(key, packed);
+        status.textContent = 'Building';
+        const { mountViewer } = await viewerModule;
+        dispose = await mountViewer(
+          {
+            host: stage,
+            slider: $<HTMLInputElement>('[data-q1-slider]'),
+            toggle: $<HTMLButtonElement>('[data-q1-toggle]'),
+            reset: $<HTMLButtonElement>('[data-q1-reset]'),
+            label: $('[data-q1-label]'),
+            labelName: $('[data-q1-label-name]'),
+            labelPath: $('[data-q1-label-path]'),
+          },
+          glb,
+          `${base}/biobuzz/draco/`,
+        );
+        load.hidden = true;
+        $('[data-q1-controls]').hidden = false;
+        $('[data-q1-hint]').hidden = false;
+      } catch (err) {
+        console.error(err);
+        status.textContent = 'The model did not load. Reload the page to try again.';
+      }
+    });
+
+    // Leaving the page releases the GPU. A page restored from the
+    // back-forward cache has no viewer any more, so it reloads.
+    addEventListener('pagehide', () => {
+      dispose?.();
+      dispose = null;
+    });
+    addEventListener('pageshow', (e) => {
+      if (e.persisted && !viewer.hidden) location.reload();
+    });
+  }
+
+  init();
+</script>

@@ -31,6 +31,8 @@
  */
 import Placeholder from '../Placeholder.astro';
 
+const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
+
 const events = [
   { key: 'q1', name: 'Qualifier 1' },
   { key: 'q2', name: 'Qualifier 2' },
@@ -84,7 +86,11 @@ const galleryCols = [
                 <Placeholder name={`season-${e.key}-highlight`}>
                   <div class="poster-seat aspect-video">
                     <span class="poster poster-lg" data-season-dest>
-                      <span class="poster-rule" aria-hidden="true"></span>
+                      {e.key === 'q1' ? (
+                        <a class="poster-rule poster-rule-link" href={`${base}/biobuzz/q1/`} aria-label="Qualifier 1 robot" />
+                      ) : (
+                        <span class="poster-rule" aria-hidden="true" />
+                      )}
                       <span class="poster-name type-display">{e.name}</span>
                     </span>
                   </div>
@@ -342,6 +348,21 @@ const galleryCols = [
     width: 3.4em;
     height: 0.16em;
     background: var(--color-accent);
+  }
+
+  /* Qualifier 1's bar is the way into the password page (/biobuzz/q1/),
+     and it is meant to be found, not advertised: it looks exactly like the
+     other two bars. The hit area grows past the 0.16em bar so a finger can
+     land on it; the bar itself does not change. It is a plain link, so the
+     page and its model are only fetched once someone follows it. */
+  .poster-rule-link {
+    position: relative;
+  }
+
+  .poster-rule-link::after {
+    content: '';
+    position: absolute;
+    inset: -0.9em -0.4em;
   }
 
   .poster-name {
