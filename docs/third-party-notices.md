@@ -45,6 +45,27 @@ https://www.apache.org/licenses/LICENSE-2.0 and in the upstream repository's
    an optional `.setReversed()`, closed with `.build()`, poses printed to three
    decimals and headings wrapped in `Math.toRadians(...)`.
 
+3. **The Pedro 3 `Paths` export shape.** The editor now emits version 3 instead,
+   and the shape of what it emits was checked against the same exporter at the
+   Visualizer's 3.x output: a `static` import of `com.pedropathing.api.Paths`, a
+   `PoseFactory.degrees()`, one named `Pose` per pose printed to three decimals
+   with its heading in degrees, one `Path` per leg built from `line(...)` or
+   `curve(...)` with a `.linear` / `.constant` / `.tangent` /
+   `.reverseTangent` heading call, a `path(...)` composing them, and a
+   `follower.follow(...)`. Reading the 2.1.2 builder surface is kept, so a chain
+   a team wrote last season still loads.
+
+4. **BIOBUZZ element positions.** The Visualizer's field list includes a
+   "BIOBUZZ Field (2026-2027)" entry, and its field image `biobuzz.webp` was
+   measured at 7.5 px/in to place the loading zones, the garden strips and the
+   four flowers the Simulate section draws, where the game manual gives a size
+   but no coordinate. **No part of that image is copied into this repository**,
+   and none of it is served: the positions were read off it and written down as
+   numbers, with their confidence, in `docs/drivetrain-research-notes.md`,
+   section "BIOBUZZ auto geometry". Everything the manual does state (the field,
+   the hive frame, the cell openings, the 18 in starting cube) comes from the
+   manual and is marked as such there.
+
 ### Changes made
 
 Both were reimplemented in TypeScript inside a single Astro page rather than

@@ -185,8 +185,8 @@ section:
   is cancelled with a negative margin, so the two centre on the INK) · one
   line along the bottom edge, the team badge at the left and the two
   CTAs at the right, bottoms level and clear of the corner nav toggle. The
-  badge (`src/assets/onyx-badge.webp`) is the team's own drawing, goose and
-  planet and moon on an orbit with the number on it, and it is the one place
+  badge (`src/assets/onyx-badge-sticker.webp`) is the team's own drawing, goose and
+  planet and moon on an orbit with the name and number on it, and it is the one place
   on the site that runs outside the five colours. It is kept small so it
   reads as a mark rather than as artwork, and the flat plate it was exported
   on has been keyed to alpha so it composites on any band with no seam. It

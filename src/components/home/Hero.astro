@@ -66,13 +66,13 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
 
     <div class="hero-foot">
       <!-- The badge, stuck to the bottom left corner: the goose on its orbit,
-           the planet, the moon and the number, drawn by the team. It is the
+           the planet, the moon, the name and the number, drawn by the team. It is the
            badge, not the mark. The circle of hands keeps the stage's top left
            and the sticker starts on that same left edge, so the frame's left
            side reads as one column and the two still read as different
            objects at opposite ends of it rather than as one logo printed
-           twice. The die cut is baked into the file, not drawn here: see
-           scripts/make-badge-sticker.mjs. Alt is empty on purpose: the
+           twice. The die cut is baked into the file, not drawn here: the
+           team exports it with its border already on. Alt is empty on purpose: the
            section is already labelled GNCE Onyx, the mark above carries that
            name, and the number is printed in the corner, so a third
            announcement would only repeat what has already been read out. -->
@@ -81,8 +81,8 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
           class="hero-badge"
           src={sticker}
           alt=""
-          widths={[514, 1027]}
-          sizes="(max-width: 40rem) 60vw, min(24vw, 22.4rem, 42svh)"
+          widths={[498]}
+          sizes="(max-width: 40rem) 60vw, min(23.4vw, 21.9rem, 42svh)"
           loading="eager"
         />
       </div>
@@ -204,12 +204,12 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
 
   /* The sticker's box. The three terms are the word's own
      min(30vw, 28rem, 60svh) put through three ratios: the O's ink is 0.8194 of
-     the word's type size, the artwork is 0.929 of this file (the rest is the
+     the word's type size, the artwork is 0.944 of this file (the rest is the
      cut's border), and then nine tenths, because matched to the letter exactly
      the sticker read as a second headline rather than as something stuck on
-     beside one. So 30vw becomes 24vw and 28rem becomes 22.4rem. The first two
-     ratios are printed by the generator script and can be read off it again
-     whenever the drawing is re-cut; the third is a judgement. The height term
+     beside one. So 30vw becomes 23.4vw and 28rem becomes 21.9rem. The border
+     ratio is measured off the file (about 14px of 498 each side), so re-measure
+     it whenever the badge is re-exported; the third is a judgement. The height term
      is the sticker's own, not the word's: it and the headline share one frame,
      and 42svh is what keeps the two apart on a short viewport.
 
@@ -229,7 +229,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     position: absolute;
     left: 0;
     bottom: 0;
-    width: min(24vw, 22.4rem, 42svh);
+    width: min(23.4vw, 21.9rem, 42svh);
     will-change: transform;
   }
 

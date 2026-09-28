@@ -1139,6 +1139,138 @@ measurement by the library's own instruction, and -41.278 is a placeholder. The
 page inherits that, as does the official visualizer, which does not read
 `FollowerConstants` at all.
 
+## BIOBUZZ auto geometry
+
+Everything the Simulate section's BIOBUZZ field and auto scoreboard use, in
+Pedro coordinates: inches, origin at the bottom-left corner of the field, x
+right, y up, heading in radians counter-clockwise with 0 facing +x. The field is
+144 x 144 in, six by six tiles of 24 in. Red is the half with x < 72, blue x >
+72. Two sources, and each row below says which one it came from:
+
+- **Manual**: BIOBUZZ presented by RTX, game manual part 1, version 1, released
+  2026-09-12, at https://ftc-resources.firstinspires.org/ftc/game/manual.
+- **Raster**: the official Pedro Pathing visualizer's BIOBUZZ field image
+  (`biobuzz.webp` in Pedro-Pathing/Visualizer), measured at 7.5 px/in. No part
+  of that image is copied into this project; it was measured and the numbers
+  written down. See `docs/third-party-notices.md`.
+
+| Element | Coordinates | Source | Confidence |
+| --- | --- | --- | --- |
+| Field | 144 x 144 in, 24 in tiles | Manual | High |
+| HIVE structure centre | (72, 72) | Manual | High |
+| HIVE frame footprint | x [47.27, 96.73], y [52.53, 91.48] | Manual: 49.46 in wide x 38.95 in deep, centred on (72, 72) | High on the sizes, medium on the centring |
+| Red HIVE axis | x = 59.25 | Manual, 25.5 in centre to centre | Medium |
+| Blue HIVE axis | x = 84.75 | Manual, same spacing mirrored | Medium |
+| CELL rows | y = 62.6 (south) and y = 81.4 (north) | Manual: two cells 18.8 in apart about y = 72 | Medium |
+| CELL opening | 20 in wide | Manual | High |
+| Cell pointing up at the start | red (59.25, 62.6), blue (84.75, 81.4) | Manual | High |
+| Red LOADING ZONE | x [0, 11], y [96, 120] | Manual: 23 x 11 in. Raster measured y 96.3 to 119.7; the code snaps the zone to the 24 in tile seam (0.3 in either side), so [96, 120] is the tile-aligned range, not the raw raster one | Medium |
+| Blue LOADING ZONE | x [133, 144], y [24, 48] | Red rotated 180 degrees about (72, 72), same tile-snapped range | Medium |
+| Red GARDEN strip | x [0, 23], y [0, 2] | Raster, 23 x 2 in per the manual | Medium |
+| Blue GARDEN strip | x [121, 144], y [142, 144] | Red rotated | Medium |
+| Red GARDEN pollen | (3, 1), (8, 1), (13, 1), (18, 1) | Estimate: four in a line across the strip | Low, drawing only |
+| Blue GARDEN pollen | (126, 143), (131, 143), (136, 143), (141, 143) | Red rotated | Low, drawing only |
+| FLOWERS | (48, 144), (0, 48), (144, 96), (96, 0) | Raster, wall contact points | Low, drawing only |
+| Launch station, red | (59.25, 38) facing 90 degrees | Derived, see below | Medium |
+| Launch station, blue | (84.75, 106) facing 270 degrees | Red rotated | Medium |
+| Robot footprint | 18 in square | Manual, the starting cube | High |
+
+The launch stations are the one derived row that matters, so here is the
+arithmetic. The up cell's window sits 53.5 to 65.6 in above the tiles and tilts
+about 15 degrees outward, so a robot has to shoot from the outward side of it:
+red from the south, blue from the north. The frame footprint starts at y = 52.53
+on the red side, and an 18 in robot centred at y = 38 has its front edge at
+y = 47, which leaves 5.53 in of paper between the footprint and the frame. That
+5.53 in is the minimum clearance both preload presets report, and it is at the
+launch pose itself rather than anywhere on the curve.
+
+The three presets, red, with their measured clearance to the frame footprint
+(sampled 400 times per segment, turned footprint against the rectangle, exact
+polygon distance):
+
+| Preset | Poses | Minimum frame clearance |
+| --- | --- | --- |
+| `bbPreload` | start (56, 9, 90), launch (59.25, 38, 90), park (14, 108, 180) | 5.53 in |
+| `bbPark` | start (56, 9, 90), park (14, 108, 180) | 8.01 in |
+| `bbCycle` | start (56, 9, 90), launch (59.25, 38, 90), garden (15, 13, 225), launch again, park (14, 108, 180) | 5.53 in |
+
+The garden pose is (15, 13, 225) rather than the round (14, 12) a first sketch
+used. Turned 45 degrees, an 18 in square reaches 12.73 in from its centre along
+each diagonal, so a centre at (14, 12) puts one corner about 0.7 in through the
+wall. (15, 13) keeps every corner inside and still sits 11 in from the garden
+strip, well inside the pickup radius below.
+
+The park pose (14, 108, 180) earns both of the standing points at once: its
+footprint runs x 5 to 23 and y 99 to 117, which is 5 in clear of the left wall
+and 6 in into the red loading zone.
+
+Scoring assumptions, all of them ours and all of them stated on the page in the
+"How auto is scored" fold:
+
+- **AUTO is 30 s.** Manual. LEAVE is 3 points, PARK is 5, each HIVE TIP is 20.
+  Manual, scoring summary.
+- **Wall touch tolerance 0.5 in.** A footprint corner within half an inch of a
+  wall still counts as touching it, so LEAVE needs all four corners more than
+  0.5 in inside the 144 in square. Ours: the manual says "no longer in contact",
+  which is not a number.
+- **Launch radius 12 in and 35 degrees.** A segment end counts as a launch stop
+  when its centre is within 12 in of the launch station and its heading is
+  within 35 degrees of facing the alliance's up cell. Ours: a stand-in for a
+  real launcher's accepted range, which is a property of the robot.
+- **Garden radius 16 in.** A segment end counts as a pickup when its centre is
+  within 16 in of the alliance's own garden rectangle. Ours, for the same
+  reason: an intake's reach is a robot property.
+- **POLLEN per tip is an input.** The manual says a HIVE flips when enough
+  elements land in its up cell and never says how many, because it is a property
+  of the bistable structure. The page defaults to 4, which is one full load, and
+  lets the number be changed. The flip itself is not modelled: after a tip the
+  real up cell changes, and the page keeps counting tips instead.
+- **Preload 4, hold 4.** Manual: each robot starts holding 4 POLLEN and may
+  control at most 4 elements at a time.
+- **Time cuts points, not seconds.** The stops are walked in path order with the
+  clock running, and a stop that finishes after 30.0 s still costs its dwell and
+  earns nothing. LEAVE and PARK need the whole chain plus every dwell inside
+  30.0 s. This is the point of putting the scoreboard on this page at all:
+  re-gearing the robot re-times the chain, and a slow drivetrain loses the park
+  first.
+
+FLOWERS are drawn and never scored: the manual locks them until 60 s remain in
+teleop, so they cannot matter to auto.
+
+## Pedro Pathing 3
+
+Pedro Pathing 3.0.0 released 2026-09-10. The editor in the Simulate section
+reads both it and the 2.1.2 builder surface, and every chain that leaves the
+editor, whether by the copy button or as a preset the alliance switch
+regenerated, is version 3.
+
+What the parser accepts from version 3: `PoseFactory.degrees()` and
+`PoseFactory.radians()`, with the optional `mirrorX(n)` or `mirrorY(n)` alliance
+mirror chained on; `p.of(x, y)` and `p.of(x, y, heading)`; `line(a, b)`;
+`curve(a, c1, ..., b)` with any number of control points; `path(...)` composing
+the legs; and the heading calls `.linear(a, b)`, `.constant(b)`, `.tangent()`,
+`.reverseTangent()` and `.facingPoint(target)`. A leg with no heading call is
+tangent, which is the library's own default. Headings are read in the unit the
+factory was built with.
+
+What it rejects, with a message naming the line: `through(a, b, c)`, which is a
+bezier through the poses rather than around control points, and so a different
+curve from the one the sampler here fits; and
+`.heading(Interpolator.piecewise()...)`, which is a heading program rather than a
+pair of endpoints.
+
+`facingPoint` is an approximation, and the page's own fold says so. The real
+interpolator re-aims at the target every tick; the page draws a straight turn
+between the heading that aims at the target from the start pose and the heading
+that aims at it from the end pose. On a leg that passes close to the target the
+two differ. On the legs a team actually writes, aiming across the field at a
+goal, they do not differ enough to move a time.
+
+Version 3 also replaced the follower configuration: `ForesightConfig` in place of
+`FollowerConstants` and `PathConstraints`. The page's braking model still comes
+from the 2.1.2 constants, documented above under "The braking constant, read out
+of 2.1.2 instead of inferred", and that is a known gap for a later pass.
+
 ## Open questions the next pass should close
 
 1. REV pack internal resistance: 11–20 mΩ (docs snippet) vs <170 mΩ (forum).

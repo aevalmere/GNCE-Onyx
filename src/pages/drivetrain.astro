@@ -309,7 +309,10 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
         <div class="dt-path-pick">
           <label class="dt-path-sel" for="pvSel">Path</label>
           <select id="pvSel">
-            <option value="preload" selected>DECODE auto, preload</option>
+            <option value="bbPreload" selected>BIOBUZZ preload launch, park</option>
+            <option value="bbPark">BIOBUZZ leave and park</option>
+            <option value="bbCycle">BIOBUZZ preload, garden, launch, park</option>
+            <option value="preload">DECODE auto, preload</option>
             <option value="decode">DECODE auto, full chain</option>
             <option value="motif">AprilTag motif auto</option>
             <option value="bucket">Into the Deep bucket auto</option>
@@ -320,7 +323,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
         </div>
         <div class="dt-path-grid">
           <div class="dt-path-main">
-            <div class="dt-chartbox dt-fieldbox" id="pathBox"><canvas id="cPath" role="img" aria-label="Top-down 144 by 144 inch FTC field of six by six foam tiles, showing the selected Pedro Pathing bezier chain, its control points, the start and end poses, and the robot driving the chain to scale"></canvas></div>
+            <div class="dt-chartbox dt-fieldbox" id="pathBox"><canvas id="cPath" role="img" aria-label="Top-down 144 by 144 inch FTC field of six by six foam tiles, showing the selected Pedro Pathing bezier chain, its control points, the start and end poses, and the robot driving the chain to scale. On a BIOBUZZ chain it also carries the BIOBUZZ elements: the hive frame at the centre with its four cells, both loading zones, both gardens with their pollen, and the four flowers on the wall"></canvas></div>
             <div class="dt-anim-controls">
               <button type="button" class="dt-btn dt-btn-sm dt-btn-primary" id="pvPlay">Play</button>
               <button type="button" class="dt-btn dt-btn-sm dt-btn-ghost" id="pvRestart" aria-label="Restart the path">Restart</button>
@@ -368,6 +371,72 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
           </div>
         </div>
 
+        <!-- The auto scoreboard. The drive time is this page's physics; the
+             stops, the footprint tests and the point values come from the
+             BIOBUZZ manual. Coordinates and assumptions:
+             docs/drivetrain-research-notes.md, "BIOBUZZ auto geometry". -->
+        <div class="dt-panel dt-sim-auto">
+          <h3 class="dt-clump-h">Auto</h3>
+          <section class="dt-clump" aria-label="Auto assumptions">
+            <div class="dt-grid2">
+              <div class="dt-field">
+                <label for="bbAlliance">Alliance</label>
+                <select id="bbAlliance">
+                  <option value="red" selected>Red</option>
+                  <option value="blue">Blue</option>
+                </select>
+              </div>
+              <div class="dt-field"><label for="bbLaunchDwell">Launch stop (s)</label><input type="number" id="bbLaunchDwell" value="2" step="0.1" min="0" max="15" /></div>
+              <div class="dt-field"><label for="bbIntakeDwell">Garden stop (s)</label><input type="number" id="bbIntakeDwell" value="1.5" step="0.1" min="0" max="15" /></div>
+              <div class="dt-field"><label for="bbTipCount">POLLEN per tip</label><input type="number" id="bbTipCount" value="4" step="1" min="1" max="8" /></div>
+            </div>
+          </section>
+          <dl class="dt-readouts">
+            <div><dt>Drive time</dt><dd id="roBbDrive">–</dd></div>
+            <div><dt>Stops</dt><dd id="roBbStops">–</dd></div>
+            <div id="roBbAutoWrap"><dt>Auto time</dt><dd id="roBbAuto">–</dd></div>
+            <div id="roBbLeftWrap"><dt>Time left</dt><dd id="roBbLeft">–</dd></div>
+            <div><dt>LEAVE</dt><dd id="roBbLeave">–</dd></div>
+            <div><dt>PARK</dt><dd id="roBbPark">–</dd></div>
+            <div><dt>HIVE TIP</dt><dd id="roBbTip">–</dd></div>
+            <div><dt>POLLEN launched</dt><dd id="roBbPollen">–</dd></div>
+            <div><dt>Auto points</dt><dd id="roBbPoints">–</dd></div>
+          </dl>
+          <details class="dt-fold">
+            <summary>How auto is scored</summary>
+            <div class="dt-fold-body prose">
+              <p>
+                Auto runs 30 seconds. Leaving the wall is worth 3 points,
+                parking at least partly in your own loading zone is 5, and each
+                HIVE tip is 20. Drive time comes from this page's physics; the
+                stops are the seconds you add for launching and for picking up.
+              </p>
+              <p>
+                A segment end counts as a launch when it lands within 12 inches
+                of the launch station and within 35 degrees of facing the HIVE,
+                and as a garden pickup within 16 inches of your own garden
+                strip. The robot starts holding 4 POLLEN and never holds more
+                than 4. Footprint is an 18 inch square turned to the pose's
+                heading, and a corner within half an inch of a wall still
+                counts as touching it.
+              </p>
+              <p>
+                Nothing that finishes after 30.0 seconds scores, which is why a
+                slow drivetrain loses the park before it loses anything else.
+              </p>
+              <p>
+                Positions come from game manual V1, released 12 September 2026,
+                and from the official visualizer's BIOBUZZ field image. How much
+                POLLEN it takes to flip a HIVE is a property of the hardware and
+                is not published, so it is a field you set. A tipped HIVE swaps
+                which cell points up; that flip is not modelled here, only the
+                tips are counted.
+              </p>
+            </div>
+          </details>
+          <p class="dt-srsum" id="srAuto"></p>
+        </div>
+
         <!-- The code IS the path: the editor always shows the chain on the
              field. A preset fills it, typing in it forks to Custom, and a
              named save keeps it in the picker. -->
@@ -387,13 +456,38 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
             <button type="button" class="dt-btn dt-btn-sm dt-btn-ghost" id="pvSaveCancel">Cancel</button>
           </div>
           <textarea id="pvSrcText" rows="18" spellcheck="false" autocomplete="off" autocapitalize="off" data-lenis-prevent
-            placeholder="follower.pathBuilder()&#10;        .addPath(new BezierLine(new Pose(22, 122), new Pose(60, 84)))&#10;        .setLinearHeadingInterpolation(Math.toRadians(324), Math.toRadians(135))&#10;        .build();"></textarea>
+            placeholder="PoseFactory p = PoseFactory.degrees();&#10;Pose startPose = p.of(22, 122, 324);&#10;Pose scorePose = p.of(60, 84, 135);&#10;&#10;Path scorePreload = line(startPose, scorePose).linear(startPose, scorePose);&#10;Path auto = path(scorePreload);"></textarea>
           <p class="dt-sim-msg" id="pvMsg" role="status"></p>
           <details class="dt-fold">
             <summary>What the editor accepts</summary>
             <div class="dt-fold-body prose">
               <p>
-                Pedro 2.1.2 builder: <span class="dt-num">Pose</span>,
+                Pedro 3 paths: <span class="dt-num">PoseFactory.degrees()</span>,
+                <span class="dt-num">PoseFactory.radians()</span>,
+                <span class="dt-num">of</span>,
+                <span class="dt-num">line</span>,
+                <span class="dt-num">curve</span>,
+                <span class="dt-num">path</span>,
+                <span class="dt-num">linear</span>,
+                <span class="dt-num">constant</span>,
+                <span class="dt-num">tangent</span>,
+                <span class="dt-num">reverseTangent</span>,
+                <span class="dt-num">facingPoint</span>,
+                <span class="dt-num">mirrorX</span>,
+                <span class="dt-num">mirrorY</span>. A degrees factory reads its
+                headings in degrees, a radians factory in radians. Bare numbers
+                in <span class="dt-num">linear</span> and
+                <span class="dt-num">constant</span> are radians, as in Pedro.
+                <span class="dt-num">facingPoint</span> is drawn as a straight
+                turn between the heading at the start and the one at the end.
+                <span class="dt-num">through</span> and
+                <span class="dt-num">heading(Interpolator…)</span> do not load
+                yet, and say so when you paste them. Code out of this editor is
+                Pedro 3.
+              </p>
+              <p>
+                Pedro 2.1.2 builder code still loads:
+                <span class="dt-num">Pose</span>,
                 <span class="dt-num">BezierLine</span>,
                 <span class="dt-num">BezierCurve</span>,
                 <span class="dt-num">BezierPoint</span>,
@@ -1088,6 +1182,18 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     font-size: 1rem;
     font-weight: 500;
     color: var(--ink-1);
+  }
+  /* A readout that has run past the 30 s auto takes the warn ink, the same
+     way a stat card does. */
+  .dt-readouts > .is-warn dt,
+  .dt-readouts > .is-warn dd { color: var(--warn-text); }
+
+  /* The auto scoreboard sits between the field and the editor, under its own
+     rule, so it reads as a consequence of the chain above it. */
+  .dt-sim-auto {
+    margin-top: var(--sp-6);
+    padding-top: var(--sp-6);
+    border-top: 1px solid var(--rule);
   }
 
   /* Actions sit under the thing they act on: the recipe on the board, and the
@@ -2610,7 +2716,143 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
   const B_P1: [number, number] = [37, 121], B_P2: [number, number] = [43, 130], B_P3: [number, number] = [49, 135];
   const B_PARK: [number, number] = [60, 98];
 
+  // ── BIOBUZZ (FTC 2026-2027) ────────────────────────────────────────────
+  // Field geometry in Pedro coordinates: origin bottom-left, inches, y up.
+  // Every number is sourced line by line in docs/drivetrain-research-notes.md,
+  // section "BIOBUZZ auto geometry", with its confidence. The field is
+  // 180-degree rotationally symmetric about (72, 72), so blue is red rotated
+  // and there is only ever one table to keep true.
+  interface BbRect { x0: number; x1: number; y0: number; y1: number }
+  type BbSide = 'red' | 'blue';
+  const BOT_IN = 18;                                   // the starting cube
+  const BB_FRAME: BbRect = { x0: 47.27, x1: 96.73, y0: 52.53, y1: 91.48 };
+  const BB_HIVE_X: Record<BbSide, number> = { red: 59.25, blue: 84.75 };
+  const BB_CELL_Y = { south: 62.6, north: 81.4 };
+  const BB_CELL_W = 20;                                // cell opening, inches
+  // The cell pointing up when the match starts, which is the one a robot can
+  // launch into. Red launches from the south of it, blue from the north.
+  const BB_UP_CELL: Record<BbSide, [number, number]> = { red: [59.25, 62.6], blue: [84.75, 81.4] };
+  const BB_LAUNCH: Record<BbSide, { x: number; y: number; h: number }> = {
+    red: { x: 59.25, y: 38, h: RAD(90) },
+    blue: { x: 84.75, y: 106, h: RAD(270) },
+  };
+  const BB_LZ: Record<BbSide, BbRect> = {
+    red: { x0: 0, x1: 11, y0: 96, y1: 120 },
+    blue: { x0: 133, x1: 144, y0: 24, y1: 48 },
+  };
+  const BB_GARDEN: Record<BbSide, BbRect> = {
+    red: { x0: 0, x1: 23, y0: 0, y1: 2 },
+    blue: { x0: 121, x1: 144, y0: 142, y1: 144 },
+  };
+  const BB_POLLEN: Record<BbSide, [number, number][]> = {
+    red: [[3, 1], [8, 1], [13, 1], [18, 1]],
+    blue: [[126, 143], [131, 143], [136, 143], [141, 143]],
+  };
+  const BB_FLOWERS: [number, number][] = [[48, 144], [0, 48], [144, 96], [96, 0]];
+
+  // An 18 in robot's footprint at a pose, as its four corners.
+  const botFoot = (cx: number, cy: number, h: number): [number, number][] => {
+    const c = Math.cos(h), s = Math.sin(h), r = BOT_IN / 2;
+    return ([[r, r], [-r, r], [-r, -r], [r, -r]] as [number, number][])
+      .map(([a, b]) => [cx + a * c - b * s, cy + a * s + b * c] as [number, number]);
+  };
+  const rectGap = (x: number, y: number, R: BbRect) =>
+    Math.hypot(Math.max(R.x0 - x, 0, x - R.x1), Math.max(R.y0 - y, 0, y - R.y1));
+  // Separating-axis test: a turned square against an axis-aligned box. Four
+  // axes from the square, two from the box, and a gap on any one of them means
+  // they miss.
+  const footHitsRect = (F: [number, number][], R: BbRect): boolean => {
+    const Q: [number, number][] = [[R.x0, R.y0], [R.x1, R.y0], [R.x1, R.y1], [R.x0, R.y1]];
+    const ax: [number, number][] = [[1, 0], [0, 1]];
+    for (let i = 0; i < F.length; i++) {
+      const p = F[i], q = F[(i + 1) % F.length];
+      const L = Math.hypot(q[0] - p[0], q[1] - p[1]) || 1;
+      ax.push([-(q[1] - p[1]) / L, (q[0] - p[0]) / L]);
+    }
+    for (const a of ax) {
+      const pf = F.map((p) => p[0] * a[0] + p[1] * a[1]);
+      const pq = Q.map((p) => p[0] * a[0] + p[1] * a[1]);
+      if (Math.max(...pf) < Math.min(...pq) || Math.max(...pq) < Math.min(...pf)) return false;
+    }
+    return true;
+  };
+
+  // The three BIOBUZZ chains are authored on the red alliance, in Pedro 3, in
+  // the shape chainToJava emits. The segs beside each one are what the page's
+  // own parser reads back out of that source, checked segment for segment.
   const PV_PRESETS: Record<string, PvPreset> = {
+    bbPreload: {
+      label: 'BIOBUZZ preload launch, park',
+      segs: [
+        { pts: [[56, 9], [59.25, 38]], mode: 'linear', h0: RAD(90), h1: RAD(90) },
+        { pts: [[59.25, 38], [30, 16], [6, 56], [14, 108]], mode: 'linear', h0: RAD(90), h1: RAD(180) },
+      ],
+      code: `import static com.pedropathing.api.Paths.*;
+
+PoseFactory p = PoseFactory.degrees();
+
+Pose startPose = p.of(56.000, 9.000, 90.0);
+Pose launchPose = p.of(59.250, 38.000, 90.0);
+Pose outControl = p.of(30.000, 16.000);
+Pose upControl = p.of(6.000, 56.000);
+Pose parkPose = p.of(14.000, 108.000, 180.0);
+
+Path leg1 = line(startPose, launchPose).linear(startPose, launchPose);
+Path leg2 = curve(launchPose, outControl, upControl, parkPose).linear(launchPose, parkPose);
+
+Path chain = path(leg1, leg2);
+
+follower.follow(chain);`,
+    },
+    bbPark: {
+      label: 'BIOBUZZ leave and park',
+      segs: [
+        { pts: [[56, 9], [18, 44], [14, 108]], mode: 'linear', h0: RAD(90), h1: RAD(180) },
+      ],
+      code: `import static com.pedropathing.api.Paths.*;
+
+PoseFactory p = PoseFactory.degrees();
+
+Pose startPose = p.of(56.000, 9.000, 90.0);
+Pose parkControl = p.of(18.000, 44.000);
+Pose parkPose = p.of(14.000, 108.000, 180.0);
+
+Path leg1 = curve(startPose, parkControl, parkPose).linear(startPose, parkPose);
+
+Path chain = path(leg1);
+
+follower.follow(chain);`,
+    },
+    bbCycle: {
+      label: 'BIOBUZZ preload, garden, launch, park',
+      segs: [
+        { pts: [[56, 9], [59.25, 38]], mode: 'linear', h0: RAD(90), h1: RAD(90) },
+        { pts: [[59.25, 38], [36, 20], [15, 13]], mode: 'linear', h0: RAD(90), h1: RAD(225) },
+        { pts: [[15, 13], [34, 18], [59.25, 38]], mode: 'linear', h0: RAD(225), h1: RAD(90) },
+        { pts: [[59.25, 38], [30, 16], [6, 56], [14, 108]], mode: 'linear', h0: RAD(90), h1: RAD(180) },
+      ],
+      code: `import static com.pedropathing.api.Paths.*;
+
+PoseFactory p = PoseFactory.degrees();
+
+Pose startPose = p.of(56.000, 9.000, 90.0);
+Pose launchPose = p.of(59.250, 38.000, 90.0);
+Pose downControl = p.of(36.000, 20.000);
+Pose gardenPose = p.of(15.000, 13.000, 225.0);
+Pose upControl = p.of(34.000, 18.000);
+Pose parkControl1 = p.of(30.000, 16.000);
+Pose parkControl2 = p.of(6.000, 56.000);
+Pose parkPose = p.of(14.000, 108.000, 180.0);
+
+Path leg1 = line(startPose, launchPose).linear(startPose, launchPose);
+Path leg2 = curve(launchPose, downControl, gardenPose).linear(launchPose, gardenPose);
+Path leg3 = curve(gardenPose, upControl, launchPose).linear(gardenPose, launchPose);
+Path leg4 = curve(launchPose, parkControl1, parkControl2, parkPose).linear(launchPose, parkPose);
+
+Path chain = path(leg1, leg2, leg3, leg4);
+
+follower.follow(chain);`,
+    },
     preload: {
       label: 'DECODE auto, preload',
       segs: [{ pts: [D_START, D_SCORE], mode: 'linear', h0: RAD(324), h1: RAD(135) }],
@@ -2796,16 +3038,20 @@ follower.followPath(lane);`,
   const angLerp = (a: number, b: number, t: number) => a + wrapPi(b - a) * t;
 
   // ── Custom chains ────────────────────────────────────────────────────────
-  // Two input languages, one output shape. The first is the real 2.1.2
-  // pathBuilder surface as a team writes it; the second is the JSON body of a
-  // .pp file, whose schema is the official visualiser's SaveData. Neither is
-  // executed: the reader is parsed by hand so a paste can never run.
+  // Three input languages, one output shape. Java covers two dialects in one
+  // pass: the Pedro 3 Paths API (PoseFactory, line, curve, path) and the 2.1.2
+  // pathBuilder surface as a team still writes it. The third is the JSON body
+  // of a .pp file, whose schema is the official visualiser's SaveData. None of
+  // it is executed: the reader is parsed by hand so a paste can never run.
   class PathSyntaxError extends Error {
     line: number;
     constructor(line: number, msg: string) { super(msg); this.line = line; }
   }
   interface ParsedChain { segs: PvSeg[]; notes: string[]; kind: 'java' | 'pp' }
   type PoseV = { x: number; y: number; h: number };
+  // A Pedro 3 PoseFactory: the heading unit it was built with, plus either
+  // alliance mirror if one is chained on.
+  type PoseFac = { deg: boolean; mx: number | null; my: number | null };
 
   // Comments and string bodies become spaces, so every index in the scrubbed
   // text still maps to its original line.
@@ -2963,9 +3209,30 @@ follower.followPath(lane);`,
   };
   const expr0 = (s: string) => s.trim().replace(/\s+/g, ' ').slice(0, 34);
 
-  // new Pose(x, y[, heading]) / new Point(x, y[, …]) / a declared pose name.
-  const readPose = (arg: string, poses: Record<string, PoseV>, nums: Record<string, number>, ln: number): PoseV => {
+  // new Pose(x, y[, heading]) / new Point(x, y[, …]) / factory.of(x, y[, h]) /
+  // a declared pose name.
+  const readPose = (arg: string, poses: Record<string, PoseV>, nums: Record<string, number>, ln: number, facs: Record<string, PoseFac> = {}): PoseV => {
     const t = arg.trim();
+    // Pedro 3: the factory decides the heading unit and carries the mirror.
+    const ofM = /^([A-Za-z_$][\w$]*)\s*\.\s*of\s*\(/.exec(t);
+    if (ofM) {
+      const fac = facs[ofM[1]];
+      if (!fac) throw new PathSyntaxError(ln, `${ofM[1]} is not a declared PoseFactory; write "PoseFactory ${ofM[1]} = PoseFactory.degrees();" above the poses`);
+      const openO = t.indexOf('(', ofM[0].length - 1);
+      const closeO = matchParen(t, openO);
+      if (closeO < 0) throw new PathSyntaxError(ln, `${ofM[1]}.of( is never closed`);
+      const argsO = splitArgs(t.slice(openO + 1, closeO));
+      if (argsO.length < 2) throw new PathSyntaxError(ln, `${ofM[1]}.of needs at least an x and a y`);
+      let x = readNum(argsO[0], poses, nums, ln);
+      let y = readNum(argsO[1], poses, nums, ln);
+      let h = argsO.length > 2 ? readNum(argsO[2], poses, nums, ln) : 0;
+      if (fac.deg) h = RAD(h);
+      // Matches PoseFactory.mirrorX/mirrorY in core/src/main/java/com/pedropathing/api/PoseFactory.java:
+      // mirrorX flips x and negates heading, mirrorY flips y and leaves heading unchanged.
+      if (fac.mx !== null) { x = 2 * fac.mx - x; h = -h; }
+      if (fac.my !== null) { y = 2 * fac.my - y; }
+      return { x, y, h };
+    }
     const ctor = /^new\s+(Pose|Point|FuturePose)\s*\(/.exec(t);
     if (ctor) {
       const open = t.indexOf('(', ctor[0].length - 1);
@@ -2993,6 +3260,7 @@ follower.followPath(lane);`,
     const notes: string[] = [];
     const poses: Record<string, PoseV> = {};
     const nums: Record<string, number> = {};
+    const facs: Record<string, PoseFac> = {};
 
     // Declared constants first, so a chain can name them in any order.
     const numRe = /(?:^|[;{}()\s])(?:(?:public|private|protected|static|final)\s+)*(?:double|float|int|long)\s+([A-Za-z_$][\w$]*)\s*=\s*([^;]+);/g;
@@ -3005,6 +3273,26 @@ follower.followPath(lane);`,
       const close = matchParen(src, open);
       if (close < 0) throw new PathSyntaxError(lineOf(src, open), `the pose ${m[1]} has an opening bracket that is never closed`);
       poses[m[1]] = readPose(src.slice(m.index + m[0].length - m[2].length, close + 1), poses, nums, lineOf(src, m.index));
+    }
+
+    // Pedro 3 pose factories, then the poses they make. The factory name is
+    // whatever the team called it, so both are read by shape, not by name.
+    const facRe = /(?:^|[;{}()\s])(?:(?:public|private|protected|static|final)\s+)*PoseFactory\s+([A-Za-z_$][\w$]*)\s*=\s*PoseFactory\s*\.\s*(degrees|radians)\s*\(\s*\)([^;]*);/g;
+    for (let m = facRe.exec(src); m; m = facRe.exec(src)) {
+      const ln = lineOf(src, m.index);
+      const fac: PoseFac = { deg: m[2] === 'degrees', mx: null, my: null };
+      const mirRe = /\.\s*mirror([XY])\s*\(([^)]*)\)/g;
+      for (let k = mirRe.exec(m[3]); k; k = mirRe.exec(m[3])) {
+        const axis = k[2].trim() ? readNum(k[2], poses, nums, ln) : FIELD_IN / 2;
+        if (k[1] === 'X') fac.mx = axis; else fac.my = axis;
+      }
+      const junk = m[3].replace(/\.\s*mirror[XY]\s*\([^)]*\)/g, '').trim();
+      if (junk) throw new PathSyntaxError(ln, `a PoseFactory here reads .mirrorX(axis) and .mirrorY(axis) only, found "${expr0(junk)}"`);
+      facs[m[1]] = fac;
+    }
+    const ofRe = /(?:^|[;{}()\s])(?:(?:public|private|protected|static|final)\s+)*Pose\s+([A-Za-z_$][\w$]*)\s*=\s*([A-Za-z_$][\w$]*\s*\.\s*of\s*\([^;]*\))\s*;/g;
+    for (let m = ofRe.exec(src); m; m = ofRe.exec(src)) {
+      poses[m[1]] = readPose(m[2], poses, nums, lineOf(src, m.index), facs);
     }
 
     // Then walk the builder calls in source order. addPath (and the legacy
@@ -3042,7 +3330,7 @@ follower.followPath(lane);`,
           if (c2 < 0) throw new PathSyntaxError(ln, `new ${cm[1]}( is never closed`);
           const pts = splitArgs(t.slice(o2 + 1, c2))
             .filter((a) => !/^(new\s+)?PathConstraints\b/.test(a.trim()))
-            .map((a) => readPose(a, poses, nums, ln))
+            .map((a) => readPose(a, poses, nums, ln, facs))
             .map((p) => [p.x, p.y] as [number, number]);
           if (cm[1] === 'BezierPoint') { skippedHolds++; continue; }
           if (cm[1] === 'BezierLine' && pts.length !== 2) throw new PathSyntaxError(ln, `BezierLine takes exactly 2 poses, found ${pts.length}`);
@@ -3071,10 +3359,142 @@ follower.followPath(lane);`,
       }
     }
 
+    // ── Pedro 3 ───────────────────────────────────────────────────────────
+    // line(a, b) and curve(a, c…, b) make one segment each, path(…) strings
+    // them together, and the interpolation is a call chained onto the shape
+    // instead of a setter on the builder. It lands in the same PvSeg the walk
+    // above fills, so nothing downstream knows which dialect it read.
+    const pathVars: Record<string, PvSeg[]> = {};
+    const copySegs = (list: PvSeg[]) => list.map((sg) => ({ ...sg, pts: sg.pts.map((p) => [p[0], p[1]] as [number, number]) }));
+    let sawFacing = false;
+    // A pose where an angle is allowed: .linear and .constant take either.
+    const maybePose = (a: string, ln: number): PoseV | null => {
+      const s = a.trim();
+      if (!/^(new\s+[A-Za-z_$]|[A-Za-z_$][\w$]*\s*(\.\s*(of|copy)\s*\(|$))/.test(s)) return null;
+      try { return readPose(s, poses, nums, ln, facs); } catch { return null; }
+    };
+    // `off` is where `text` begins in `src`, so the chained-call loop below can
+    // report the line a chained .call( actually sits on (a multi-line chain
+    // otherwise blames every error on the `Path x = …` statement's own line).
+    const readPathExpr = (text: string, off: number, ln: number, strict: boolean): PvSeg[] | null => {
+      const lead = text.length - text.trimStart().length;
+      const t = text.trim();
+      const call = /^(line|curve|through|path)\s*\(/.exec(t);
+      let list: PvSeg[] = [];
+      let tail: string;
+      let tailOff: number; // offset of tail[0] within `text`; add `off` for the absolute offset in `src`
+      if (call) {
+        const open = t.indexOf('(', call[0].length - 1);
+        const close = matchParen(t, open);
+        if (close < 0) throw new PathSyntaxError(ln, `${call[1]}( is never closed`);
+        const args = splitArgs(t.slice(open + 1, close));
+        const afterClose = t.slice(close + 1);
+        tail = afterClose.trim();
+        tailOff = lead + close + 1 + (afterClose.length - afterClose.trimStart().length);
+        if (call[1] === 'through') throw new PathSyntaxError(ln, 'through(…) is not supported yet: write the same shape as curve(start, control…, end)');
+        if (call[1] === 'path') {
+          if (!args.length) throw new PathSyntaxError(ln, 'path(…) needs at least one Path inside it');
+          const innerText = t.slice(open + 1, close);
+          const innerOff = lead + open + 1;
+          let cursor = 0;
+          for (const a of args) {
+            const idx = innerText.indexOf(a, cursor);
+            const aOff = off + innerOff + (idx >= 0 ? idx : 0);
+            if (idx >= 0) cursor = idx + a.length;
+            const sub = readPathExpr(a, aOff, ln, true);
+            if (!sub) throw new PathSyntaxError(ln, `path(…) wants a Path, found "${expr0(a)}"`);
+            list = list.concat(sub);
+          }
+        } else {
+          const pts = args.map((a) => readPose(a, poses, nums, ln, facs)).map((p) => [p.x, p.y] as [number, number]);
+          if (call[1] === 'line' && pts.length !== 2) throw new PathSyntaxError(ln, `line takes exactly 2 poses, found ${pts.length}`);
+          if (call[1] === 'curve' && pts.length < 2) throw new PathSyntaxError(ln, `curve needs at least a start and an end, found ${pts.length}`);
+          list = [{ pts, mode: 'tangent' }];
+        }
+      } else {
+        const ref = /^[A-Za-z_$][\w$]*/.exec(t);
+        if (!ref || !(ref[0] in pathVars)) return null;
+        list = copySegs(pathVars[ref[0]]);
+        const afterRef = t.slice(ref[0].length);
+        tail = afterRef.trim();
+        tailOff = lead + ref[0].length + (afterRef.length - afterRef.trimStart().length);
+      }
+      for (;;) {
+        const cm = /^\.\s*([A-Za-z_$][\w$]*)\s*\(/.exec(tail);
+        if (!cm) break;
+        const callLn = lineOf(src, off + tailOff);
+        const name = cm[1];
+        const open = tail.indexOf('(', cm[0].length - 1);
+        const close = matchParen(tail, open);
+        if (close < 0) throw new PathSyntaxError(callLn, `.${name}( is never closed`);
+        const args = splitArgs(tail.slice(open + 1, close));
+        const ang = (a: string): number => { const p = maybePose(a, callLn); return p ? p.h : readNum(a, poses, nums, callLn); };
+        if (name === 'linear') {
+          if (args.length < 2) throw new PathSyntaxError(callLn, '.linear needs a start heading and an end heading, or the two poses that carry them');
+          const h0 = ang(args[0]), h1 = ang(args[1]);
+          for (const sg of list) { sg.mode = 'linear'; sg.h0 = h0; sg.h1 = h1; }
+        } else if (name === 'constant') {
+          if (!args.length) throw new PathSyntaxError(callLn, '.constant needs one heading, or the pose that carries it');
+          const h = ang(args[0]);
+          for (const sg of list) { sg.mode = 'constant'; sg.h0 = h; sg.h1 = h; }
+        } else if (name === 'tangent' || name === 'reverseTangent') {
+          for (const sg of list) { sg.mode = 'tangent'; delete sg.h0; delete sg.h1; if (name === 'reverseTangent') sg.rev = true; }
+        } else if (name === 'facingPoint') {
+          if (!args.length) throw new PathSyntaxError(callLn, '.facingPoint needs the point to face');
+          const tp = maybePose(args[0], callLn);
+          if (!tp) throw new PathSyntaxError(callLn, `.facingPoint wants a pose, found "${expr0(args[0])}"`);
+          for (const sg of list) {
+            const a = sg.pts[0], b = sg.pts[sg.pts.length - 1];
+            sg.mode = 'linear';
+            sg.h0 = Math.atan2(tp.y - a[1], tp.x - a[0]);
+            sg.h1 = Math.atan2(tp.y - b[1], tp.x - b[0]);
+          }
+          sawFacing = true;
+        } else if (name === 'heading') {
+          throw new PathSyntaxError(callLn, '.heading(Interpolator…) is not supported yet: use .linear, .constant, .tangent, .reverseTangent or .facingPoint');
+        } else {
+          throw new PathSyntaxError(callLn, `.${name}() is not a call this page reads on a path`);
+        }
+        const afterCall = tail.slice(close + 1);
+        tail = afterCall.trim();
+        tailOff += close + 1 + (afterCall.length - afterCall.trimStart().length);
+      }
+      if (strict) {
+        const left = tail.replace(/^;+/, '').trim();
+        if (left) throw new PathSyntaxError(lineOf(src, off + tailOff), `could not read "${expr0(left)}" after the path`);
+      }
+      return list;
+    };
+
+    // Path declarations in source order, so a later one can name an earlier
+    // one; then the path(…) compositions, which win when the file has any.
+    const declared: PvSeg[][] = [];
+    const declRe = /(?:^|[;{}()\s])(?:(?:public|private|protected|static|final)\s+)*(?:Path|CompoundPath)\s+([A-Za-z_$][\w$]*)\s*=\s*([^;]*);/g;
+    for (let m = declRe.exec(src); m; m = declRe.exec(src)) {
+      const off = m.index + m[0].length - 1 - m[2].length; // m[2]'s own offset in src (m[0] ends "…m[2];")
+      const got = readPathExpr(m[2], off, lineOf(src, m.index), true);
+      if (got) { pathVars[m[1]] = got; declared.push(got); }
+    }
+    const compRe = /(?:^|[^\w$.])path\s*\(/g;
+    const composed: PvSeg[] = [];
+    for (let m = compRe.exec(src); m; m = compRe.exec(src)) {
+      const at = m.index + m[0].length - 5;
+      const open = m.index + m[0].length - 1;
+      const close = matchParen(src, open);
+      const ln = lineOf(src, at);
+      if (close < 0) throw new PathSyntaxError(ln, 'path( is never closed');
+      const semi = src.indexOf(';', close);
+      const got = readPathExpr(src.slice(at, semi < 0 ? src.length : semi), at, ln, false);
+      if (got) composed.push(...got);
+      compRe.lastIndex = close + 1;
+    }
+    for (const sg of (composed.length ? composed : ([] as PvSeg[]).concat(...declared))) segs.push(sg);
+    if (sawFacing) notes.push('facingPoint is drawn as a straight turn between the heading at the start and the one at the end');
+
     if (!segs.length) {
       throw new PathSyntaxError(1, sawBuilder
         ? 'the chain builds nothing: add at least one .addPath(new BezierLine(…)) or .addPath(new BezierCurve(…))'
-        : 'no Pedro chain here. Start with follower.pathBuilder() and one .addPath(new BezierLine(new Pose(x, y), new Pose(x, y)))');
+        : 'no Pedro path here. Start with Path leg = line(poseA, poseB), or with follower.pathBuilder() and one .addPath(new BezierLine(new Pose(x, y), new Pose(x, y)))');
     }
     if (globalMode) {
       for (const sg of segs) { sg.mode = globalMode; if (globalMode !== 'tangent') { sg.h0 = globalH0; sg.h1 = globalH1; } }
@@ -3144,7 +3564,7 @@ follower.followPath(lane);`,
 
   const parseChain = (raw: string): ParsedChain => {
     const t = raw.trim();
-    if (!t) throw new PathSyntaxError(1, 'nothing to drive yet: paste a pathBuilder chain or the JSON from a .pp file');
+    if (!t) throw new PathSyntaxError(1, 'nothing to drive yet: paste Pedro 3 Paths code, a 2.1.2 pathBuilder chain, or the JSON from a .pp file');
     // Bound the work before any of it starts: a whole OpMode file pasted in is
     // fine, a novel is not.
     if (t.length > 60000) throw new PathSyntaxError(1, `that is ${Math.round(t.length / 1000)} thousand characters; paste just the chain`);
@@ -3153,19 +3573,45 @@ follower.followPath(lane);`,
 
   // Java emitter. Template shape follows the official visualiser's exporter,
   // so what comes out of here is what a team would have got out of the real
-  // tool: one pathBuilder chain, poses to three decimals, headings in degrees
-  // wrapped in Math.toRadians because the builder takes radians.
+  // tool: Pedro 3, a degrees PoseFactory, named poses to three decimals, one
+  // Path per segment, and a path(…) that composes them. A pose is declared
+  // once and reused, so a shared end and start print as one name.
   const chainToJava = (segs: PvSeg[]) => {
-    const P = (p: [number, number]) => `new Pose(${p[0].toFixed(3)}, ${p[1].toFixed(3)})`;
-    const R = (h: number) => `Math.toRadians(${(((DEG(h) % 360) + 360) % 360).toFixed(1)})`;
-    const body = segs.map((sg) => {
-      const curve = sg.pts.length === 2 ? 'BezierLine' : 'BezierCurve';
-      const head = sg.mode === 'linear' ? `.setLinearHeadingInterpolation(${R(sg.h0 || 0)}, ${R(sg.h1 || 0)})`
-        : sg.mode === 'constant' ? `.setConstantHeadingInterpolation(${R(sg.h0 || 0)})`
-          : '.setTangentHeadingInterpolation()';
-      return `        .addPath(new ${curve}(${sg.pts.map(P).join(', ')}))\n        ${head}${sg.rev ? '\n        .setReversed()' : ''}`;
-    }).join('\n');
-    return `private PathChain customChain;\n\ncustomChain = follower.pathBuilder()\n${body}\n        .build();\n\nfollower.followPath(customChain);`;
+    const N = (n: number) => n.toFixed(3);
+    const A = (h: number) => (((DEG(h) % 360) + 360) % 360).toFixed(1);
+    const decls: string[] = [];
+    const named = new Map<string, string>();
+    let np = 0, nc = 0;
+    // A control point carries no heading, so it prints as the two-argument of.
+    const poseName = (p: [number, number], deg: string | null, ctrl = false) => {
+      const key = `${N(p[0])}|${N(p[1])}|${deg ?? ''}|${ctrl ? 'c' : 'p'}`;
+      const had = named.get(key);
+      if (had) return had;
+      const nm = ctrl ? `control${++nc}` : `pose${++np}`;
+      named.set(key, nm);
+      decls.push(`Pose ${nm} = p.of(${N(p[0])}, ${N(p[1])}${deg === null ? '' : `, ${deg}`});`);
+      return nm;
+    };
+    const legs = segs.map((sg, i) => {
+      // .linear/.constant have no reversed() call to carry sg.rev, so a reversed
+      // segment bakes it into the printed headings instead (buildPath/segEndPose
+      // add PI to the driven heading when rev is set; adding it here to both
+      // ends before printing drives the same heading with rev cleared).
+      const bake = sg.rev && (sg.mode === 'linear' || sg.mode === 'constant');
+      const h0 = (sg.h0 || 0) + (bake ? Math.PI : 0);
+      const h1 = (sg.h1 || 0) + (bake ? Math.PI : 0);
+      const ends = sg.mode === 'tangent' ? [null, null] : sg.mode === 'constant' ? [A(h0), null] : [A(h0), A(h1)];
+      const a = poseName(sg.pts[0], ends[0]);
+      const b = poseName(sg.pts[sg.pts.length - 1], ends[1]);
+      const mid = sg.pts.slice(1, -1).map((p) => poseName(p, null, true));
+      const shape = mid.length ? `curve(${[a, ...mid, b].join(', ')})` : `line(${a}, ${b})`;
+      const head = sg.mode === 'linear' ? `.linear(${a}, ${b})`
+        : sg.mode === 'constant' ? `.constant(${a})`
+          : sg.rev ? '.reverseTangent()' : '.tangent()';
+      return `Path leg${i + 1} = ${shape}${head};`;
+    });
+    const names = segs.map((_, i) => `leg${i + 1}`).join(', ');
+    return `import static com.pedropathing.api.Paths.*;\n\nPoseFactory p = PoseFactory.degrees();\n\n${decls.join('\n')}\n\n${legs.join('\n')}\n\nPath chain = path(${names});\n\nfollower.follow(chain);`;
   };
 
   const niceStep = (range: number, target = 5) => {
@@ -3484,7 +3930,7 @@ follower.followPath(lane);`,
     // anything restores over it, and Reset applies the same object, so the two
     // cannot drift apart the way a hand-maintained reset always eventually
     // does. Shaped exactly like a snapshot, because it is one.
-    const DEFAULT_PATH = 'preload';
+    const DEFAULT_PATH = 'bbPreload';
     const DEFAULTS = {
       v: 2, fuse: 'burst', basis: 'spec',
       stages: [] as string[][],
@@ -4230,6 +4676,160 @@ follower.followPath(lane);`,
       };
     };
 
+    // ── BIOBUZZ auto ────────────────────────────────────────────────────────
+    // The three BIOBUZZ presets are written for red. Blue is the same run
+    // rotated 180 degrees about (72, 72), because the field itself is built
+    // that way, so one authored table covers both alliances. Red keeps its
+    // authored source in the editor; blue's is regenerated, so the poses a
+    // reader copies out are the poses on the field.
+    const BB_KEYS = ['bbPreload', 'bbPark', 'bbCycle'];
+    const BB_RED = BB_KEYS.map((k) => ({ k, segs: PV_PRESETS[k].segs, code: PV_PRESETS[k].code }));
+    const bbAlliance = (): BbSide => (($('bbAlliance') as HTMLSelectElement).value === 'blue' ? 'blue' : 'red');
+    const bbMirror = (segs: PvSeg[]): PvSeg[] => segs.map((sg) => {
+      const out: PvSeg = { ...sg, pts: sg.pts.map((p) => [FIELD_IN - p[0], FIELD_IN - p[1]] as [number, number]) };
+      if (sg.h0 !== undefined) out.h0 = sg.h0 + Math.PI;
+      if (sg.h1 !== undefined) out.h1 = sg.h1 + Math.PI;
+      return out;
+    });
+    const bbApplyAlliance = () => {
+      const blue = bbAlliance() === 'blue';
+      for (const r of BB_RED) {
+        const segs = blue ? bbMirror(r.segs) : r.segs;
+        PV_PRESETS[r.k].segs = segs;
+        PV_PRESETS[r.k].code = blue ? chainToJava(segs) : r.code;
+      }
+    };
+    // The presets from older seasons keep the plain tile field they were drawn
+    // on. Everything else, a pasted chain included, gets the BIOBUZZ elements.
+    const PV_OLD_SEASON = new Set(['preload', 'decode', 'motif', 'bucket']);
+    const bbFieldOn = () => !PV_OLD_SEASON.has(($('pvSel') as HTMLSelectElement).value);
+
+    const AUTO_S = 30;             // the auto period
+    const BB_HOLD = 4;             // elements a robot may control at once
+    const BB_TOUCH_IN = 0.5;       // clearance that counts as off the wall
+    const BB_LAUNCH_IN = 12;       // how near the launch station a stop counts
+    const BB_LAUNCH_DEG = 35;      // how square to the hive it has to sit
+    const BB_GARDEN_IN = 16;       // how near the garden strip a pickup counts
+    const BB_TIP_PTS = 20, BB_LEAVE_PTS = 3, BB_PARK_PTS = 5;
+
+    // The pose a segment finishes on, heading included: the same rules the
+    // sampler in buildPath uses, read at t = 1.
+    const segEndPose = (sg: PvSeg): [number, number, number] => {
+      const P = sg.pts;
+      const e = P[P.length - 1];
+      let h: number;
+      if (sg.mode === 'constant') h = sg.h0 || 0;
+      else if (sg.mode === 'linear') h = sg.h1 || 0;
+      else { const [dx, dy] = bezAt(bezDeriv(P), 1); h = Math.atan2(dy, dx); }
+      if (sg.rev) h += Math.PI;
+      return [e[0], e[1], h];
+    };
+
+    interface BbOpts { alliance: BbSide; launchDwell: number; intakeDwell: number; tipCount: number }
+    interface BbScore {
+      drive: number; stops: number; dwell: number; auto: number; left: number;
+      leave: number; park: number; tips: number; tipPts: number; pollen: number;
+      points: number; over: boolean;
+    }
+    // Pure: segments in, points out. Nothing here reads the DOM, so the same
+    // chain and the same drivetrain always score the same.
+    const scoreAuto = (segs: PvSeg[], data: PvData | null, o: BbOpts): BbScore => {
+      const blank: BbScore = {
+        drive: 0, stops: 0, dwell: 0, auto: 0, left: AUTO_S, leave: 0, park: 0,
+        tips: 0, tipPts: 0, pollen: 0, points: 0, over: false,
+      };
+      if (!data || !segs.length) return blank;
+      const S = data.samples;
+      const st = BB_LAUNCH[o.alliance], cell = BB_UP_CELL[o.alliance];
+      const lz = BB_LZ[o.alliance], gd = BB_GARDEN[o.alliance];
+      // Every segment end is already a sample on the path, so its time comes
+      // off the same profile the speed strip draws. Walking forward keeps a
+      // pose the chain visits twice, like a launch station on a cycle, on the
+      // right visit.
+      let idx = 0;
+      const stops: { launch: boolean; garden: boolean; t: number }[] = [];
+      segs.forEach((sg, k) => {
+        const [x, y, h] = segEndPose(sg);
+        let best = idx, bd = Infinity;
+        for (let i = idx; i < S.length; i++) {
+          const d = Math.hypot(S[i].x - x, S[i].y - y);
+          if (d < bd) { bd = d; best = i; }
+        }
+        idx = k === segs.length - 1 ? S.length - 1 : best;
+        const faceErr = Math.abs(wrapPi(h - Math.atan2(cell[1] - y, cell[0] - x)));
+        stops.push({
+          t: S[idx].t,
+          launch: Math.hypot(x - st.x, y - st.y) <= BB_LAUNCH_IN && faceErr <= RAD(BB_LAUNCH_DEG),
+          garden: rectGap(x, y, gd) <= BB_GARDEN_IN,
+        });
+      });
+
+      // Walk the stops in path order with the clock running. A stop that
+      // finishes after the buzzer costs its seconds and earns nothing, which is
+      // the whole reason the drivetrain matters here.
+      let held = BB_HOLD, launched = 0, dwell = 0, count = 0;
+      for (const s of stops) {
+        if (!s.launch && !s.garden) continue;
+        const add = s.launch ? o.launchDwell : o.intakeDwell;
+        const done = s.t + dwell + add;
+        dwell += add;
+        count += 1;
+        if (done > AUTO_S + 1e-9) continue;
+        if (s.launch) { launched += held; held = 0; }
+        else held = BB_HOLD;
+      }
+
+      const drive = data.total;
+      const auto = drive + dwell;
+      const inTime = auto <= AUTO_S + 1e-9;
+      const [fx, fy, fh] = segEndPose(segs[segs.length - 1]);
+      const F = botFoot(fx, fy, fh);
+      const offWall = F.every((p) => p[0] > BB_TOUCH_IN && p[0] < FIELD_IN - BB_TOUCH_IN
+        && p[1] > BB_TOUCH_IN && p[1] < FIELD_IN - BB_TOUCH_IN);
+      const leave = inTime && offWall ? BB_LEAVE_PTS : 0;
+      const park = inTime && footHitsRect(F, lz) ? BB_PARK_PTS : 0;
+      const tips = Math.floor(launched / Math.max(1, o.tipCount));
+      const tipPts = tips * BB_TIP_PTS;
+      return {
+        drive, stops: count, dwell, auto, left: AUTO_S - auto, leave, park,
+        tips, tipPts, pollen: launched, points: leave + park + tipPts, over: !inTime,
+      };
+    };
+
+    const bbNum = (id: string, fb: number) => {
+      const v = parseFloat(($(id) as HTMLInputElement).value);
+      return isFinite(v) ? v : fb;
+    };
+    const bbOpts = (): BbOpts => ({
+      alliance: bbAlliance(),
+      launchDwell: bbNum('bbLaunchDwell', 2),
+      intakeDwell: bbNum('bbIntakeDwell', 1.5),
+      tipCount: Math.max(1, Math.round(bbNum('bbTipCount', 4))),
+    });
+    const BB_COUNT = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight'];
+    const updateAuto = () => {
+      const sc = scoreAuto(pv.chain ? pv.chain.segs : [], pv.data, bbOpts());
+      const set = (id: string, v: string) => { ($(id) as HTMLElement).textContent = v; };
+      set('roBbDrive', `${fmt(sc.drive, 2)} s`);
+      set('roBbStops', `${sc.stops}, ${fmt(sc.dwell, 1)} s`);
+      set('roBbAuto', `${fmt(sc.auto, 2)} s`);
+      set('roBbLeft', `${fmt(sc.left, 2)} s`);
+      set('roBbLeave', String(sc.leave));
+      set('roBbPark', String(sc.park));
+      set('roBbTip', String(sc.tipPts));
+      set('roBbPollen', String(sc.pollen));
+      set('roBbPoints', String(sc.points));
+      ($('roBbAutoWrap') as HTMLElement).classList.toggle('is-warn', sc.over);
+      ($('roBbLeftWrap') as HTMLElement).classList.toggle('is-warn', sc.left < 0);
+      const won: string[] = [];
+      if (sc.leave) won.push('leave');
+      if (sc.park) won.push('park');
+      if (sc.tips) won.push(`${BB_COUNT[sc.tips] || sc.tips} hive tip${sc.tips === 1 ? '' : 's'}`);
+      set('srAuto', `Auto: ${fmt(sc.auto, 1)} s of ${AUTO_S} with ${sc.stops} stop${sc.stops === 1 ? '' : 's'}, `
+        + `${sc.points} point${sc.points === 1 ? '' : 's'}`
+        + (won.length ? `: ${won.join(', ')}.` : ', nothing scored.'));
+    };
+
     const setMsg = (text: string, tone: '' | 'ok' | 'off') => {
       const el = $('pvMsg');
       el.textContent = text;
@@ -4296,13 +4896,17 @@ follower.followPath(lane);`,
         return d && typeof d.text === 'string' ? d.text.slice(0, 40000) : '';
       } catch { return ''; }
     };
-    // Everything the sim remembers between visits: the custom scratch text
-    // and which picker entry was live.
+    // Everything the sim remembers between visits: the custom scratch text,
+    // which picker entry was live, and the four auto assumptions. None of it
+    // rides in the #s= snapshot, which is the robot and nothing else.
+    const BB_FIELDS = ['bbAlliance', 'bbLaunchDwell', 'bbIntakeDwell', 'bbTipCount'];
     const saveSimState = () => {
       try {
         const sel = ($('pvSel') as HTMLSelectElement).value;
         const txt = sel === 'custom' ? ($('pvSrcText') as HTMLTextAreaElement).value : scratchText();
-        localStorage.setItem(CUSTOM_KEY, JSON.stringify({ text: txt.slice(0, 40000), sel }));
+        const auto: Record<string, string> = {};
+        for (const id of BB_FIELDS) auto[id] = ($(id) as HTMLInputElement).value;
+        localStorage.setItem(CUSTOM_KEY, JSON.stringify({ text: txt.slice(0, 40000), sel, auto }));
       } catch { /* private mode */ }
     };
     const syncDelBtn = () => {
@@ -4494,6 +5098,9 @@ follower.followPath(lane);`,
         `Simulate summary: ${chain.label}, ${fmt(lenIn, 1)} inches long, ${fmt(t, 2)} seconds of driving, ` +
         `top speed ${fmt(topV / M_PER_IN, 1)} inches per second` +
         (cornerIn > 0.5 ? `, ${fmt(cornerIn / Math.max(1, lenIn) * 100, 0)} per cent of it corner-limited.` : ', no corner limits it.');
+      // The scoreboard is a consequence of the chain and of the drivetrain that
+      // drove it, so it is written here and nowhere else.
+      updateAuto();
       if (wasPlaying || (pv.autoplayed && !pv.held && !REDUCED)) playPath();
       else { pausePath(); drawPath(); }
     };
@@ -4779,6 +5386,78 @@ follower.followPath(lane);`,
         g.fillStyle = P.ink3;
         g.textAlign = 'center'; g.textBaseline = 'bottom';
         halo(g, '24 in', bx + bw2 / 2, by - 5, P.ink3, P.inset);
+      }
+
+      // ── The BIOBUZZ elements ──────────────────────────────────────────────
+      // Drawn to scale in the field's own inches, under the chain, so the path
+      // and the robot stay the loudest things here. Your own alliance's
+      // elements carry the accent; the other alliance's are drawn in ink so the
+      // half of the field you cannot score in still reads. Sources for every
+      // coordinate: docs/drivetrain-research-notes.md, "BIOBUZZ auto geometry".
+      if (bbFieldOn()) {
+        const al = bbAlliance();
+        const other: BbSide = al === 'red' ? 'blue' : 'red';
+        const box = (R: BbRect, wash: string | null, line: string) => {
+          const w = (R.x1 - R.x0) * ppi, h = (R.y1 - R.y0) * ppi;
+          if (wash) { g.fillStyle = wash; g.fillRect(SX(R.x0), SY(R.y1), w, h); }
+          g.strokeStyle = line;
+          g.lineWidth = W_HAIR;
+          g.strokeRect(SNAP(SX(R.x0)), SNAP(SY(R.y1)), Math.round(w), Math.round(h));
+        };
+        // Loading zones. Yours is the park target, so it is the one washed.
+        box(BB_LZ[al], P.band, P.accent);
+        box(BB_LZ[other], null, P.ink3);
+        // Gardens, with the four pollen each holds at the start of the match.
+        for (const s of [al, other] as BbSide[]) {
+          const col = s === al ? P.accent : P.ink3;
+          box(BB_GARDEN[s], null, col);
+          g.fillStyle = col;
+          for (const [px, py] of BB_POLLEN[s]) {
+            g.beginPath(); g.arc(SX(px), SY(py), Math.max(1.2, 1.4 * ppi), 0, 7); g.fill();
+          }
+        }
+        // The hive frame is a keep-out, so it is a hairline box and nothing
+        // more: a fill here would read as somewhere to drive.
+        box(BB_FRAME, null, P.ink3);
+        for (const s of ['red', 'blue'] as BbSide[]) {
+          const hx = BB_HIVE_X[s], upY = BB_UP_CELL[s][1];
+          const col = s === al ? P.accent : P.ink3;
+          g.fillStyle = col;
+          g.strokeStyle = col;
+          g.lineWidth = W_HAIR;
+          // Two cells per hive, each 20 in wide. The one pointing up at the
+          // start is filled, because that is the one a robot can launch into;
+          // the one underneath is an outline.
+          for (const cy of [BB_CELL_Y.south, BB_CELL_Y.north]) {
+            const x = SX(hx - BB_CELL_W / 2), w = BB_CELL_W * ppi;
+            const y = SY(cy + 1), h = 2 * ppi;
+            if (Math.abs(cy - upY) < 0.01) g.fillRect(x, y, w, h);
+            else g.strokeRect(SNAP(x), SNAP(y), Math.round(w), Math.round(h));
+          }
+          // The hive's own centre, between its two cells.
+          g.beginPath(); g.arc(SX(hx), SY(72), 2, 0, 7); g.fill();
+        }
+        // Flowers are locked shut for the whole of auto, so they are drawn and
+        // never scored.
+        g.strokeStyle = P.ink3;
+        g.lineWidth = W_HAIR;
+        for (const [fx, fy] of BB_FLOWERS) {
+          g.beginPath(); g.arc(SX(fx), SY(fy), Math.max(2, 2 * ppi), 0, 7); g.stroke();
+        }
+        // Three labels, in the chart label type, knocked out of whatever they
+        // cross. Held in from the frame edge so a corner zone still reads.
+        const inset = (v: number) => Math.max(14, Math.min(FIELD_IN - 14, v));
+        const lz = BB_LZ[al], gd = BB_GARDEN[al];
+        g.font = FONT_COORD;
+        g.fillStyle = P.ink3;
+        g.textAlign = 'center';
+        g.textBaseline = 'middle';
+        halo(g, 'HIVE', SX(72), SY(72), P.ink3, P.inset);
+        halo(g, 'LOAD', SX(inset((lz.x0 + lz.x1) / 2)),
+          SY(lz.y1 > 72 ? lz.y1 + 5 : lz.y0 - 5), P.ink3, P.inset);
+        // The garden label clears the scale bar, which lives in the same corner.
+        halo(g, 'GARDEN', SX(inset((gd.x0 + gd.x1) / 2)),
+          SY(gd.y1 > 72 ? gd.y0 - 13 : gd.y1 + 13), P.ink3, P.inset);
       }
 
       // Control polygons are construction lines, drawn under the curve so the
@@ -5117,7 +5796,16 @@ follower.followPath(lane);`,
         const d = JSON.parse(localStorage.getItem(CUSTOM_KEY) || 'null');
         if (d && typeof d.sel === 'string') sel = d.sel;
         else if (d && d.on && typeof d.text === 'string' && d.text.trim()) sel = 'custom'; // legacy shape
+        if (d && d.auto && typeof d.auto === 'object') {
+          for (const id of BB_FIELDS) {
+            const v = (d.auto as Record<string, unknown>)[id];
+            if (typeof v === 'string' && v) ($(id) as HTMLInputElement).value = v;
+          }
+        }
       } catch { /* private mode or a corrupt entry: start on the default */ }
+      // The alliance decides what the BIOBUZZ presets even are, so it is
+      // settled before the picker's own entry is applied.
+      bbApplyAlliance();
       const selEl = $('pvSel') as HTMLSelectElement;
       selEl.value = sel;
       if (!selEl.value) selEl.value = DEFAULT_PATH;
@@ -5264,6 +5952,24 @@ follower.followPath(lane);`,
       applySelection(($('pvSel') as HTMLSelectElement).value);
       saveSimState();
     });
+    // Alliance is geometry, not a colour: it swaps the BIOBUZZ presets for
+    // their 180-degree rotation, redraws the field and rescores. A pasted chain
+    // is the reader's own writing, so it stays exactly as pasted.
+    ($('bbAlliance') as HTMLSelectElement).addEventListener('change', () => {
+      bbApplyAlliance();
+      const sel = ($('pvSel') as HTMLSelectElement).value;
+      if (BB_KEYS.includes(sel)) applySelection(sel);
+      else { pathGeo = null; schedule(); }
+      saveSimState();
+    });
+    for (const id of ['bbLaunchDwell', 'bbIntakeDwell', 'bbTipCount']) {
+      $(id).addEventListener('input', () => { updateAuto(); saveSimState(); });
+      $(id).addEventListener('change', () => {
+        clampNumField($(id) as HTMLInputElement);
+        updateAuto();
+        saveSimState();
+      });
+    }
     $('pvPlay').addEventListener('click', () => {
       if (pv.playing) { pv.held = true; pausePath(); } else playPath();
     });

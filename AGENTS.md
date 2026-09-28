@@ -63,7 +63,11 @@ Manage the background server with `astro dev stop`, `astro dev status`, and `ast
   a self-contained tool page: every style is `.dt-` prefixed or declared in
   the page, and it runs no motion-engine scenes. Its share links keep state
   in the URL hash, so it passes `keepHash` to BaseLayout (which otherwise
-  strips fragments on reload). The announcement post
+  strips fragments on reload). Its path editor reads both Pedro Pathing 3 and
+  the 2.1.2 builder surface, and everything it emits is Pedro 3. The Simulate
+  section draws the BIOBUZZ field and carries an auto scoreboard whose
+  coordinates, sources and scoring assumptions are all written down in
+  `docs/drivetrain-research-notes.md` under "BIOBUZZ auto geometry". The announcement post
   `src/content/blog/drivetrain-calculator.md` links to it; it is not in the
   nav. Research notes + third-party notices moved with it into `docs/`.
 - The calculator was deliberately stripped to bare inputs: every field is a
@@ -108,6 +112,13 @@ Manage the background server with `astro dev stop`, `astro dev status`, and `ast
   (`DESIGN.md` rule 2). Re-run it if the drawing is re-exported, and carry the
   two ratios it prints across to `Hero.astro`, which sizes the sticker off the
   wordmark's O and so has to know the artwork's share of the file.
+  **Current state:** the badge was redrawn (name added) and the team now
+  exports it as a finished sticker with its own pale border, so
+  `onyx-badge-sticker.webp` is that export cropped to its alpha bounds
+  (498x502, border about 14px, artwork 0.944 of the file) and the script is
+  out of the loop. Do not run it: it would overwrite the new sticker with a
+  cut of the old drawing in `onyx-badge.webp`. The export is only 498px, so
+  it is soft at 2x; a larger export should replace it the same way.
   The cut is a real path: a closed loop of straight segments and circular arcs,
   and the image is rendered from the exact distance to it. That is where the
   edge quality comes from and it is not negotiable. Thresholding a pixel mask's
