@@ -156,6 +156,10 @@ magnitude stiffer.
 
 ## Braking (review flaw #3)
 
+(Superseded at pass seven: the fixed `k * mu * g` below is gone, and every
+stop is charged on the drivetrain's own shorted-winding curve. See "Pedro
+Pathing 3.0.1".)
+
 - `ZeroPowerBehavior.BRAKE` shorts the windings; braking torque scales with
   back-EMF, so passive BRAKE decay is speed-proportional, not constant
   (inferred from DC-motor theory + FTC forum explainer). No measured FTC
@@ -639,6 +643,9 @@ that rebuilt the section, so the notice file and this note cannot drift apart.
 
 ### What the real follower actually does
 
+(This is the 2.1.2 follower. The 3.0 follower, Foresight, is described in
+"Pedro Pathing 3.0.1".)
+
 This is the part the page must not overstate, and it now comes from the
 follower's own code rather than from the docs.
 
@@ -1020,8 +1027,8 @@ widening the input does not widen it.
 | Decision on the page | Basis |
 | --- | --- |
 | Thermal i²t fuse mode, hard cap kept | ATM blade trip curves (verified) + one-shot consequence |
-| Braking charged, strength user-set (default 0.6) | RR configs vs traction ceiling; no measurement exists |
-| Chain braking = ZPA x brakingStrength x 4 | The library's own product, read out of ErrorCalculator at 2.1.2; the docs say a brakingStrength of 1 IS the retired ZPAM of 4 |
+| Braking charged, on the drivetrain's own shorted-winding curve capped by grip (pass seven; it was a fixed 0.6 mu g) | Pedro 3's Foresight plans every stop on that curve; one braking model for the ladder, the cards and the chain |
+| Chain braking = the natural curve above (pass seven; it was ZPA x brakingStrength x 4 from 2.1.2) | 3.0 replaced that machinery with Foresight's fitted brake displacement; see "Pedro Pathing 3.0.1" |
 | Core Hex torque divided by the ratio AND the efficiency | REV publishes 3.2 N·m at the gearbox output, so the ratio alone leaves the model applying the box's loss twice |
 | Verdict = buildable recipe from verified parts only | Product-URL-confirmed tooth counts; pinions unpinned |
 | Optimum reported as 1%-plateau window across μ±0.10, R±0.05 | Only tile μ spec (0.51) sits below folklore; loop-R spread is real |
@@ -1051,8 +1058,15 @@ widening the input does not widen it.
 | Stage teeth typed, stocked sizes as suggestions | The confirmed MOD 0.8 ladder runs 15–40 pinion and 48–108 hub, wider than any select shipped, while recipes still name stocked parts only |
 | Every chip removed, both ladders kept as prose | Rest volts are flat across the NiMH middle, so three labelled states oversold a reading; the pack ladder is real but a preset chip is still chrome, and every field on the page is now a plain label and one control |
 | Three-up charts drawn as equal blocks | They are three views of one run, so unequal frames make the eye compare the frames instead of the curves |
+| Chain direction: mecanum pays k = abs(cos t) + abs(sin t) / 0.75 off its heading | Foresight caps speed with the same diamond (`Mecanum.interpolateVelocity`); the 0.75 is the page's existing strafe estimate |
+| Pushing read off forceAt at a standstill, held on the sustained rating, net of the robot's own drag | No second model; a shove outlasts a burst; a drawbar pull is quoted net |
+| Defenders and the box are page constants, not inputs | Bare-input rule: the table covers the weight range, so no figure needs a new field |
+| Vendor and dyno bases on all three brands | REV and AndyMark publish sheets after all; old links keep their numbers and the toggle follows them |
 
 ## The braking constant, read out of 2.1.2 instead of inferred
+
+(Superseded at pass seven: Pedro 3 brakes differently and the page follows it.
+See "Pedro Pathing 3.0.1". This section stays as the record of 2.1.2.)
 
 Pass six went looking for "Pedro 3" and there is not one. **2.1.2 is still the
 current release.** `Pedro-Pathing/PedroPathing` `main`, cloned at commit
@@ -1271,6 +1285,364 @@ Version 3 also replaced the follower configuration: `ForesightConfig` in place o
 from the 2.1.2 constants, documented above under "The braking constant, read out
 of 2.1.2 instead of inferred", and that is a known gap for a later pass.
 
+**Correction, pass seven.** Four statements in this section were wrong or are
+now stale. The release date: the `v3.0.0` tag is dated 2026-09-09, and 3.0.1
+followed on 2026-09-18. The mirrors: the page applied 3.0.0's `mirrorX` (negate
+the heading) and `mirrorY` (leave it), which 3.0.1 fixed to pi - h and -h. The
+two-argument `p.of(x, y)`: 3.0.1's `PoseFactory` has no such overload, so the
+page's own export did not compile. And the rejections: `through` and
+`.heading(Interpolator…)` both load now, and `facingPoint` is no longer an
+approximation. The section below, "Pedro Pathing 3.0.1", is the current record.
+
+## Pedro Pathing 3.0.1
+
+Pass seven, 2026-10-07. **The current release is 3.0.1**, and the page now
+targets it.
+
+| Artifact | Version | Date | Where it was read |
+| --- | --- | --- | --- |
+| `com.pedropathing:core` | 3.0.1 (latest; 3.0.0 before it) | 2026-09-18 | <https://repo1.maven.org/maven2/com/pedropathing/core/maven-metadata.xml> |
+| `com.pedropathing:revhub` | 3.0.1 (latest) | 2026-09-18 | <https://repo1.maven.org/maven2/com/pedropathing/revhub/maven-metadata.xml> |
+| `com.pedropathing:tuning` | 1.0.2 (latest; the quickstart pins 1.0.1) | 2026-10-06 | <https://repo1.maven.org/maven2/com/pedropathing/tuning/maven-metadata.xml> |
+| `com.pedropathing:ftc` | 2.1.2, the last 2.x artifact | 2026-05-07 | <https://repo1.maven.org/maven2/com/pedropathing/ftc/maven-metadata.xml> |
+| `Pedro-Pathing/PedroPathing` | tags `v3.0.1` (2026-09-18), `v3.0.0` (2026-09-09); `main` at `69094ad` (2026-10-02) | | <https://github.com/Pedro-Pathing/PedroPathing> |
+| `Pedro-Pathing/Quickstart` | `main` at `2df9646` (2026-09-30), pinning `revhub:3.0.1` and `tuning:1.0.1` in `build.dependencies.gradle` | | <https://github.com/Pedro-Pathing/Quickstart> |
+| `Pedro-Pathing/Docs` | `master` at `ddba176` (2026-10-02), the source of pedropathing.com | | <https://github.com/Pedro-Pathing/Docs> |
+| `Pedro-Pathing/Visualizer` | `main` at `f0b063a` (2026-10-04) | | <https://github.com/Pedro-Pathing/Visualizer> |
+
+All four repositories were cloned and read from git at those commits; the Maven
+metadata was fetched directly. A web search on the same day still returned 2.1.2
+as the newest release, which is the search index lagging, not the project.
+
+Commits on `main` after 3.0.1 are not released yet. The one that matters here,
+`5585b96` "Patch piecewise heading interpolation to actually work for both
+linear and tangent heading", fixes 3.0.1's `PiecewiseInterpolator`, which
+rescales a linear stretch by the bezier parameter instead of by completion. The
+page draws the fixed behaviour, which is also what the docs page on
+interpolation describes, and says so in its code.
+
+### What changed against what the page emitted
+
+1. **`of` takes three numbers.** `PoseFactory.of(double x, double y, double
+   heading)` is the only overload in 3.0.0 and 3.0.1, and the docs write control
+   poses with a heading too (`p.of(36, 60, 45)`). The page printed control
+   points as `p.of(x, y)`, which does not compile. The emitter now writes every
+   pose with three numbers, control points at 0, as the official visualizer's
+   own exporter does. The reader still takes a two-argument `of` from older
+   pastes, reads the heading as 0 and says so.
+2. **Imports.** The docs and the visualizer write
+   `import com.pedropathing.api.PoseFactory;`,
+   `import com.pedropathing.math.Pose;` and
+   `import com.pedropathing.paths.Path;` beside the static `Paths` import; the
+   emitter now writes all four, plus
+   `com.pedropathing.paths.interpolator.Interpolator` when it needs one.
+3. **Mirrors.** 3.0.1 changed `mirrorX(a)` to `(2a - x, y, pi - h)` and
+   `mirrorY(a)` to `(x, 2a - y, -h)` (`fix PoseFactory mirroring and mapHeading`,
+   #178), and added `rotateAround(cx, cy, angle)`, `rotateAround(pose, angle)`
+   and `mirrorAroundPoint`. The reader applies them in the order they are
+   written, as `Operation.andThen` does, and reads a factory that is reassigned
+   (`factory = factory.mirrorX(70.75)`, the form the docs use). The `map`,
+   `mapX`, `mapY` and `mapHeading` operations take Java lambdas and are
+   refused by name.
+4. **A path with no heading call throws.** `Path.getSegments()` throws "Cannot
+   resolve segments: path has no heading" in 3.0.1, though the docs still call
+   tangent the default. The emitter always writes a heading call; the reader
+   treats a missing one as tangent, as the docs do.
+5. **Heading programs.** `Interpolator.linear` runs on
+   `curve.pathCompletion(t)`, which on a bezier is the arc-length fraction, not
+   `t`. The page interpolated on `t`, so on a curve whose speed varies along it
+   the heading turned at the wrong places. It now samples each segment whole,
+   measures its length and interpolates on completion. `facingPoint` is
+   `point.minus(curve.get(t)).theta()`, re-aimed at every point; the page now
+   does exactly that. `longLinear`, `.reverse()`, `.linear(a, b, endT)` (a
+   piecewise program in disguise) and `Interpolator.piecewise().until(…)` all
+   read. An interpolator set on a `path(…)` of several legs overrides theirs
+   and runs across their combined length (`CompoundPath.heading` and
+   `convertChildHeading`); the page carries that as a span per leg and writes
+   such a group back out as a group.
+6. **`through`.** `Paths.through(a, m…, b)` builds the one bezier of degree
+   n - 1 that passes through all n poses at evenly spaced t
+   (`BezierCurve.interpolateThroughPoints`: a Bernstein matrix inverted against
+   the targets). The page solves the same system by Gaussian elimination, and
+   the tests check that the curve passes through its middle pose at t = 0.5.
+7. **The shapes teams paste now.** The docs recommend path-returning methods
+   (`private Path park() { return line(…)…; }`), and the visualizer exports
+   `Paths.`-prefixed calls inside such methods with an Ivy routine of
+   `follow(follower, method())` and `waitMs(…)`. The reader takes methods,
+   `Paths.` prefixes, `Pose.zero()` and `Vector2D.cartesian`/`polar`, and when
+   the code calls `follow`, the followed paths, in order, are what is driven.
+   `.with(…)` constraints (`maxPathSpeed.at(0.8)` and the like) are read past
+   with a note: the times are this drivetrain at full power.
+8. **The `.pp` file moved too.** The visualizer now keeps each path's heading on
+   the path (`heading: { type, … }`), nests legs in `compound` paths with an
+   optional group heading, stores `throughPoints`, and has a piecewise heading
+   type with `continueFromPrevious`. The reader follows `src/types.ts` and
+   `src/utils/normalize.ts`, including the legacy endpoint fields, so both old
+   and new files load.
+
+### What the follower does now, and what the page models
+
+3.0 replaced the 2.x follower with **Foresight** (`algorithm/Foresight.java`,
+`ForesightConfig.java`, `ForesightPowerAllocator.java`). Read at `v3.0.1`:
+
+- **Drive.** `coast()` returns full power whenever the target speed is at the
+  achievable maximum, and every constraint (`maxAccelerationConstraint`,
+  `maxVelocityConstraint`, `maxDecelerationConstraint`, `maxPathSpeed`,
+  `maxDecelerationScale`) defaults to `Constraint.NONE`. So the follower drives
+  flat out down the tangent, which is what the page's forward pass does.
+- **No centripetal term.** `calculatePath` passes `Vector2D.zero()` as the
+  normal feedforward to `allocatePowers`. 2.x's `centripetalScaling` is gone and
+  nothing in Foresight slows for curvature. The page's corner ceiling is
+  therefore grip, `sqrt(mu g / kappa)` with its own 0.9 margin, and its own
+  joint rounding; the comment that credited it to "Pedro's own margin" is
+  corrected.
+- **Momentum across joints.** With `pathSkip` true (default), when the follower
+  would start braking on a path that is not the last, it advances to the next
+  one instead. A chain brakes only for its end (`brakeAtEnd`, default true).
+  The page already capped joints only by their direction change; that stands.
+- **Braking.** Foresight projects the robot forward by its fitted brake
+  displacement, `k_quad * v|v| + k_lin * v` per axis
+  (`getBrakeDisplacement`, `quadraticBrakeCoefficients`,
+  `linearBrakeCoefficients`), and brakes once that projection reaches the end
+  (`getVelocityToBrakeInTime`). While braking it commands
+  `brake.calculate(target, 0) = kV * target`, where the target is the speed it
+  would have to brake from to stop on time, negative when it is running long,
+  and `Control.clampBrakingPower` caps any power against the motion at
+  `maxBrakingPower`, 0.2 by default. Following runs with the FLOAT zero-power
+  behaviour (`drivetrain.drive(powers, false)`).
+- **What the coefficients are fitted on.** The quickstart's `ForesightTuner`
+  (`ForwardBraking`) drives at 0.3 to 0.7 power, then brakes with a command of
+  `-brakingPower * direction`, `brakingPower = 0.001`, and fits stopping
+  distance against speed with `quadraticFit`. A command of 0.001 rather than
+  zero, under FLOAT, reads as a deliberate way to get the hub's braking drive
+  rather than a coast. **That reading is inferred** from the code; nothing in it
+  or the docs says what the REV hub does with a 0.1 per cent duty.
+- **So the page brakes on the natural curve.** `brakeAccel` is the shorted
+  winding, `tau0 * w / wf0`, plus the motor's own friction `Kt * I_free`,
+  carried to the wheel through the gear train with its loss on the braking side
+  (divide by eta), capped by grip and added to rolling drag. The reverse power
+  Foresight may add is a correction for a bad prediction, not the plan, so it
+  is not in the curve. This replaces the 2.1.2 constant (41.278 in/s² x 1 x 4)
+  in the chain **and** the fixed `0.6 mu g` the straight-line ladder used since
+  pass one: one braking model for the board, the sweep, the stat cards and the
+  Simulate chain.
+- **Consequence.** Back-EMF braking goes with the square of the reduction:
+  at 0.4 m/s the default robot brakes at 2.85 m/s² on its 13.8:1 cartridge and
+  0.28 m/s² on a 3.7:1. Tall gearing now pays for its long stops, so the
+  ladder's optimum moved shorter: on the default robot the continuous best went
+  from 538 to 423 rpm and the recommendation from 540 rpm (3.7:1 + gears 20:60)
+  to 426 rpm (3.7:1 + #25 chain 10:38). The bowl is flat there: the default
+  435 rpm sits about a millisecond off the best.
+- **Honest limit.** Near the end of a stop the shorted winding brakes weakly and
+  the page lets rolling drag finish it, which is a slow tail. The real follower
+  ends a path at `parametricTConstraint` (t >= 0.975) and hands over to a hold
+  controller on the end pose (`holdEnd`, default true), which pushes the last
+  inch in rather than coasting it. The page's stop times are therefore on the
+  long side, most of all on tall gearing; measuring that is in the open
+  questions.
+- **Direction.** Foresight caps its target speed with
+  `drivetrain.interpolateVelocity(forward, strafe, angleToTangent)`, which for
+  mecanum is the diamond `1 / (|cos t| / vx + |sin t| / vy)`. The page had a
+  strafe derate (0.75 force, 0.85 grip) that nothing used. Each sample of a
+  chain now reads the angle between its heading and its tangent and applies
+  `k = |cos t| + |sin t| / 0.75` to the wheel speed and force, the same diamond
+  with this page's strafe estimate on the sideways leg, and blends grip as
+  `cos² t + 0.85 sin² t`. A mecanum robot that crabs through a turn now pays
+  for it: the BIOBUZZ preload park leg, which turns 90 to 180 degrees while the
+  curve heads the other way, tops out near 55 to 65 in/s against 91 forward,
+  and the default chain went from 2.41 to 3.19 s. A tank drive stays at k = 1.
+- **The fuse along a chain.** The chain used to accelerate on the burst cap for
+  its whole length. It now spends and refills the same i²t budget the sprint
+  does, step by step along the forward pass.
+
+Docs pages read, from the `Docs` repo: `pathing/pedro3.mdx`,
+`guide/pose-creation.mdx`, `guide/path-creation.mdx`,
+`guide/path-following.mdx`, `guide/setting-up-auto.mdx`, `guide/modifiers.mdx`,
+`reference/api.mdx`, `reference/interpolation.mdx`,
+`reference/posefactory.mdx`, `reference/deceleration.mdx`,
+`reference/foresightoptions.mdx`, `reference/velocity.mdx` and
+`tuning/constants.mdx`. The last carries a complete tuned example: natural
+forward deceleration 85.0 in/s², brake coefficients 0.106 s (linear) and
+0.00147 s²/in (quadratic), top speed 72.7 in/s. Those are one team's robot and
+the page does not use them; they are recorded because they put a scale on the
+fitted curve, about 15 in to stop from 72 in/s.
+
+## Vendor sheets, re-read
+
+Every motor row on the page, checked against its source this pass.
+
+| Row | Free speed | Stall torque | Stall current | Free current | Source | Change |
+| --- | --- | --- | --- | --- | --- | --- |
+| goBILDA Yellow Jacket, vendor (`yjspec`) | 6000 rpm | 1.47 kg·cm = 0.144 N·m | 9.2 A | 0.25 A | gobilda.com 5203 1:1 product page (search result) | none |
+| goBILDA, gm0 dyno (`gobilda`) | 5900 | 0.19 | 11 | 0.3 | gm0 motor guide, read directly | none |
+| REV HD Hex, vendor (`revspec`) | 6000 | 0.105 | 8.5 | 0.4 | revrobotics.com/REV-41-1291, read directly ("No-Load Current: 400mA", "Max Output Power: 15W") | **new row**; REV now gets the vendor/dyno toggle |
+| REV HD Hex, gm0 dyno (`revhd`) | 6000 | 0.18 | 11 | 0.3 | gm0 | none |
+| REV Core Hex (`revcore`) | 125 x 72 | 3.2 / 72 / 0.93 | 4.4 | 0.2 | revrobotics.com/rev-41-1300 (no free current published); gm0's Core Hex row for the free current | free current 0.3 to 0.2 |
+| AndyMark NeveRest, vendor (`amspec`) | 6600 (see below) | 0.062 | 11.5 | 0.4 | andymark.com am-3104 (search result: "6000 RPM ± 10%", 8.75 oz-in, 11.5 A, 0.4 A, 14 W) and the encoder-free variant's page, read directly ("0.062 N-m", "11.5 A") | **new row**; AndyMark gets the toggle |
+| AndyMark NeveRest, gm0 dyno (`neverest`) | 6600 (gm0: 5500) | 0.17 | 9.8 | 0.4 | gm0 | none |
+
+- The page's comment said AndyMark publishes no bare-motor sheet. **It does**
+  (am-3104), and the comment is corrected. Its figures do not agree with each
+  other: 6000 rpm and 0.062 N·m give about 9.7 W of peak power against the 14 W
+  on the same sheet. The page uses them as printed, as the vendor basis.
+- Free speed stays 6600 on both AndyMark rows. It is inside the sheet's
+  plus or minus 10 per cent, and it is what every geared rung AndyMark sells
+  back-solves to (Orbital 3.7 at 1784 rpm, Orbital 20 at 340, Classic 40 at
+  160, Classic 60 at 105), which is what keeps the picker's labels and the
+  readout in agreement. gm0's dyno measured 5500 and that is recorded here, not
+  used.
+- Old share links: REV and AndyMark links were saved under the default "spec"
+  basis while carrying dyno numbers, since those platforms had no vendor row.
+  The numbers restore exactly as saved; on restore the toggle is set to the row
+  the numbers actually match.
+- Wheels, checked against current product pages: goBILDA 96 mm mecanum
+  (3213-3606-0002, 70A rollers) and 104 mm GripForce mecanum (40A rollers); REV
+  75 mm mecanum (REV-45-1655, 40 mm wide, NBR rollers); REV 90 mm Grip Wheel
+  (REV-41-1267, 65A TPU tread); goBILDA 96 mm traction exists as the Rhino
+  (3619, 30A) and Gecko (3613, silicone) lines; AndyMark 4 in mecanum is
+  101.6 mm. All diameters on the page stand.
+- Gearbox ladders, stage ladders, the fuse, the battery and the efficiency
+  defaults were checked against the sections above and stand as recorded there.
+
+## The recommendation audit, calc v2
+
+The rule was already written down ("Apply-recommended changes gear ratio and
+nothing else"). A script now checks it: it loads nine configurations through
+the share link (default; goBILDA with two stages at 91 and 97 per cent; a custom
+ratio; dyno basis on a hard fuse; REV with an UltraPlanetary stack and a stage;
+the Core Hex bare and with a #25 stage; AndyMark Classic 40; a custom motor),
+presses each button, and diffs every control on the page. Only `gbSel`,
+`gbCustom` and the stage rows may move.
+
+Found and fixed:
+
+1. **"Build the ideal" on a Core Hex.** It switched the picker from the sealed
+   72:1 gearmotor to "Custom ratio", which describes an HD Hex with a gearbox
+   the Core Hex does not have. The motor fields kept the Core Hex numbers, so
+   the physics ran on a gearbox that cannot come off. It now keeps the
+   gearmotor and puts the rest of the ratio into one custom stage behind it,
+   the closest tooth pair in 1 to 200 (under a thousandth off), at 100 per cent
+   so it lands on the sweep's own basis.
+2. **A measured stage efficiency was overwritten.** A reader running a gears
+   stage at 91 per cent who pressed the button got the recipe's stage at the
+   family default, 96. Recipes in a family the reader already runs are now
+   scored on the reader's own efficiency, and building one keeps that row and
+   its efficiency and changes only its teeth.
+3. **Ratio ties kept the first build found** rather than the more efficient
+   one (the reviewer's finding). Two builds on one ratio now keep the one with
+   less loss.
+
+Sealed gearmotors were already handled in the pool: a recipe that needs one is
+only a candidate when that gearmotor is already fitted. After the fixes all
+nineteen presses change gearing and nothing else.
+
+## Charts and the model, calc v2
+
+An independent review of the model math (a second agent, given the physics
+line ranges) and this pass's own audit. Every finding below was checked by hand
+before it was acted on.
+
+- **Battery sag.** `forceAt` found the pack voltage by six fixed-point steps,
+  which only converge while the loop resistance times the draw's slope stays
+  under one. At 0.5 ohm and 1.5 m/s it returned 0 N where the exact answer is
+  24.5 N. The torque line is linear in voltage below free speed, so the loop has
+  a closed form, and the page now uses it; a test checks it against a bisected
+  root to 1e-6 at four speeds on four configurations.
+- **Top speed** was the speed 8 s into the sprint, which on a 3.7:1 drive is
+  6.60 m/s against a true 7.45. It is now solved where the wheel force falls to
+  the rolling drag.
+- **Cost of starting** was `vtop / a0`, exact only for a pure exponential
+  launch. It is now the integral of `1 - v / vtop`.
+- **Free speed (ideal)** was quoted at 12 V while the model runs the pack's own
+  rest voltage, so "ideal" read slower than "real" (3.59 against 3.80
+  tiles/s). It is now at the rest voltage.
+- **The stop** is found between the two samples that straddle it instead of at
+  the first sample past it.
+- **The sweep's minimum** is refined with a parabola through its neighbours
+  instead of being a multiple of the 12.5 rpm grid.
+- **Sensitivity clamps** could put the low variant above the base; they now
+  clamp to the bounds the base already lives in. **Burst current** is clamped
+  against the sustained value as the model holds it, not as typed.
+- **Tick labels.** A 2.5 step printed 2.5, 5, 7.5 as 3, 5, 8, and a 0.25 step
+  as 0.3, 0.5, 0.8; decimals now come from the step itself. Axes step through
+  1, 2, 5 only, labelled gridlines sit at least 18 px apart (they could land
+  8 px apart under 11 px type), x steps widen until their labels clear, and a
+  label at the far edge is held inside the canvas (the speed strip's last tick
+  was cut off on a phone).
+- **Marker labels** were clamped with a fixed 34 px half-width, which ran the
+  sweep's "you" label over the y axis on a phone; they are clamped by their
+  measured width.
+- **Limit labels** that would stack on each other (a burst set just over the
+  sustained limit) go under their line instead.
+- **Legends.** The profile's braking line had no key; it has one. The current
+  chart's burst line was drawn 2 on 4 against a 3 on 3 swatch; they match. The
+  field key showed "where the corner binds" as a dashed limit swatch while the
+  canvas draws a solid warning stroke; it has a solid swatch, and the current
+  chart's over-the-limit stroke has a key too. The strip's top-speed line used
+  the limit dash where the profile uses the reference dash; both use the
+  reference dash.
+- **Empty states.** A sweep with nothing finite says so in the plot. A gearing
+  outside the 100 to 1000 rpm sweep used to turn the visible window inside out;
+  only marks inside the domain anchor it now.
+- **Pixel ratio.** Moving the window to a screen with another pixel ratio
+  changes no box size, so the resize observer never fired; a resolution media
+  query now repaints every figure.
+- **Units.** Table heads were uppercased whole, which turns tiles/s into
+  TILES/S, a siemens; units in the pin and push tables keep their case.
+- **Labels.** "Tip margin" is "Launch tip margin" (it checks the launch only)
+  and "Stall torque at wheel" is "Wheel stall torque, per motor".
+- **1.0.x paste.** The bucket preset wraps poses as `new Point(startPose)`,
+  which the reader refused, so editing that preset broke it; it reads.
+
+## Pushing
+
+The Pushing block in Results answers "what is the heaviest thing this
+drivetrain can shove". It is the page's own model read at a standstill, not a
+second model.
+
+- **Force.** `forceAt(0, ...)`: the wheel force at stall, capped by the robot's
+  own grip (`mu * m * g`, so its weight matters) and by the fuse, less its own
+  rolling drag (`crr * m * g`), the way a drawbar pull is quoted. "Held" uses
+  the sustained rating, because a shove lasts longer than the burst budget;
+  "burst" is shown beside it when the fuse model gives one. Strafe (mecanum
+  only) uses the page's strafe derates, 0.75 force and 0.85 grip, which remain
+  community estimates (see "Traction").
+- **A box on tile: mu = 0.6.** Assumption, ours. No FTC measurement of anything
+  sliding on the soft tiles was found (searched; unpinned). The tiles are EVA
+  foam (AndyMark's soft-tile listing, search result). A search result quoting
+  a polymer property table puts EVA at 0.63; the table itself would not load
+  (403), so that figure is inferred. General tables put wood on plastic near
+  0.5 static and wood on wood at 0.25 to 0.55. 0.6 sits at the high end of
+  those on purpose: a higher figure makes the box harder to move, so the page
+  under-promises. A luggage-scale pull on the real box settles it.
+- **Defender, mecanum with its wheels locked: 0.70 x cos 45 = 0.49.** A locked
+  mecanum wheel still turns on its rollers, which leaves one diagonal free.
+  Pushed straight, the contact slides along the roller axis only, so friction
+  meets cos 45 of the push, and the X pattern cancels the sideways parts. The
+  derivation is ours; roller bearing drag would add a little and is left out.
+  0.70 is the page's own mecanum grip default.
+- **Defender, traction wheels locked with motors stalled: 1.10,** the page's
+  traction default, as static friction: what has to be overcome to start it
+  moving.
+- **Defender, coasting: 0.045,** the page's mecanum rolling resistance, for a
+  robot on free wheels.
+- These three are page constants and do not follow the reader's own grip
+  input, which describes the reader's wheels.
+- **Opponent weights: 10, 12.5, 15, 17.5 and 20 kg** (22 to 44 lb), about the
+  span FTC robots weigh in at (ours). Each cell is the speed the reader's robot
+  holds while shoving that resistance (where its held force, net of drag,
+  equals the resistance) or "stalls".
+- **A robot like yours.** The same drivetrain at the opponent's weight, both
+  pushing flat out from a standstill: wheel force against wheel force, which
+  differs only in each robot's grip ceiling. A grip-limited robot is matched at
+  its own weight; one held back by the fuse or the motors is never out-pushed
+  by its twin, which only draws level once it is heavy enough to reach the same
+  cap. A one-newton gap reads as even.
+- On the default robot: 76 N held (fuse-limited), 85 N burst for 1.5 s, 55 N
+  strafing, a 12.9 kg box forward and 9.4 kg strafing, a locked mecanum robot
+  up to 15.6 kg, a locked traction robot up to 7.0 kg, and a robot like it
+  draws even from 11.9 kg.
+
 ## Open questions the next pass should close
 
 1. REV pack internal resistance: 11–20 mΩ (docs snippet) vs <170 mΩ (forum).
@@ -1295,6 +1667,17 @@ of 2.1.2 instead of inferred", and that is a known gap for a later pass.
    and self-consistent. Expect the swap to move each ratio by well under a
    percent and to change no conclusion, which is exactly why it is worth doing
    cheaply rather than guessing.
+
+9. The tail of a stop. The page lets the shorted winding and rolling drag
+   finish every stop; the real follower hands the last inch to its hold
+   controller. One encoder log of a Pedro 3 stop on a tall-geared drive would
+   say how long the tail really is.
+10. A box sliding on soft tile, and a locked mecanum robot being pushed: two
+    luggage-scale pulls would replace the 0.6 and the cos 45 derivation in
+    "Pushing" with measurements.
+11. What a REV hub does with a 0.001 command under FLOAT, which is what the
+    Foresight tuner brakes with. Read from the hub firmware or measured, it
+    would turn the inference in "Pedro Pathing 3.0.1" into a fact.
 
 ## Provenance
 
@@ -1351,3 +1734,15 @@ only, so the model then applied the gearbox efficiency a second time and
 printed 2.98 N·m against REV's own 3.2. The row now divides by the efficiency
 as well as the ratio. This pass also caught up the sections that still
 described chips and a scoring fold the page had already dropped.
+
+Pass seven, 2026-10-07, was "calc v2": the move to Pedro Pathing 3.0.1, a
+gearing-only audit of both build buttons, a chart and model audit with an
+independent second reader on the math, and the Pushing block. Pedro was read
+from the four repositories cloned at the commits in "Pedro Pathing 3.0.1" and
+from Maven Central's metadata; the vendor rows were re-read from REV's pages
+directly and from goBILDA and AndyMark through search results, as tagged in
+"Vendor sheets, re-read". The page's parser, emitter and physics were checked
+by scripts run against the page's own functions (parse and round-trip tests,
+the sag solve against a bisected root, the brake table against a fine
+integral, terminal speed against a 40 s run), and the buttons and charts by a
+headless browser at 1440 x 900 and 390 x 844.

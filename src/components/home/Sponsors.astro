@@ -1,9 +1,19 @@
 ---
 /**
- * Sponsors — paper band, second to last. The recognition ladder is the whole
- * pitch: four rungs, low to high, no amounts and no "what the money buys"
- * copy. Rungs wipe in one at a time on scrub via [data-ladder]/[data-rung].
- * Closes on the CTA into the contact section.
+ * Sponsors — paper band, second to last. One pitch in two columns: on the
+ * left the headline, one line on why a gift is tax-deductible, and the
+ * recognition ladder (four rungs, low to high, no amounts and no "what the
+ * money buys" copy) closing on the CTA into the contact section; on the
+ * right, from the top of the section down, how to actually give.
+ *
+ * Rungs wipe in one at a time on scrub via [data-ladder]/[data-rung]; the
+ * giving column is instructions, so it stands still.
+ *
+ * Every route runs through Weston Public Schools and only reaches the team
+ * if it names us, so the name is stated once, at the head of the giving
+ * column, with a copy button, and each route refers back to it rather than
+ * printing it again. Links are actions under each route, never words in the
+ * middle of a sentence.
  */
 
 const rungs = [
@@ -15,6 +25,9 @@ const rungs = [
   { tier: 'Instagram', gets: 'Your own thank-you post on the team feed.' },
   { tier: 'Shirts', gets: 'Your name on the team shirts, printed before Premiers and Worlds.' },
 ];
+
+// The name the school's business office routes a gift to this team by.
+const memo = 'Robotics Team 37122 GNCE Onyx';
 ---
 
 <!-- The last section under the curtain, so its tail is the field the
@@ -28,57 +41,201 @@ const rungs = [
   <div
     class="mx-auto flex min-h-[calc(100svh-9rem)] max-w-[88rem] flex-col justify-center px-5 pt-[clamp(3rem,9svh,8rem)] pb-[clamp(2.5rem,7svh,6rem)] sm:px-8"
   >
-    <span class="mark" aria-hidden="true"></span>
-    <h2 id="sponsors-title" class="type-display text-[clamp(2.25rem,min(7vw,9svh),5.5rem)]">
-      Back the build
-    </h2>
+    <div class="pitch">
+      <div class="pitch-head">
+        <span class="mark" aria-hidden="true"></span>
+        <h2 id="sponsors-title" class="type-display text-[clamp(2.25rem,min(7vw,9svh),5.5rem)]">
+          Back the build
+        </h2>
+        <p class="lead text-muted">
+          We're a school team, so every gift goes through Weston Public Schools and is
+          tax-deductible.
+        </p>
+      </div>
 
-    <dl class="ladder mt-[clamp(1.5rem,4svh,2.5rem)]" data-ladder>
-      {
-        rungs.map((rung) => (
-          <div class="rung hairline" data-rung>
-            <dt class="type-display rung-tier">{rung.tier}</dt>
-            <dd class="rung-gets text-muted">{rung.gets}</dd>
+      <div class="pitch-get">
+        <h3 class="col-head type-label">What you get</h3>
+        <dl class="ladder" data-ladder>
+          {
+            rungs.map((rung) => (
+              <div class="rung hairline" data-rung>
+                <dt class="type-display rung-tier">{rung.tier}</dt>
+                <dd class="rung-gets text-muted">{rung.gets}</dd>
+              </div>
+            ))
+          }
+        </dl>
+      </div>
+
+      <div class="pitch-give">
+        <h3 class="col-head type-label">How to give</h3>
+
+        <div class="memo">
+          <p class="memo-k text-muted">Designate every gift to</p>
+          <div class="memo-row">
+            <p class="memo-v" id="memo-name">{memo}</p>
+            <button type="button" class="memo-copy" data-copy={memo} aria-describedby="memo-name">
+              Copy
+            </button>
           </div>
-        ))
-      }
-    </dl>
+          <p class="sr-only" role="status" data-copy-status></p>
+        </div>
 
-    <div class="mt-[clamp(1.5rem,4svh,2.5rem)]">
-      <a href="#contact" class="btn btn-solid">Get in touch</a>
+        <ul class="give-list">
+          <li class="give">
+            <h4 class="give-name">Employer match</h4>
+            <p class="give-how text-muted">
+              Many employers match gifts to schools, which can double yours. Search your company's
+              giving portal for Weston High School in Weston, MA.
+            </p>
+            <a
+              class="give-act"
+              href="https://www.firstinspires.org/community/donors-and-sponsors/workplace-giving"
+              target="_blank"
+              rel="noopener"
+              >See if your employer matches<span class="sr-only"> (opens in a new tab)</span></a
+            >
+          </li>
+
+          <li class="give">
+            <h4 class="give-name">Online</h4>
+            <p class="give-how text-muted">
+              Pay by card on the district's MySchoolBucks page: choose Buy Now under Robotics
+              Donations and put the team name in the memo. Guest checkout works.
+            </p>
+            <a
+              class="give-act"
+              href="https://www.myschoolbucks.com/ver2/prdembd?ref=ZZH4RE7U2N08342_ZZ64AA9VI5RKOZT"
+              target="_blank"
+              rel="noopener"
+              >Donate online<span class="sr-only"> (opens in a new tab)</span></a
+            >
+          </li>
+
+          <li class="give">
+            <h4 class="give-name">Check</h4>
+            <p class="give-how text-muted">
+              Make it payable to the Town of Weston, with the team name on the memo line, and mail
+              it to:
+            </p>
+            <p class="give-addr">
+              Attn: Business Office, Town of Weston<br />
+              89 Wellesley Street, Weston, MA 02493
+            </p>
+            <a class="give-act" href="mailto:gnceonyx@gmail.com?subject=Picking%20up%20a%20check"
+              >Near Boston? We'll pick it up</a
+            >
+          </li>
+        </ul>
+      </div>
+
+      <div class="pitch-cta">
+        <a href="#contact" class="btn btn-solid">Get in touch</a>
+      </div>
     </div>
   </div>
 </section>
 
 <style>
+  /* ---- Layout ------------------------------------------------------ */
+  /* A phone reads it straight down: the headline, what you get, how to
+     give, then the button. */
+  .pitch {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'head' 'get' 'give' 'cta';
+    row-gap: clamp(2.25rem, 6svh, 3.25rem);
+  }
+
+  .pitch-head {
+    grid-area: head;
+  }
+
+  .pitch-get {
+    grid-area: get;
+  }
+
+  .pitch-give {
+    grid-area: give;
+  }
+
+  .pitch-cta {
+    grid-area: cta;
+  }
+
+  /* Wide band: two columns. The headline, the ladder and the button stack
+     on the left; the giving column runs down the right from the section's
+     top edge, so it never sits under the headline and the whole pitch
+     stands in the field the finale's REACH level leaves it. The last row
+     is the flexible one, so the left column's own blocks size the first
+     two and the button sits right under the ladder. The left share is
+     what the headline needs on one line at its 5.5rem cap (about 725px of
+     ink at 1920); the giving column's rows are happy at 30-odd rem. */
+  @media (min-width: 64rem) {
+    .pitch {
+      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+      grid-template-rows: auto auto 1fr;
+      grid-template-areas:
+        'head give'
+        'get  give'
+        'cta  give';
+      align-items: start;
+      column-gap: clamp(3rem, 6vw, 6rem);
+      row-gap: 0;
+    }
+
+    .pitch-get {
+      margin-top: clamp(1.75rem, 4.5svh, 2.75rem);
+    }
+
+    .pitch-cta {
+      margin-top: clamp(1.5rem, 3.5svh, 2.25rem);
+    }
+  }
+
+  /* ---- Headline ---------------------------------------------------- */
   /* The shared grape bar (global.css); only its air belongs to this section,
      and it gives some of that back on a short screen. */
   .mark {
     margin-bottom: clamp(1rem, 2.5svh, 1.75rem);
   }
 
+  .lead {
+    margin-top: clamp(0.75rem, 2svh, 1.1rem);
+    max-width: 30rem;
+    font-size: 1.0625rem;
+    line-height: 1.55;
+  }
+
+  /* The column labels: small spaced caps a step down the ink ramp, sitting
+     on the rule their column opens with. Smaller than anything inside the
+     column on purpose: they name it, the rows below are the content. */
+  .col-head {
+    margin-bottom: 0.75rem;
+    color: var(--color-muted);
+  }
+
+  /* ---- What you get ------------------------------------------------ */
   .ladder {
     border-top: 1px solid var(--color-line);
   }
 
-  /* The rung spans the whole measure: the tier holds the left margin, what
-     it gets runs on from there, and the hairline closes the row. Stacked
-     below the wide breakpoint, where the tier sits over its own line. */
+  /* Stacked below the wide breakpoint, where the tier sits over its own
+     line. */
   .rung {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
-    gap: 0.35rem 2rem;
+    gap: 0.3rem 2rem;
     border-bottom: 1px solid var(--color-line);
-    padding: 1.1rem 0;
+    padding: 1rem 0;
     will-change: clip-path;
   }
 
-  /* The display face runs wide: the tier column is roomier than the contact-page one. */
   .rung-tier {
     width: 10rem;
     flex: none;
-    font-size: 1.25rem;
+    font-size: 1.2rem;
   }
 
   .rung-gets {
@@ -87,28 +244,188 @@ const rungs = [
   }
 
   /* Wide band: two fixed columns and one fixed height, so all four rungs are
-     the same block whatever length the line inside them runs, and the copy
-     gets the whole rest of the measure (which is what puts the portfolio
-     line on one line). Height rather than padding is what makes them equal:
-     padding only matches when the copy does. Centred in that height, so a
-     line that does wrap still sits in the middle of its rung.
-
-     Capped against viewport height the same way the headline is, so the four
-     rungs, the headline and the button all stand inside the field the REACH
-     level leaves them. */
+     the same block whatever length the line inside them runs. Height rather
+     than padding is what makes them equal: padding only matches when the
+     copy does. Centred in that height, so a line that does wrap still sits
+     in the middle of its rung. Capped against viewport height the same way
+     the headline is. */
   @media (min-width: 64rem) {
     .rung {
       display: grid;
-      grid-template-columns: 14rem minmax(0, 1fr);
+      grid-template-columns: 10.5rem minmax(0, 1fr);
       align-items: center;
-      gap: 0 clamp(2rem, 4vw, 3.5rem);
-      min-height: clamp(4.5rem, 9.5svh, 6.25rem);
+      gap: 0 clamp(1.25rem, 2vw, 2rem);
+      min-height: clamp(4rem, 8.5svh, 5.5rem);
       padding: 0.5rem 0;
     }
 
     .rung-tier {
       width: auto;
-      font-size: 1.75rem;
+      font-size: clamp(1.2rem, 1.6vw, 1.45rem);
+    }
+  }
+
+  /* ---- How to give ------------------------------------------------- */
+  /* The name every route needs, stated once and set to be copied: full
+     ink, bold, a size up from the instructions, with the copy control
+     beside it. */
+  .memo {
+    border-top: 1px solid var(--color-line);
+    padding: 1rem 0 1.1rem;
+  }
+
+  .memo-k {
+    font-size: 0.875rem;
+  }
+
+  .memo-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1rem;
+    margin-top: 0.3rem;
+  }
+
+  .memo-v {
+    font-size: clamp(1.125rem, 1.5vw, 1.3rem);
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  /* A quiet control, not a second button competing with the CTA: small
+     spaced caps inside a hairline box, which turns grape on hover like
+     every other control on the site. */
+  .memo-copy {
+    padding: 0.35rem 0.7rem;
+    border: 1px solid var(--color-line);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-ink);
+    transition:
+      color 160ms ease,
+      border-color 160ms ease;
+  }
+
+  /* A finger needs the full 44px, which the quiet box above is not. */
+  @media (pointer: coarse) {
+    .memo-copy {
+      min-height: 2.75rem;
+      padding-inline: 1rem;
+    }
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .memo-copy:hover {
+      border-color: var(--color-accent);
+      color: var(--color-accent);
+    }
+  }
+
+  .give-list {
+    list-style: none;
+  }
+
+  .give {
+    border-top: 1px solid var(--color-line);
+    padding: 1rem 0 1.1rem;
+  }
+
+  .give:last-child {
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .give-name {
+    font-size: 1.0625rem;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  .give-how {
+    margin-top: 0.3rem;
+    max-width: 36rem;
+    font-size: 0.9375rem;
+    line-height: 1.55;
+  }
+
+  /* Set as an envelope is addressed: two lines in full ink. */
+  .give-addr {
+    margin-top: 0.4rem;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    line-height: 1.5;
+  }
+
+  /* The route's action, under it rather than inside a sentence: the hero's
+     text-link treatment (bold spaced caps on a grape underline) a size down,
+     so every "go do this" link on the page reads as the same kind of
+     thing. */
+  .give-act {
+    display: inline-block;
+    margin-top: 0.6rem;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-ink);
+    text-decoration: underline;
+    text-decoration-color: var(--color-accent);
+    text-underline-offset: 0.35em;
+    transition: color 160ms ease;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .give-act:hover {
+      color: var(--color-accent);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .memo-copy,
+    .give-act {
+      transition: none;
     }
   }
 </style>
+
+<script>
+  // The copy control beside the designation. Clipboard first; where that is
+  // refused (an insecure origin, an old browser) the name is selected
+  // instead, so a Ctrl+C still gets it. The label says what happened and
+  // the status line repeats it for a screen reader.
+  function initMemoCopy() {
+    const btn = document.querySelector<HTMLButtonElement>('#sponsors [data-copy]');
+    const status = document.querySelector<HTMLElement>('#sponsors [data-copy-status]');
+    const name = document.getElementById('memo-name');
+    if (!btn || !name) return;
+    let timer = 0;
+
+    const say = (label: string, line: string) => {
+      btn.textContent = label;
+      if (status) status.textContent = line;
+      clearTimeout(timer);
+      timer = window.setTimeout(() => (btn.textContent = 'Copy'), 2000);
+    };
+
+    const select = () => {
+      const range = document.createRange();
+      range.selectNodeContents(name);
+      const sel = getSelection();
+      sel?.removeAllRanges();
+      sel?.addRange(range);
+    };
+
+    btn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(btn.dataset.copy ?? '');
+        say('Copied', 'Team name copied.');
+      } catch {
+        select();
+        say('Selected', 'Team name selected. Press Control C to copy it.');
+      }
+    });
+  }
+
+  initMemoCopy();
+</script>

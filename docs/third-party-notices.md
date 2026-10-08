@@ -35,6 +35,14 @@ https://www.apache.org/licenses/LICENSE-2.0 and in the upstream repository's
    `degrees`, `tangential` with `reverse`), and an optional `sequence` that
    reorders the lines and interleaves waits. Adopting this schema verbatim is
    deliberate: it makes files saved by the official tool load here unchanged.
+   The Visualizer has since moved the heading onto the path itself
+   (`heading: { type: linear | constant | tangential | piecewise }`), added
+   `compound` paths with `segments` and an optional group heading, and added
+   `throughPoints` for `Paths.through`. The reader follows that newer shape from
+   `src/types.ts` and the legacy fallbacks in `src/utils/normalize.ts`
+   (`normalizePaths`, `normalizeHeading`, `headingFromLegacy`), read at
+   Visualizer `main` commit `f0b063a` (2026-10-04), so old and new files both
+   load.
 
 2. **The Java export template.** The shape emitted by the code fold follows
    `buildPathSegmentCode` and `generateJavaCode` in the Visualizer's
@@ -45,15 +53,18 @@ https://www.apache.org/licenses/LICENSE-2.0 and in the upstream repository's
    an optional `.setReversed()`, closed with `.build()`, poses printed to three
    decimals and headings wrapped in `Math.toRadians(...)`.
 
-3. **The Pedro 3 `Paths` export shape.** The editor now emits version 3 instead,
-   and the shape of what it emits was checked against the same exporter at the
-   Visualizer's 3.x output: a `static` import of `com.pedropathing.api.Paths`, a
-   `PoseFactory.degrees()`, one named `Pose` per pose printed to three decimals
-   with its heading in degrees, one `Path` per leg built from `line(...)` or
-   `curve(...)` with a `.linear` / `.constant` / `.tangent` /
-   `.reverseTangent` heading call, a `path(...)` composing them, and a
-   `follower.follow(...)`. Reading the 2.1.2 builder surface is kept, so a chain
-   a team wrote last season still loads.
+3. **The Pedro 3.0.1 `Paths` export shape.** The editor emits version 3.0.1,
+   and the shape follows the Visualizer's current code generator
+   (`src/lib/codegen/`, at the commit above): the import block from
+   `languages/java.ts`, a `PoseFactory.degrees()`, every pose through
+   `of(x, y, heading)` with control points at heading 0 (as its model builder
+   writes them, and because 3.0.1 has no two-argument `of`), numbers rounded to
+   four decimals as in `numbers.ts`, and the heading calls and
+   `.heading(Interpolator.piecewise().until(...))` form from `pedroApi.ts`. The
+   page writes statements with a `p` factory and one `follower.follow(...)`
+   rather than the generator's class with path-returning methods and an Ivy
+   routine; the reader takes both. Reading the 2.1.2 builder surface is kept,
+   so a chain a team wrote last season still loads.
 
 4. **BIOBUZZ element positions.** The Visualizer's field list includes a
    "BIOBUZZ Field (2026-2027)" entry, and its field image `biobuzz.webp` was
@@ -95,24 +106,34 @@ the page's own text; the page draws the full 144 inch frame and says so.
 ## Pedro-Pathing/PedroPathing (reference only, no code taken)
 
 - Repository: https://github.com/Pedro-Pathing/PedroPathing
-- Licence: **BSD 3-Clause**, which is a different licence from the Visualizer's
-  Apache-2.0. The two are not interchangeable and must not be conflated.
+- Licence: **BSD 3-Clause**, copyright (c) 2026 Pedro Pathing, which is a
+  different licence from the Visualizer's Apache-2.0. The two are not
+  interchangeable and must not be conflated.
 
-Nothing from this repository is reproduced here. It was read as a behavioural
-reference for the 2.1.2 `PathBuilder` method surface that the custom editor
-accepts, and for the constants the page names in prose. Three of them set the
-deceleration rate of the page's follower-style profile, and the page uses their
-product: `FollowerConstants.defaults()` sets `forwardZeroPowerAcceleration =
--41.278` in/s²; `PathConstraints.brakingStrength` defaults to `1`, which is also
-what `Pedro-Pathing/Quickstart` ships; and `ErrorCalculator` multiplies that
-strength by a literal `4` before it reaches the deceleration, which is why the
-project's own deceleration docs say a brakingStrength of 1 corresponds to the
-retired ZPAM of 4. The page also relies on `usePredictiveBraking` being `false`
-by default on `FollowerConstants`, so the real follower commands full power
-along the path tangent until it is inside a stopping distance of the end. Those
-are stated as facts about Pedro's behaviour, not ported as source. All four were
-re-read at `main` commit `b025bad` (2026-08-31), whose `gradle.properties` still
-reads `version=2.1.2`.
+Nothing from this repository is reproduced here. It was read, at tag `v3.0.1`
+(2026-09-18) and `main` commit `69094ad` (2026-10-02), as a behavioural
+reference, and the page reimplements these behaviours in its own TypeScript:
+
+- the `Paths` and `PoseFactory` method surface the editor reads, including
+  3.0.1's corrected mirrors (`mirrorX(a)` sends a heading h to pi - h,
+  `mirrorY(a)` to -h) and `rotateAround` / `mirrorAroundPoint`;
+- the `Interpolator` semantics: linear and longLinear on path completion (arc
+  length), tangent and facingPoint read at the robot's point, piecewise
+  stretches by completion, and a compound path's own interpolator overriding
+  its legs across their combined length;
+- `BezierCurve.through`, the one bezier of degree n - 1 that passes through n
+  poses at evenly spaced t, which the page solves as the same Bernstein system;
+- `Mecanum.interpolateVelocity`, `1 / (|cos t| / vx + |sin t| / vy)`, used as
+  the shape of the page's direction penalty;
+- Foresight's driving and braking: full power down the tangent, no centripetal
+  term (the normal feedforward it passes is zero), momentum carried from path
+  to path while `pathSkip` is on, and a stop planned on the robot's own fitted
+  braking curve with `maxBrakingPower` (0.2) as a correction only.
+
+Those are stated as facts about Pedro's behaviour, with file and line pointers
+in `docs/drivetrain-research-notes.md`, "Pedro Pathing 3.0.1". Earlier passes
+read the 2.1.2 constants (`forwardZeroPowerAcceleration`, `brakingStrength`,
+the `ErrorCalculator` factor of 4) the same way; the page no longer uses them.
 
 ---
 

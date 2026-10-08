@@ -5,19 +5,14 @@
  *
  * Two registers, not three: the headline sitting above the middle of the
  * frame with the team mark and the team number holding its top corners, and
- * one line along the bottom edge with the badge sticker at the left and the
- * two calls to action at the right. The corners are small, so the first
- * thing on the page is the sentence.
+ * the two calls to action centred under it on the same axis. The corners are
+ * small, so the first thing on the page is the sentence.
  * The mark's corner is also where the intro cover's part flies home to on
  * the desktop cut (see BaseLayout), so it stays a plain box in this file.
  *
- * The bottom line stops short of the true corner: the nav toggle is a 56px
- * square pinned flush to the bottom right of every page, and the foot's own
- * bottom padding is what keeps the buttons clear of it at any width.
- *
- * On the wipe the sticker rides the wordmark's plane rather than the sheet's:
- * the two shear off together, one object stuck to another. See
- * [data-cover-ride] in motion.ts.
+ * The badge sticker is a phone-only resident here. On wider screens it is
+ * stuck beside the "Team members" title instead (Team.astro), which is the
+ * first thing the wipe uncovers.
  *
  * Behind the headline the wordmark is set at viewport scale as an indigo
  * watermark, running edge to edge with only its outer serifs shaved by the
@@ -65,25 +60,23 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     </div>
 
     <div class="hero-foot">
-      <!-- The badge, stuck to the bottom left corner: the goose on its orbit,
-           the planet, the moon, the name and the number, drawn by the team. It is the
-           badge, not the mark. The circle of hands keeps the stage's top left
-           and the sticker starts on that same left edge, so the frame's left
-           side reads as one column and the two still read as different
-           objects at opposite ends of it rather than as one logo printed
-           twice. The die cut is baked into the file, not drawn here: the
-           team exports it with its border already on. Alt is empty on purpose: the
-           section is already labelled GNCE Onyx, the mark above carries that
-           name, and the number is printed in the corner, so a third
+      <!-- The badge: the goose on its orbit, the planet, the moon, the name
+           and the number, drawn by the team. It is the badge, not the mark.
+           Phones only (display rule below): wider screens carry it beside the
+           roster title. The die cut is baked into the file, not drawn here:
+           the team exports it with its border already on. Lazy, so a desktop,
+           where it never displays, never fetches it. Alt is empty on purpose:
+           the section is already labelled GNCE Onyx, the mark above carries
+           that name, and the number is printed over the headline, so a third
            announcement would only repeat what has already been read out. -->
-      <div class="hero-sticker" data-cover-ride>
+      <div class="hero-sticker">
         <Image
           class="hero-badge"
           src={sticker}
           alt=""
           widths={[498]}
-          sizes="(max-width: 40rem) 60vw, min(23.4vw, 21.9rem, 42svh)"
-          loading="eager"
+          sizes="56vw"
+          loading="lazy"
         />
       </div>
 
@@ -189,56 +182,33 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     max-width: 25ch;
   }
 
-  /* The bottom line: the controls, hard right. The actions box grows into
-     the whole line (see below) and justifies its own contents right. Its own
-     box is what the sticker is pinned to, so the two share a bottom edge and
-     a left edge without the sticker's height being able to reach the stage. */
+  /* The bottom line: the two controls, centred on the headline's axis, so
+     the sentence and what it asks you to do read as one column. Centred, the
+     pair never reaches the nav toggle's 56px square in the bottom right
+     corner; the section's bottom padding is what keeps them clear of the
+     heat rail under it. */
   .hero-foot {
     position: relative;
     display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 1.5rem clamp(1.5rem, 4vw, 3rem);
+    flex-direction: column;
+    align-items: center;
+    gap: 1.75rem;
   }
 
-  /* The sticker's box. The three terms are the word's own
-     min(30vw, 28rem, 60svh) put through three ratios: the O's ink is 0.8194 of
-     the word's type size, the artwork is 0.944 of this file (the rest is the
-     cut's border), and then nine tenths, because matched to the letter exactly
-     the sticker read as a second headline rather than as something stuck on
-     beside one. So 30vw becomes 23.4vw and 28rem becomes 21.9rem. The border
-     ratio is measured off the file (about 14px of 498 each side), so re-measure
-     it whenever the badge is re-exported; the third is a judgement. The height term
-     is the sticker's own, not the word's: it and the headline share one frame,
-     and 42svh is what keeps the two apart on a short viewport.
-
-     Out of the flow, because in it the sticker's own height became the foot's
-     and the foot's height comes off the stage: at 900px tall that squeezed
-     the wordmark and the headline into the top third and shoved the team
-     number onto the headline's first line. Pinned to the foot's bottom left
-     instead, it hangs over the wordmark's own bottom left, which is where a
-     sticker would be stuck. The left edge is the foot's, which is the
-     stage's, which is the mark's up in the far corner, so the frame's left
-     side reads as one column.
-
-     A box and not just the image, because the wipe drives this element and
-     the tilt below belongs to the drawing: two transforms on one node means
-     the engine owns the tilt as well, and the tilt is not motion. */
+  /* Phones only; the media query at the foot of this block turns it on. On
+     wider screens the badge is stuck beside the roster title instead. A box
+     and not just the image, so the tilt below belongs to the drawing rather
+     than to whatever lays the box out. */
   .hero-sticker {
-    position: absolute;
-    left: 0;
-    bottom: 0;
-    width: min(23.4vw, 21.9rem, 42svh);
-    will-change: transform;
+    display: none;
   }
 
   /* Tilted, because a sticker that lines up with the frame is a printed panel
      instead. Eight degrees is enough to read as applied by hand and little
      enough that the type inside it stays level enough to read. The rotation
      overhangs the box by about 6% of the width on each side, which the
-     gutter and the foot's own bottom padding already clear, and the drawing's
-     corners are its thinnest paint in any case.
+     column's own air already clears, and the drawing's corners are its
+     thinnest paint in any case.
 
      The shadow is the site's one blur, and the narrow exception written into
      DESIGN.md rule 2: a sticker is a physical thing lying on paper and the
@@ -274,22 +244,12 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     width: auto;
   }
 
-  /* Grows into whatever the mark leaves, which is what keeps the two ends on
-     one line: asked for its own width instead, the pair of controls would
-     outrun a phone and take the mark with it onto a second row. Narrow
-     screens stack the two controls inside this box, still hard right, still
-     bottomed out on the mark's line. */
+  /* Side by side and centred; phones stack the pair (below). */
   .hero-actions {
     display: flex;
-    /* Basis, not auto: a flex line breaks on what an item asks for, and
-       asked for its content width this pair claims more than a phone has.
-       Twelve rems is one button, so the two ends stay on one line until the
-       mark itself is too wide for that, and only then do they stack. */
-    flex: 1 1 12rem;
-    min-width: 0;
     flex-wrap: wrap;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: center;
     gap: 1rem clamp(1.25rem, 3vw, 2rem);
   }
 
@@ -305,56 +265,73 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
   }
 
   /* ---- The phone hero --------------------------------------------- */
-  /* A different composition, not a squeezed copy of the wide one: the
-     headline centres over the full word, and the foot becomes a centred
-     column with the mark above the two calls to action. Centred content
-     never meets the corner nav toggle, so the frame reads calm at 360px. */
+  /* A different composition, not a squeezed copy of the wide one: one
+     centred column, the number, then the mark, then the headline over the
+     word, then the badge above the two calls to action.
+
+     Everything in the stage is in the flow here. It used to be the wide
+     layout's corner pins re-aimed at the centre line: the number and the
+     mark absolutely placed at fixed offsets, the headline centred in
+     whatever height was left. On a short phone that height ran out and the
+     headline rode up over both of them. In rows, each one takes the room it
+     needs and the headline can only ever sit below the mark. */
   @media (max-width: 40rem) {
+    /* Number, mark, then the headline's row taking the rest. One track at
+       minmax(0, 1fr): the wordmark is wider than a phone on purpose, and an
+       auto track would grow to hold it and push the whole column off
+       centre. */
     .hero-stage {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto auto 1fr;
       justify-items: center;
+      align-content: stretch;
+      row-gap: clamp(0.85rem, 2.4svh, 1.5rem);
     }
 
-    /* The mark centres under the number, above the headline, at a size the
-       phone can read. Margin centring is not available to an absolute box,
-       so this is the one transform on it; nothing else drives it. */
+    /* The far plane gives up its box so the word and the mark can take rows
+       of the stage. The cover wipe that moves this plane runs on fine
+       pointers only, so on a phone there is no transform to lose; a narrow
+       desktop window just lets the word travel with the sheet. */
+    .hero-deep {
+      display: contents;
+    }
+
+    /* Relative rather than static, so the z-index that keeps it over the
+       word still applies. */
+    .hero-team {
+      position: relative;
+      top: auto;
+      right: auto;
+      grid-row: 1;
+    }
+
     .hero-logo {
-      top: 3.25rem;
-      left: 50%;
-      transform: translateX(-50%);
+      position: static;
+      grid-row: 2;
       font-size: 3rem;
     }
 
-    /* The phone hero is one centred column, so the number joins its axis
-       above the headline instead of floating in a corner. Margin centring,
-       not a transform: the wipe owns this element's transform. */
-    .hero-team {
-      left: 0;
-      right: 0;
-      width: fit-content;
-      margin-inline: auto;
+    /* The headline and the word share the last row, centred on each other,
+       which is the same pairing the wide stage makes over its full height. */
+    .hero-deep-word,
+    .hero-title {
+      grid-row: 3;
+      grid-column: 1;
+      align-self: center;
     }
 
-    .hero-foot {
-      flex-direction: column;
-      align-items: center;
-      gap: 1.75rem;
-    }
-
-    /* Back into the flow, stacked above the two calls to action on the
-       column's own axis: the phone hero is a column and a sticker pinned to
-       one corner of it would be the one thing off that axis. The O's own
-       ratio would put it near 98px at this width, but a centred column has
-       room the wide foot does not, and the drawing carries a team number and
-       two words that have to survive at 360px. */
+    /* On the column's own axis above the two calls to action. Sized to the
+       short side as well as the width: at 375 by 667 a width-only sticker
+       pushed the second link below the fold. The drawing carries a team
+       number and two words that have to survive at 360px, which is what
+       sets the floor. */
     .hero-sticker {
-      position: static;
-      width: 60vw;
+      display: block;
+      width: max(8.5rem, min(56vw, 22svh));
     }
 
     .hero-actions {
-      flex: none;
       flex-direction: column;
-      align-items: center;
       gap: 1.1rem;
     }
   }

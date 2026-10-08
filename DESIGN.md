@@ -20,16 +20,19 @@ touching UI.
    else. `#823A80` grape soda appears ONLY as a true highlight:
    selection, the heat rail, hover states, the section marks, the stub
    dashes.
-   The `/drivetrain/` calculator is the one exception on the site: a
-   self-contained tool page with its own token set (a three-level ink
-   ramp, a deeper grape that clears AA as small text, and one burnt-orange
-   warning hue for limits). It is declared and justified inside that page.
+   The two tool pages, the `/drivetrain/` and `/belt/` calculators, are
+   the one exception on the site: self-contained pages with their own token
+   set (a three-level ink ramp, a deeper grape that clears AA as small text,
+   and one burnt-orange warning hue for limits). It is declared and
+   justified inside `drivetrain.astro`; `belt.astro` restates the same set
+   under its own `.bc-` prefix rather than inventing another.
 2. **No idle glows. No gradient fills. No blur.** Life comes from motion
    and solid color; content is sharp from its first painted frame, and
    nothing frosted sits over anything. Texture is film grain alone, used
    sparingly.
-   One exception, and it is narrow: the hero's badge sticker casts a
-   single small drop shadow (1px 4px 7px, ink at 30%). A sticker is a
+   One exception, and it is narrow: the badge sticker casts a single
+   small drop shadow (1px 4px 7px, ink at 30%, at the phone hero's size;
+   scaled with the sticker, 0.5px 2px 3.5px on the roster title). A sticker is a
    physical object lying on paper and the shadow is the only thing that
    says so. It is light, it is close, and it never moves. This does not
    open the door to shadows on cards, buttons or type.
@@ -182,20 +185,22 @@ section:
 - **Hero**: nothing along the top · the headline sitting above centre on
   the same axis as an oversized indigo-watermark ONYX running edge to edge,
   only its outer serifs shaved by the frame (the word's trailing letter-space
-  is cancelled with a negative margin, so the two centre on the INK) · one
-  line along the bottom edge, the team badge at the left and the two
-  CTAs at the right, bottoms level and clear of the corner nav toggle. The
-  badge (`src/assets/onyx-badge-sticker.webp`) is the team's own drawing, goose and
-  planet and moon on an orbit with the name and number on it, and it is the one place
-  on the site that runs outside the five colours. It is kept small so it
-  reads as a mark rather than as artwork, and the flat plate it was exported
-  on has been keyed to alpha so it composites on any band with no seam. It
-  is not the circle of hands: the two marks hold opposite corners and are
-  different objects. The
+  is cancelled with a negative margin, so the two centre on the INK) · the
+  two CTAs centred under it on the same axis, clear of the corner nav
+  toggle. The badge (`src/assets/onyx-badge-sticker.webp`) is the team's own
+  drawing, goose and planet and moon on an orbit with the name and number on
+  it, and it is the one place on the site that runs outside the five colours.
+  Above 40rem it is not in the hero at all: it is stuck, tilted, at the right
+  end of the Team section's title line (see Team). On a phone it prints in
+  the hero, between the headline and the CTAs. The flat plate it was
+  exported on has been keyed to alpha so it composites on any band with no
+  seam. It is not the circle of hands: the two are different objects. The
   wordmark is the cover wipe's far plane (`[data-cover-deep]`): it gives up
   almost half the sheet's travel on the same scrub, so the exit reads as
-  two planes at two speeds. On a phone the composition centres instead:
-  headline over the word, then the badge and the stacked CTAs on one axis.
+  two planes at two speeds. On a phone the composition is one centred
+  column in plain flow (number, mark, headline over the word, badge, the
+  stacked CTAs): no pinned corners, so a short screen can never stack the
+  headline over the number or the mark.
 - **Team** (`#team`): the section the hero uncovers, pinned under the
   cover wipe on fine pointers, plain flow on touch. A small "Team members"
   display title over a grid of portrait plates with the name and that
@@ -224,7 +229,20 @@ section:
   Accordion logic lives in the component's own script.
 - **Outreach** (`#outreach`): the posts as a ruled index (date, title, the
   line about it, columns repeating exactly down the list) · invite-us CTA.
-- **Sponsors** (`#sponsors`): scrubbed recognition ladder, no amounts.
+- **Sponsors** (`#sponsors`): two columns above 64rem. Left: the headline
+  (one line at every desktop width, which is what sets the 1.4 : 1 split),
+  one lead line on why a gift is tax-deductible, then the scrubbed
+  recognition ladder (no amounts) and the CTA. Right, from the section's
+  top: a still "How to give" column. The designation the business office
+  routes gifts by, "Robotics Team 37122 GNCE Onyx", is stated ONCE at its
+  head with a copy button; the three routes (employer match, online, check)
+  each get a bold sentence-case name, two short sentences that refer back
+  to "the team name", and one action link under them in the hero's
+  text-link style. No links inside sentences, no display caps outside the
+  headline and the rung tiers: the column labels are small spaced caps a
+  step down the ink ramp. The whole section stands in the field the
+  finale's REACH level leaves it at 1440 by 900; a phone stacks it
+  headline, ladder, giving, button.
 - **Finale** (`#contact`): the curtain reveal, with exactly two resting
   levels. Everything above it scrolls up like a sheet lifted off a static
   first viewport; arriving momentum is set down on REACH (curtain parked

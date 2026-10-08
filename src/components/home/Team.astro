@@ -20,8 +20,15 @@
  * pointer; the portraits do: the hovered face zooms in a touch and its
  * grid neighbours follow at half the step (script at the end of the file),
  * attention falling off with distance.
+ *
+ * Above 40rem the team's badge sticker is stuck at the title line's right
+ * end, tilted, at three eighths of the size it used to print in the hero.
+ * The title line is as wide as the grid under it, so the title starts over
+ * the first face and the sticker sits over the last. Phones carry the badge
+ * in the hero instead.
  */
 import { Image } from 'astro:assets';
+import sticker from '../../assets/onyx-badge-sticker.webp';
 
 // Previous GNCE team numbers only; the record lives in git history.
 // Both orders below are the team's own and neither is a ranking: the roster
@@ -72,10 +79,28 @@ const photoFor = (name: string) => {
 ---
 
 <section id="team" aria-labelledby="team-title">
-  <div class="team-frame mx-auto w-full max-w-[88rem] px-5 sm:px-8">
-    <h2 id="team-title" class="team-head type-display">Team members</h2>
+  <div
+    class="team-frame mx-auto w-full max-w-[88rem] px-5 sm:px-8"
+    style={`--columns:${columns};--rows:${rowCount}`}
+  >
+    <div class="team-top">
+      <h2 id="team-title" class="team-head type-display">Team members</h2>
+      <!-- Alt is empty: the drawing's name and number are already the
+           page's own, printed in the hero and the title above. Lazy, so a
+           phone, where this copy never displays, never fetches it. -->
+      <div class="team-sticker">
+        <Image
+          class="team-badge"
+          src={sticker}
+          alt=""
+          widths={[260, 498]}
+          sizes="min(8.8vw, 130px)"
+          loading="lazy"
+        />
+      </div>
+    </div>
 
-    <ul class="roster" style={`--columns:${columns};--rows:${rowCount}`}>
+    <ul class="roster">
       {
         roster.map((member) => {
           const photo = photoFor(member.name);
@@ -131,8 +156,14 @@ const photoFor = (name: string) => {
 </section>
 
 <style>
-  /* One screen, the title and the grid centred in it. */
+  /* One screen, the title and the grid centred in it. The grid's measures
+     are declared here rather than on the grid itself, because the title
+     line is sized off them too (see .team-top). */
   .team-frame {
+    /* One gap value drives both axes, so the columns and the rows are spaced
+       by the same measure and the block reads as a grid rather than as rows
+       that happen to line up. */
+    --grid-gap: clamp(0.85rem, 1.8vw, 1.75rem);
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -141,16 +172,21 @@ const photoFor = (name: string) => {
     padding-bottom: clamp(3.5rem, 8svh, 5.5rem);
   }
 
-  .team-head {
+  .team-top {
+    position: relative;
     margin-bottom: clamp(1.5rem, 4svh, 2.75rem);
+  }
+
+  .team-head {
     font-size: clamp(1.75rem, 4vw, 3rem);
   }
 
-  /* One gap value drives both axes, so the columns and the rows are spaced
-     by the same measure and the block reads as a grid rather than as rows
-     that happen to line up. */
+  /* Phones carry the badge in the hero. */
+  .team-sticker {
+    display: none;
+  }
+
   .roster {
-    --grid-gap: clamp(0.85rem, 1.8vw, 1.75rem);
     display: grid;
     /* Two across on a phone, portraits big enough to be faces. From the
        tablet breakpoint up the count comes off the roster (block below). */
@@ -196,27 +232,73 @@ const photoFor = (name: string) => {
   }
 
   @media (min-width: 40rem) {
-    .roster {
-      /* Squares cannot be told to fit a short screen by trimming their
-         height, so the CELL is what gets capped: the smaller of the column
-         width and the height its rows may have, with the grid centring
-         itself whenever the height is what binds. Both counts come from the
-         roster (set inline on the element), so adding a member reshapes the
-         grid instead of overflowing it.
+    /* Squares cannot be told to fit a short screen by trimming their
+       height, so the CELL is what gets capped: the smaller of the column
+       width and the height its rows may have, with the grid centring itself
+       whenever the height is what binds. Both counts come from the roster
+       (set inline on the frame), so adding a member reshapes the grid
+       instead of overflowing it.
 
-         The reserve is this section's other furniture measured at its
-         largest: both paddings and the title are fixed, and every row adds
-         a name block and a gap. 16 + 2 x 6 is the 28rem two rows always
-         used, so nine members lay out exactly as they did before. */
+       The reserve is this section's other furniture measured at its
+       largest: both paddings and the title are fixed, and every row adds a
+       name block and a gap. 16 + 2 x 6 is the 28rem two rows always used,
+       so nine members lay out exactly as they did before.
+
+       The 100% is left unresolved on purpose: a custom property carries its
+       percentage as text, so it resolves against whichever box uses it. The
+       grid and the title line both span the frame's content box, so both
+       read the same width out of it. */
+    .team-frame {
       --reserve: calc(16rem + var(--rows) * 6rem);
       --cell: min(
         (100% - (var(--columns) - 1) * var(--grid-gap)) / var(--columns),
         (100svh - var(--reserve)) / var(--rows)
       );
+    }
+
+    .roster {
       grid-template-columns: repeat(var(--columns), var(--cell));
       justify-content: center;
       gap: clamp(1.75rem, 4svh, 3rem) var(--grid-gap);
     }
+
+    /* As wide as the grid, centred the same way, so on a short screen,
+       where the height binds and the grid draws in from the frame, the
+       title still starts over the first face instead of out in the margin. */
+    .team-top {
+      width: calc(var(--columns) * var(--cell) + (var(--columns) - 1) * var(--grid-gap));
+      margin-inline: auto;
+    }
+
+    /* Stuck to the right end of the title's line, three eighths of the
+       min(23.4vw, 21.9rem, 42svh) it printed at in the hero. Out of the
+       flow, so it adds nothing to a section that has to stand one viewport
+       tall under the cover wipe, and lifted a little off the line's centre
+       so its foot clears the first row of faces. Above the grid, so a
+       zoomed corner plate passes under it like a photo under a sticker. */
+    .team-sticker {
+      position: absolute;
+      right: 0;
+      top: 50%;
+      z-index: 1;
+      display: block;
+      width: min(8.78vw, 8.21rem, 15.75svh);
+      transform: translateY(-62%);
+    }
+  }
+
+  /* Tilted the other way from the hero's, leaning into the corner it is
+     stuck in. Eight degrees reads as applied by hand and keeps the name in
+     the drawing level enough to read. The shadow is DESIGN.md rule 2's one
+     exception, scaled down with the sticker: the same light, close shadow
+     at 126px wide as the hero's at 336, never moving, never answering the
+     pointer. */
+  .team-badge {
+    display: block;
+    width: 100%;
+    height: auto;
+    transform: rotate(8deg);
+    filter: drop-shadow(0.5px 2px 3.5px color-mix(in srgb, var(--color-surface) 30%, transparent));
   }
 
   .member-name {

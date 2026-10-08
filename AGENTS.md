@@ -2,8 +2,9 @@
 
 Astro 7 + Tailwind CSS 4 website for FTC team 37122, GNCE Onyx. The whole
 site is one scrollable page
-(`src/pages/index.astro` composing `src/components/home/`); blog posts and
-the `/drivetrain/` calculator are the only separate routes. Copy and
+(`src/pages/index.astro` composing `src/components/home/`); blog posts,
+privacy, the `/drivetrain/` and `/belt/` calculators and the locked
+`/biobuzz/q1/` viewer are the only separate routes. Copy and
 identity facts are real (team 37122, gnceonyx@gmail.com, @gnceonyx on
 Instagram, @GNCEOnyx on YouTube). Five of the ten roster portraits are
 real photos; the season highlights and galleries are the only placeholder
@@ -58,13 +59,46 @@ Manage the background server with `astro dev stop`, `astro dev status`, and `ast
   spend its stored wheel momentum the instant the lock came off. The head
   script drops `loading` after 4.5s no matter what, so the lock cannot
   stick.
+- The FTC belt calculator (`src/pages/belt.astro`, math in
+  `src/lib/belt-geometry.ts`, catalog in `src/data/belts.ts`) is a sibling
+  of `/drivetrain/`: same tokens, `.bc-` prefixed, no motion-engine scenes,
+  `keepHash` for its `#s=` share links. Whichever of center distance, belt
+  teeth or belt length was typed last is the driver and solves the other
+  two; the driver's label wears a filled square and a solid frame, solved
+  fields an open square and a dashed frame (no one-sided accent bar: that
+  was tried and removed). Keep the inputs bare, the same way the drivetrain
+  page does. Belt length is the exact open-belt formula and center distance
+  is solved from it by Newton's method; `node
+  scripts/check-belt-geometry.mjs` holds the solver to the two drives worked
+  in the Gates PowerGrip GT2 manual, so run it after touching the math. The
+  catalog only lists rows a product page or catalog listing actually showed
+  (researched 7 October 2026: goBILDA, ServoCity, AndyMark, WCP,
+  McMaster-Carr, B&B, SDP/SI, Misumi; REV sells neither profile and Gates
+  has no public catalog). Re-run the research and update the header comment
+  rather than adding rows by part-number pattern; a size no checked catalog
+  lists reads "Not in database". The pick follows goBILDA's advice: the
+  closest belt inside the fit tolerance, otherwise the next longer one,
+  because a belt rounded down runs too tight.
+  Its "Method and sources" section is a two-column ruled sheet (one column
+  on a phone), and every equation in it is LaTeX typeset by KaTeX at build
+  time (`tex()` and `prose()` in the page's frontmatter; `$...$` inside
+  `prose()` is inline math). No script runs for it, and KaTeX's CSS and
+  fonts are bundled into this page alone and served from the site, which
+  is what keeps the privacy page's font promise true. Write new equations
+  the same way, never as monospace text, and check them at 360px: display
+  equations sit flush left (`fleqn`) and lose their indent on a phone so
+  the belt-length line fits whole.
 - The FTC drivetrain calculator (`src/pages/drivetrain.astro`, ported whole
   from Ethan Zhang's personal site and re-skinned to this site's tokens) is
   a self-contained tool page: every style is `.dt-` prefixed or declared in
   the page, and it runs no motion-engine scenes. Its share links keep state
   in the URL hash, so it passes `keepHash` to BaseLayout (which otherwise
-  strips fragments on reload). Its path editor reads both Pedro Pathing 3 and
-  the 2.1.2 builder surface, and everything it emits is Pedro 3. The Simulate
+  strips fragments on reload). Its path editor reads Pedro Pathing 3.0.1,
+  the 2.1.2 builder and 1.0.x code, and the visualizer's `.pp` files, and
+  everything it emits is 3.0.1 (versions, commits and URLs in the research
+  notes under "Pedro Pathing 3.0.1"). Braking is the drivetrain's own
+  motor-braking curve, the one stop model on the page; there is no braking
+  constant to tune. The Simulate
   section draws the BIOBUZZ field and carries an auto scoreboard whose
   coordinates, sources and scoring assumptions are all written down in
   `docs/drivetrain-research-notes.md` under "BIOBUZZ auto geometry". The announcement post
@@ -78,6 +112,15 @@ Manage the background server with `astro dev stop`, `astro dev status`, and `ast
   an all-null stub so the model runs on published constants and the branches
   downstream still compile. Chart summaries (`.dt-srsum`) are visually hidden
   on purpose: they exist for screen readers, since a canvas cannot be read.
+  "Build the recommendation" and "Build the ideal" change gearing only (the
+  gearbox picker, a custom ratio, the external stage rows) and never motor,
+  wheel, mass, battery, fuse or path; a sealed gearmotor stays fitted and
+  gets a custom tooth pair instead. Hold that line when touching either.
+  Results ends on a Pushing block (held, burst and strafe push, heaviest box
+  on tile, a table of 10 to 20 kg opponents) read off the same force model
+  at standstill; its friction constants and their sources live in the notes
+  under "Pushing", not on the page. All three motor brands carry the
+  vendor-spec / gm0-dyno toggle.
 - Roster portraits are matched by filename, not by a list: save a square
   photo as `src/assets/team/<slug>.<ext>` (slug of the member's name in
   `Team.astro`'s `roster`) and it replaces that member's silhouette and
@@ -104,7 +147,7 @@ Manage the background server with `astro dev stop`, `astro dev status`, and `ast
   deliberate and separate from the output sharpen below: an upscale needs
   correcting at its own size, and dropping it leaves her visibly soft.
   No contrast or colour correction: portraits stay as shot, per `DESIGN.md`.
-- The hero's badge is a die-cut sticker, generated:
+- The team badge is a die-cut sticker, generated:
   `src/assets/onyx-badge.webp` is the drawing as the team exported it, and
   `node scripts/make-badge-sticker.mjs` cuts `onyx-badge-sticker.webp` from
   it, which is the file the hero prints. The cut is baked in because CSS can
@@ -157,9 +200,17 @@ Manage the background server with `astro dev stop`, `astro dev status`, and `ast
   The sticker carries the site's only blur, which is the narrow exception
   written into `DESIGN.md` rule 2: one small, light drop shadow, because a
   sticker is a physical thing lying on paper and nothing else says so. Keep it
-  small and keep it still. On the cover wipe it carries `[data-cover-ride]`, which is not a plane
-  of its own: `motion.ts` hands every rider the deep plane's own travel, so the
-  sticker and the wordmark shear off together as one object.
+  small and keep it still.
+  Where it prints: above 40rem it sits at the right end of the Team
+  section's title line (`Team.astro`), tilted 8 degrees, at three eighths of
+  the size it used to print in the hero (`min(8.78vw, 8.21rem, 15.75svh)`).
+  That title line is sized off the roster grid's own width, so the sticker
+  lands over the last column even when the height binds and the grid draws
+  in. On phones it stays in the hero, which is one plain-flow column there.
+  Both copies load lazily, so whichever one is `display: none` is never
+  fetched. It used to ride the cover wipe with the wordmark through a
+  `[data-cover-ride]` hook; that left with it and is deleted from
+  `motion.ts`.
 
 - The Qualifier 1 robot viewer (`src/pages/biobuzz/q1.astro`, module
   `src/scripts/q1-viewer.ts`) sits behind a password and is reached only
@@ -203,6 +254,18 @@ Manage the background server with `astro dev stop`, `astro dev status`, and `ast
   plus and its rule together, and a back link turns its arrow and its word
   together. Hover is the only thing that colours a season title: an open row
   keeps its name in the ink and lets its plus and rule carry the state. Nothing moves on hover except the roster's own scale.
+- Giving: the "How to give" column in `Sponsors.astro` routes every gift
+  through Weston Public Schools (tax-deductible) and names the team with the
+  one designation string held in its `memo` constant, "Robotics Team 37122
+  GNCE Onyx", printed once with a copy button. Keep it printed once: the
+  first version repeated it in bold inside every route with links mid
+  sentence, and it read as crammed. Routes refer to "the team name" and end
+  on a single action link. The three routes and their links (FIRST's workplace-giving
+  checker, the district's MySchoolBucks robotics donation page, the Town of
+  Weston business office address for checks) were taken from team 26112's
+  Support Us page, which runs the same routes for the same school. If the
+  business office ever asks for a different designation, change `memo`:
+  the printed name and what the copy button copies both read from it.
 - Privacy lives at `src/pages/privacy.astro`: the same paper page as a blog
   post, so `.post-col`, `.post-rule` and the `.back*` set are declared once
   in `global.css` rather than in either file. Do not re-scope them into a

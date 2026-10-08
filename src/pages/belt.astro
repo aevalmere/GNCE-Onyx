@@ -1,0 +1,1442 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { MAKERS, PRESETS, CATALOG_DATE, makerCounts } from '../data/belts';
+import katex from 'katex';
+import 'katex/dist/katex.min.css';
+
+// /belt: timing belt calculator for two pulleys. A sibling of /drivetrain and
+// built to its sheet: plain fields, one inverted answer block, a datasheet
+// table, no motion-engine scenes and nothing that animates.
+//
+// Any of the three spacing fields can be typed into (center distance, belt
+// teeth, belt length) and whichever was typed last drives the other two.
+// The geometry is the exact open-belt length, solved for C by safeguarded
+// Newton (src/lib/belt-geometry.ts); scripts/check-belt-geometry.mjs holds it
+// against the Gates GT2 manual's published drives and against an independent
+// tangent-point construction. The belt catalog and where every row came from:
+// src/data/belts.ts.
+//
+// Styles are .bc- prefixed and declared in this file. The token set is the
+// drivetrain sheet's, restated here rather than imported, so the two tools
+// read as one family and neither page can break the other.
+
+const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
+const counts = makerCounts();
+
+// Equations are typeset here, at build time: KaTeX writes the HTML (plus
+// MathML, which is what a screen reader reads) straight into the page, so no
+// script runs for them. Its fonts are bundled and served from this site, so
+// the privacy page's "no third-party font" still holds. fleqn sets display
+// equations flush left, on the same edge as the text around them.
+const tex = (src: string, display = false) =>
+  katex.renderToString(src, { displayMode: display, fleqn: display, throwOnError: true, output: 'htmlAndMathml' });
+// Prose with $...$ inline math. The text goes in as HTML, so keep & and <
+// out of it.
+const prose = (src: string) => src.replace(/\$([^$]+)\$/g, (_, t: string) => tex(t));
+const longDate = new Date(CATALOG_DATE + 'T12:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+---
+
+<BaseLayout
+  title="FTC belt calculator"
+  description="An FTC timing belt calculator that solves center distance, belt teeth or belt length from whichever you type, locks a pulley ratio, and finds the stocked GT2 and HTD 5 mm belts that fit, with part numbers."
+  light
+  keepHash
+>
+  <div class="bc-shell">
+    <a href={`${base}/`} class="bc-back">
+      <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+      </svg>
+      Home
+    </a>
+
+    <header class="bc-head">
+      <h1 class="bc-title">FTC belt calculator</h1>
+    </header>
+
+    <div id="bc-inputs">
+      <section class="bc-section" aria-labelledby="secDrive">
+        <div class="bc-body">
+          <h2 class="bc-panel-h" id="secDrive">Drive</h2>
+
+          <div class="bc-panel">
+            <div class="bc-clumps">
+
+              <section class="bc-clump" aria-labelledby="hBelt">
+                <h3 class="bc-clump-h" id="hBelt">Belt</h3>
+                <div class="bc-field">
+                  <label for="prof">Profile</label>
+                  <select id="prof">
+                    {Object.entries(PRESETS).map(([k, p]) => <option value={k} selected={k === 'htd5'}>{p.label}</option>)}
+                    <option value="custom">Custom belt</option>
+                  </select>
+                </div>
+                <div class="bc-field bc-mt" data-custom hidden>
+                  <label for="form">Tooth form</label>
+                  <select id="form">
+                    <option value="gt2">GT2</option>
+                    <option value="htd" selected>HTD</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div class="bc-field bc-mt" data-custom hidden>
+                  <label for="pitch">Pitch (mm)</label>
+                  <input type="number" id="pitch" value="5" step="0.5" min="0.5" max="50" />
+                </div>
+                <div class="bc-field bc-mt">
+                  <label for="width">Width (mm)</label>
+                  <input type="number" id="width" value="9" step="1" min="1" max="100" list="bc-widths" />
+                </div>
+              </section>
+
+              <section class="bc-clump" aria-labelledby="hPulleys">
+                <h3 class="bc-clump-h" id="hPulleys">Pulleys</h3>
+                <div class="bc-field">
+                  <label for="na">Driving pulley (teeth)</label>
+                  <input type="number" id="na" value="16" step="1" min="8" max="200" list="bc-teeth" />
+                </div>
+                <div class="bc-field bc-mt">
+                  <label for="nb">Driven pulley (teeth)</label>
+                  <input type="number" id="nb" value="48" step="1" min="8" max="200" list="bc-teeth" />
+                </div>
+                <label class="bc-check bc-mt"><input type="checkbox" id="lock" /> Lock ratio</label>
+                <p class="bc-msg" id="lockMsg" role="status"></p>
+              </section>
+
+              <section class="bc-clump" aria-labelledby="hSpacing">
+                <h3 class="bc-clump-h" id="hSpacing">Spacing</h3>
+                <div class="bc-field" data-drv="cc">
+                  <label for="cc">Center to center (mm)<span class="bc-visually-hidden" data-drv-sr></span></label>
+                  <input type="number" id="cc" value="120" step="0.5" min="1" max="5000" />
+                </div>
+                <div class="bc-field bc-mt" data-drv="bt">
+                  <label for="bt">Belt teeth<span class="bc-visually-hidden" data-drv-sr></span></label>
+                  <input type="number" id="bt" value="" step="1" min="1" max="2000" />
+                </div>
+                <div class="bc-field bc-mt" data-drv="bl">
+                  <label for="bl">Belt length (mm)<span class="bc-visually-hidden" data-drv-sr></span></label>
+                  <input type="number" id="bl" value="" step="5" min="1" max="10000" />
+                </div>
+                <div class="bc-field bc-mt">
+                  <label for="stock">Stocked belt</label>
+                  <select id="stock"><option value="">–</option></select>
+                </div>
+                <div class="bc-field bc-mt">
+                  <label for="tol">Fit tolerance (mm)</label>
+                  <input type="number" id="tol" value="0.05" step="0.01" min="0" max="5" />
+                </div>
+              </section>
+            </div>
+
+            <fieldset class="bc-makers">
+              <legend>Catalogs</legend>
+              <div class="bc-makers-list">
+                {MAKERS.filter((m) => counts[m.id]).map((m) => (
+                  <label class="bc-check"><input type="checkbox" value={m.id} checked /> {m.name}</label>
+                ))}
+              </div>
+            </fieldset>
+
+            <datalist id="bc-teeth"></datalist>
+            <datalist id="bc-widths"></datalist>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <section class="bc-section" aria-labelledby="secRes">
+      <div class="bc-body">
+        <h2 class="bc-panel-h" id="secRes">Results</h2>
+
+        <p class="bc-session" id="sessionNote" role="status" hidden>
+          <span id="sessionNoteText">Restored your last session.</span>
+          <button type="button" id="sessionReset">Start fresh</button>
+        </p>
+
+        <!-- The answer in one inverted block: the belt on the left, the
+             center distance it runs at on the right. -->
+        <div class="bc-board" id="board">
+          <div class="bc-board-belt">
+            <p class="bc-board-k" id="beltK">Belt to order</p>
+            <p class="bc-board-n"><span id="beltN">–</span> <small>teeth</small></p>
+            <p class="bc-board-recipe" id="beltBuy">–</p>
+            <p class="bc-board-sub" id="beltSub">–</p>
+          </div>
+          <div class="bc-board-cc">
+            <p class="bc-board-k">Center to center</p>
+            <p class="bc-board-n"><span id="ccN">–</span> <small>mm</small></p>
+            <p class="bc-board-sub" id="ccSub"></p>
+          </div>
+          <p class="bc-board-rule" id="pickRule"></p>
+        </div>
+
+        <div class="bc-acts">
+          <button type="button" class="bc-btn bc-btn-primary" id="copyLink">Copy link</button>
+          <button type="button" class="bc-btn bc-btn-ghost" id="resetBtn">Reset</button>
+        </div>
+
+        <dl class="bc-readouts">
+          <div><dt>Ratio</dt><dd id="roRatio">–</dd></div>
+          <div><dt>Pitch diameters</dt><dd id="roPd">–</dd></div>
+          <div><dt>Wrap, small pulley</dt><dd id="roWrap">–</dd></div>
+          <div id="roTimWrap"><dt>Teeth in mesh</dt><dd id="roTim">–</dd></div>
+          <div><dt>Free span</dt><dd id="roSpan">–</dd></div>
+          <div id="roGapWrap"><dt>Tip clearance</dt><dd id="roGap">–</dd></div>
+        </dl>
+        <p class="bc-warn" id="warn" role="status"></p>
+
+        <h3 class="bc-table-h" id="candH">Nearest belts</h3>
+        <div class="bc-tablewrap">
+          <table class="bc-table" aria-labelledby="candH">
+            <thead>
+              <tr>
+                <th scope="col">Belt</th>
+                <th scope="col" class="is-numeric">Center to center</th>
+                <th scope="col">Where to buy</th>
+              </tr>
+            </thead>
+            <tbody id="candBody"></tbody>
+          </table>
+        </div>
+
+        <p class="bc-srsum" id="srSum" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <section class="bc-section" aria-labelledby="secMethod">
+      <div class="bc-body">
+        <h2 class="bc-panel-h" id="secMethod">Method and sources</h2>
+
+        <div class="bc-method">
+          <section class="bc-mblock" aria-labelledby="mLen">
+            <h3 class="bc-clump-h" id="mLen">Belt length</h3>
+            <p set:html={prose("Every length here is a pitch length, measured along the line the belt's cords run on. A pulley with $N$ grooves at pitch $p$ has a pitch diameter of")}></p>
+            <div class="bc-eq" set:html={tex(String.raw`D = \frac{N p}{\pi}`, true)}></div>
+            <p set:html={prose('With $D$ the large pulley, $d$ the small one and $C$ the center distance, the belt is two straight spans and two arcs:')}></p>
+            <div class="bc-eq" set:html={tex(String.raw`L = 2C\cos\varphi + \frac{\pi}{2}(D + d) + \varphi\,(D - d)`, true)}></div>
+            <div class="bc-eq" set:html={tex(String.raw`\sin\varphi = \frac{D - d}{2C}`, true)}></div>
+            <p>That is exact. The shortcut most calculators use is its series expansion, and it drifts as the ratio grows:</p>
+            <div class="bc-eq" set:html={tex(String.raw`L \approx 2C + \frac{\pi}{2}(D + d) + \frac{(D - d)^2}{4C}`, true)}></div>
+          </section>
+
+          <section class="bc-mblock" aria-labelledby="mSolve">
+            <h3 class="bc-clump-h" id="mSolve">Center distance from a belt</h3>
+            <p set:html={prose(String.raw`Given a belt, the page solves that length for $C$ by Newton's method. Differentiate it and the $\varphi$ terms cancel, which leaves an exact slope:`)}></p>
+            <div class="bc-eq" set:html={tex(String.raw`\frac{dL}{dC} = 2\cos\varphi`, true)}></div>
+            <div class="bc-eq" set:html={tex(String.raw`C_{k+1} = C_k - \frac{L(C_k) - L_{\text{belt}}}{2\cos\varphi_k}`, true)}></div>
+            <p set:html={prose("It starts from the shortcut's answer, falls back to bisection whenever a step would leave the bracket, and stops when the length it reproduces is within $10^{-9}$ mm of the belt.")}></p>
+          </section>
+
+          <section class="bc-mblock" aria-labelledby="mGates">
+            <h3 class="bc-clump-h" id="mGates">Checked against Gates</h3>
+            <p>The two drives worked in the Gates PowerGrip GT2 design manual, run through this page and through the shortcut. Lengths and center distances in inches.</p>
+            <div class="bc-tablewrap">
+              <table class="bc-table bc-mtable">
+                <thead>
+                  <tr>
+                    <th scope="col">Drive</th>
+                    <th scope="col" class="is-numeric">Belt</th>
+                    <th scope="col" class="is-numeric">Gates</th>
+                    <th scope="col" class="is-numeric">This page</th>
+                    <th scope="col" class="is-numeric">Shortcut</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th scope="row">72/144<span class="bc-sub">8 mm pitch</span></th>
+                    <td class="is-numeric">94.49</td>
+                    <td class="is-numeric">30.02</td>
+                    <td class="is-numeric"><b>30.0199</b></td>
+                    <td class="is-numeric">30.0289</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">36/72<span class="bc-sub">14 mm pitch</span></th>
+                    <td class="is-numeric">90.94</td>
+                    <td class="is-numeric">30.42</td>
+                    <td class="is-numeric"><b>30.4241</b></td>
+                    <td class="is-numeric">30.4318</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="bc-mafter">The shortcut misses both in the second decimal.</p>
+          </section>
+
+          <section class="bc-mblock" aria-labelledby="mMesh">
+            <h3 class="bc-clump-h" id="mMesh">Teeth in mesh</h3>
+            <p set:html={prose('The small pulley, with $N_s$ grooves, is wrapped through')}></p>
+            <div class="bc-eq" set:html={tex(String.raw`\theta = \pi - 2\varphi`, true)}></div>
+            <div class="bc-eq" set:html={tex(String.raw`\text{teeth in mesh} = N_s\,\frac{\theta}{2\pi}`, true)}></div>
+            <p>Gates rates its belts at six or more teeth in mesh and takes 20% off the rating for each tooth short of six, so the page flags anything under 6.</p>
+          </section>
+
+          <section class="bc-mblock" aria-labelledby="mPick">
+            <h3 class="bc-clump-h" id="mPick">Which belt to buy</h3>
+            <p>A belt has a whole number of teeth, so the exact length almost never exists. goBILDA advises rounding up and taking up the slack with a tensioner, because a belt rounded down runs too tight. The pick is the closest belt inside your fit tolerance, otherwise the next longer one.</p>
+            <p>The tolerance starts at 0.05 mm, the tight end of the 0.05 to 0.08 mm Gates says a fixed-center drive has to hold.</p>
+          </section>
+
+          <section class="bc-mblock" aria-labelledby="mCat">
+            <h3 class="bc-clump-h" id="mCat">Catalogs</h3>
+            <p>Read from each maker's site on {longDate}. A row is only what a product page or listing actually showed, so a size a maker sells can still be missing, and a belt no checked catalog lists reads Not in database.</p>
+            <div class="bc-tablewrap">
+              <table class="bc-table bc-mtable">
+                <thead>
+                  <tr>
+                    <th scope="col">Maker</th>
+                    <th scope="col" class="is-numeric">Belts listed</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {MAKERS.filter((m) => counts[m.id]).map((m) => (
+                    <tr>
+                      <th scope="row"><a href={m.home} target="_blank" rel="noopener">{m.name}</a></th>
+                      <td class="is-numeric">{counts[m.id]}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+
+        <p class="bc-mfoot">
+          Picking the ratio this belt carries? The{' '}
+          <a href={`${base}/drivetrain/`}>drivetrain calculator</a> models the
+          motor, the gearing and the run they add up to.
+        </p>
+      </div>
+    </section>
+  </div>
+</BaseLayout>
+
+<style is:global>
+  /* ══════════════════════════════════════════════════════════════════════════
+     /belt: the drivetrain report's sheet, one size smaller.
+     Light neutral document, hairline groups, one inverted block (the answer).
+     Colour is rationed the drivetrain way: grape for "this is your
+     configuration or the pick", burnt orange for "this is a limit".
+
+     Global on purpose: table rows, stocked-belt options and datalists are
+     injected at runtime, and Astro's scoped styles never match injected
+     nodes. Everything is .bc- prefixed, and the tokens live on .bc-shell
+     only, so nothing outside this page ever sees them.
+     ═════════════════════════════════════════════════════════════════════════ */
+
+  .bc-shell {
+    /* SURFACES: the site's pale slate, lifted and pressed, plus the inverted
+       indigo the answer sits on. Depth is a surface step and a hairline. */
+    --s-canvas: #C9CFDD;
+    --s-panel:  #D9DDE7;
+    --s-inset:  #BDC4D4;
+    --s-ink:    #10254F;
+
+    /* INK: three levels, every one AA on all three light surfaces. */
+    --ink-1: #10254F;
+    --ink-2: #303D6A;
+    --ink-3: #44506F;
+
+    --rule-hair:   #B9C0D0;
+    --rule:        #A8B1C5;
+    --rule-strong: #8A94AF;
+    --rule-axis:   #44506F;
+
+    /* The site's grape one step deeper, so it clears AA as small text. */
+    --accent:      #75346F;
+    --accent-wash: #CDC8D8;
+    --accent-ink:  #632B61;
+
+    /* Burnt orange, limits only: too few teeth in mesh, pulleys that hit. */
+    --warn-line: #B84E00;
+    --warn-text: #843900;
+    --warn-wash: #D6CFCF;
+
+    --on-ink-1:      #EDF0F6;
+    --on-ink-2:      #C9CFDD;
+    --on-ink-3:      #97A2BC;
+    --on-ink-accent: #C99BC7;
+    --on-ink-warn:   #E8833A;
+    --on-ink-rule:   #303D6A;
+
+    --bc-font-sans: var(--font-text);
+    --bc-font-mono: var(--font-code);
+
+    --t-verdict: 700 clamp(2.5rem, 5vw, 3.5rem)/1.00 var(--bc-font-sans);
+    --t-h1:      500 clamp(2.1rem, 3.8vw, 2.9rem)/1.08 var(--font-display);
+    --t-h2:      700 1.375rem/1.25 var(--bc-font-sans);
+    --t-h3:      700 1rem/1.35 var(--bc-font-sans);
+    --t-label:   700 0.75rem/1.30 var(--bc-font-sans);
+    --t-body:    400 1rem/1.62 var(--bc-font-sans);
+    --t-ui:      400 0.875rem/1.45 var(--bc-font-sans);
+    --t-num:     400 0.875rem/1.45 var(--bc-font-mono);
+    --t-caption: 400 0.8125rem/1.55 var(--bc-font-sans);
+    --t-micro:   500 0.6875rem/1.35 var(--bc-font-mono);
+
+    --sp-1: 4px;   --sp-2: 8px;   --sp-3: 12px;  --sp-4: 16px;  --sp-5: 20px;
+    --sp-6: 24px;  --sp-8: 32px;  --sp-10: 40px; --sp-12: 48px; --sp-20: 80px;
+  }
+
+  /* ─── SHELL ──────────────────────────────────────────────────────────── */
+  .bc-shell {
+    max-width: 84rem;
+    margin-inline: auto;
+    padding-inline: clamp(1rem, 3vw, 2.5rem);
+    padding-block: clamp(3rem, 7vh, 5rem) var(--sp-20);
+    background: var(--s-canvas);
+    font-family: var(--bc-font-sans);
+    font-weight: 400;
+    color: var(--ink-2);
+  }
+  /* The `font:` shorthand resets the figure setting, and every reading on
+     this page is a number, so tabular lining figures go on the whole tree. */
+  .bc-shell, .bc-shell * { font-variant-numeric: lining-nums tabular-nums; }
+  body:has(.bc-shell) { background-color: var(--s-canvas); }
+  .bc-shell {
+    background-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='0.018'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 160px 160px;
+  }
+  .bc-shell :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .bc-shell ::selection { background: var(--accent-wash); color: var(--ink-1); }
+  .bc-shell a { color: var(--accent); }
+
+  .bc-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 2.5rem;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .bc-shell a.bc-back { color: var(--ink-3); }
+  .bc-back svg { width: 0.85rem; height: 0.85rem; }
+  /* Coarse pointers: the tap box grows upward so the glyphs stay put. */
+  @media (pointer: coarse) {
+    .bc-back { padding-top: 1.6rem; margin-top: -1.6rem; }
+  }
+
+  .bc-title {
+    font: var(--t-h1);
+    letter-spacing: 0.005em;
+    color: var(--ink-1);
+    margin: var(--sp-3) 0 0;
+  }
+
+  /* ─── SECTION ────────────────────────────────────────────────────────── */
+  .bc-section {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    margin-top: var(--sp-12);
+  }
+  .bc-body {
+    min-width: 0;
+    padding-top: var(--sp-6);
+    border-top: 1px solid var(--rule-strong);
+  }
+  .bc-panel-h {
+    font: var(--t-h2);
+    letter-spacing: -0.010em;
+    color: var(--ink-1);
+    margin: 0;
+  }
+  .bc-panel { margin-top: var(--sp-6); }
+
+  /* ─── GROUPS ─────────────────────────────────────────────────────────────
+     No boxes: a group is a stack of labelled fields, told apart from the
+     next by a hairline. Three columns once there is room for three. */
+  .bc-clumps { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-5); }
+  .bc-clump { min-width: 0; }
+  .bc-clumps > .bc-clump + .bc-clump {
+    border-top: 1px solid var(--rule-hair);
+    padding-top: var(--sp-5);
+  }
+  .bc-clump-h { font: var(--t-h3); color: var(--ink-2); margin: 0 0 var(--sp-4); }
+  @media (min-width: 62rem) {
+    .bc-clumps { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 var(--sp-8); }
+    .bc-clumps > .bc-clump + .bc-clump {
+      border-top: 0;
+      padding-top: 0;
+      border-left: 1px solid var(--rule-hair);
+      padding-left: var(--sp-6);
+    }
+  }
+
+  /* ─── FIELDS ─────────────────────────────────────────────────────────── */
+  .bc-mt { margin-top: var(--sp-4); }
+  .bc-field { display: flex; flex-direction: column; gap: var(--sp-2); min-width: 0; }
+  .bc-field[hidden] { display: none; }
+  .bc-field > label {
+    display: block;
+    font: var(--t-ui);
+    color: var(--ink-3);
+  }
+  .bc-shell input[type="number"],
+  .bc-shell select {
+    font-family: var(--bc-font-mono);
+    font-size: 0.875rem;
+    font-weight: 400;
+    color: var(--ink-1);
+    background: var(--s-inset);
+    border: 1px solid var(--rule);
+    border-bottom-color: var(--rule-strong);
+    border-radius: 0;
+    padding: 8px 10px;
+    width: 100%;
+    height: 36px;
+  }
+  .bc-shell input:hover,
+  .bc-shell select:hover { border-color: var(--rule-strong); }
+  .bc-shell input:focus-visible,
+  .bc-shell select:focus-visible { background: var(--s-panel); border-color: var(--accent); }
+  .bc-shell select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%235A6169' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 28px;
+  }
+
+  /* ─── DRIVER AND SOLVED ──────────────────────────────────────────────────
+     The spacing field you typed into is a filled well framed in full ink,
+     with a filled mark on its label. The two the page solved are hollow: no
+     well, a dashed frame, an open mark. Typing into a hollow one fills it and
+     empties the other two. The marks are the drivetrain legend's filled and
+     open squares, so the page needs no words for it. */
+  .bc-field[data-drv] > label { display: flex; align-items: center; gap: var(--sp-2); }
+  .bc-field[data-drv] > label::before {
+    content: "";
+    flex: none;
+    width: 8px;
+    height: 8px;
+    box-sizing: border-box;
+    border: 1px solid var(--ink-3);
+  }
+  .bc-field[data-role="driver"] > label { color: var(--ink-1); }
+  .bc-field[data-role="driver"] > label::before { background: var(--ink-1); border-color: var(--ink-1); }
+  .bc-shell .bc-field[data-role="driver"] input { border-color: var(--ink-1); }
+  .bc-shell .bc-field[data-role="solved"] input {
+    background: transparent;
+    border-style: dashed;
+    border-color: var(--rule-strong);
+    color: var(--ink-2);
+  }
+  .bc-shell .bc-field[data-role="solved"] input:focus-visible { background: var(--s-panel); border-style: solid; border-color: var(--accent); }
+
+  /* ─── CHECKBOXES ─────────────────────────────────────────────────────── */
+  .bc-check {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    min-height: 28px;
+    font: var(--t-ui);
+    color: var(--ink-2);
+    cursor: pointer;
+  }
+  .bc-check input {
+    flex: none;
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: var(--ink-1);
+  }
+  .bc-msg {
+    margin: var(--sp-2) 0 0;
+    min-height: 1.2rem;
+    font-family: var(--bc-font-mono);
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: var(--ink-3);
+  }
+  .bc-msg.is-off { color: var(--warn-text); }
+
+  .bc-makers {
+    margin: var(--sp-6) 0 0;
+    padding: var(--sp-5) 0 0;
+    border: 0;
+    border-top: 1px solid var(--rule-hair);
+    min-width: 0;
+  }
+  .bc-makers legend {
+    float: left;
+    width: 100%;
+    padding: 0;
+    margin: 0 0 var(--sp-3);
+    font: var(--t-h3);
+    color: var(--ink-2);
+  }
+  .bc-makers-list {
+    clear: both;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-1) var(--sp-6);
+  }
+
+  /* ─── BUTTONS ────────────────────────────────────────────────────────── */
+  .bc-acts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+    margin: var(--sp-4) 0 var(--sp-5);
+  }
+  .bc-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 36px;
+    padding: 0 16px;
+    font-family: var(--bc-font-sans);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-1);
+    background: transparent;
+    border: 1px solid var(--rule-axis);
+    border-radius: 0;
+    cursor: pointer;
+  }
+  .bc-btn-primary { background: var(--ink-1); border-color: var(--ink-1); color: var(--on-ink-1); }
+  .bc-btn-ghost { border-color: transparent; color: var(--ink-3); padding-inline: var(--sp-2); }
+
+  .bc-session {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--sp-3);
+    margin: var(--sp-5) 0 0;
+    font: var(--t-caption);
+    color: var(--ink-3);
+  }
+  .bc-session[hidden] { display: none; }
+  .bc-session::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border: 1px solid var(--ink-3);
+    flex: none;
+  }
+  .bc-session button {
+    font: var(--t-ui);
+    font-weight: 500;
+    color: var(--accent);
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  /* ─── THE ANSWER: the one inverted block ───────────────────────────────── */
+  .bc-board {
+    background: var(--s-ink);
+    color: var(--on-ink-2);
+    padding: var(--sp-6);
+    margin: var(--sp-5) 0 0;
+  }
+  .bc-board-k {
+    margin: 0;
+    font: var(--t-label);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--on-ink-3);
+  }
+  .bc-board-n {
+    margin: var(--sp-3) 0 0;
+    font: var(--t-verdict);
+    letter-spacing: -0.022em;
+    color: var(--on-ink-1);
+    white-space: nowrap;
+  }
+  .bc-board-n small {
+    font-family: var(--bc-font-mono);
+    font-size: 0.32em;
+    font-weight: 400;
+    letter-spacing: 0;
+    color: var(--on-ink-3);
+  }
+  /* The part numbers are what gets typed into an order, so they take the
+     only accent spent on legibility, as the drivetrain recipe line does. */
+  .bc-board-recipe {
+    margin: var(--sp-3) 0 0;
+    font-family: var(--bc-font-mono);
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--on-ink-accent);
+    overflow-wrap: anywhere;
+  }
+  /* A maker and its part number wrap as one unit, never across the space
+     between them. */
+  .bc-shell .bc-board-recipe a { color: var(--on-ink-accent); white-space: nowrap; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+  .bc-board-recipe .bc-sep { color: var(--on-ink-3); }
+  .bc-board-sub {
+    margin: var(--sp-2) 0 0;
+    font-family: var(--bc-font-mono);
+    font-size: 0.8125rem;
+    line-height: 1.45;
+    color: var(--on-ink-3);
+  }
+  .bc-board-sub b { color: var(--on-ink-2); font-weight: 500; }
+  .bc-board-sub.is-warn b { color: var(--on-ink-warn); }
+  .bc-board-cc {
+    margin-top: var(--sp-5);
+    padding-top: var(--sp-5);
+    border-top: 1px solid var(--on-ink-rule);
+  }
+  .bc-board-rule {
+    margin: var(--sp-5) 0 0;
+    padding-top: var(--sp-4);
+    border-top: 1px solid var(--on-ink-rule);
+    font: var(--t-caption);
+    color: var(--on-ink-2);
+  }
+  .bc-board-rule:empty { display: none; }
+  @media (min-width: 52rem) {
+    .bc-board {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      column-gap: var(--sp-12);
+      padding: var(--sp-8);
+    }
+    .bc-board-cc {
+      margin: 0;
+      padding: 0 0 0 var(--sp-8);
+      border-top: 0;
+      border-left: 1px solid var(--on-ink-rule);
+    }
+    .bc-board-rule { grid-column: 1 / -1; }
+  }
+
+  /* ─── READOUTS ───────────────────────────────────────────────────────── */
+  .bc-readouts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--sp-4) var(--sp-6);
+    margin: 0;
+    padding-top: var(--sp-5);
+    border-top: 1px solid var(--rule);
+  }
+  @media (min-width: 46rem) {
+    .bc-readouts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+  @media (min-width: 72rem) {
+    .bc-readouts { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  }
+  .bc-readouts > div { min-width: 0; }
+  .bc-readouts dt {
+    font: var(--t-label);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .bc-readouts dd {
+    margin: var(--sp-1) 0 0;
+    font-family: var(--bc-font-mono);
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--ink-1);
+  }
+  .bc-readouts > .is-warn dt,
+  .bc-readouts > .is-warn dd { color: var(--warn-text); }
+  .bc-warn {
+    margin: var(--sp-4) 0 0;
+    font: var(--t-caption);
+    color: var(--warn-text);
+  }
+  .bc-warn:empty { display: none; }
+
+  /* ─── THE BELT TABLE: a datasheet, rows not tiles ──────────────────────
+     Three columns so it holds at 390px with no scroller: the length rides
+     under the tooth count and the fit under the center distance. */
+  .bc-table-h {
+    margin: var(--sp-8) 0 var(--sp-3);
+    font: var(--t-label);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .bc-tablewrap { min-width: 0; }
+  .bc-table { width: 100%; border-collapse: collapse; table-layout: auto; }
+  .bc-table th[scope="col"] {
+    font: var(--t-label);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    text-align: left;
+    background: var(--s-inset);
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--rule-axis);
+  }
+  .bc-table th[scope="row"],
+  .bc-table td {
+    font: var(--t-num);
+    color: var(--ink-1);
+    text-align: left;
+    vertical-align: top;
+    padding: 10px;
+    border-bottom: 1px solid var(--rule-hair);
+  }
+  .bc-table th.is-numeric,
+  .bc-table td.is-numeric { text-align: right; }
+  .bc-table b { font-weight: 500; }
+  .bc-sub { display: block; margin-top: 2px; font: var(--t-micro); letter-spacing: 0.02em; color: var(--ink-3); }
+  /* The pick's tooth count goes grape and the row says so in words, so the
+     mark is never colour alone. Grape rides on type here, never on a frame. */
+  .bc-table tr.is-pick th[scope="row"] b { color: var(--accent); }
+  .bc-tag {
+    display: inline-block;
+    margin-top: var(--sp-1);
+    padding: 1px 6px;
+    font: var(--t-micro);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    background: var(--accent-wash);
+    color: var(--accent-ink);
+  }
+  .bc-sub.is-warn { color: var(--warn-text); }
+  .bc-buy { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-5); }
+  .bc-buy a { display: inline-block; text-decoration: none; }
+  .bc-buy .bc-maker { display: block; font: var(--t-caption); color: var(--ink-2); }
+  .bc-buy .bc-part { display: block; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; overflow-wrap: anywhere; }
+  .bc-none { font: var(--t-caption); color: var(--ink-3); }
+  .bc-empty { font: var(--t-caption); color: var(--ink-3); }
+  @media (max-width: 30rem) {
+    .bc-table th[scope="col"], .bc-table th[scope="row"], .bc-table td { padding-inline: 6px; }
+  }
+
+  /* ─── METHOD: the sheet's back page ────────────────────────────────────
+     Ruled blocks in two columns once there is room, told apart the way the
+     input groups are: a hairline over each row and one between the two
+     columns, no boxes. Text keeps a reading measure inside its block; the
+     equations and tables take the block's full width. */
+  .bc-method {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    margin-top: var(--sp-6);
+    border-bottom: 1px solid var(--rule-hair);
+  }
+  .bc-mblock {
+    min-width: 0;
+    padding: var(--sp-5) 0 var(--sp-6);
+    border-top: 1px solid var(--rule-hair);
+    font: var(--t-body);
+    color: var(--ink-2);
+  }
+  .bc-mblock p { margin: 0 0 var(--sp-3); max-width: 68ch; }
+  .bc-mblock p:last-child { margin-bottom: 0; }
+  .bc-mblock p.bc-mafter { margin-top: var(--sp-3); }
+  .bc-mblock a,
+  .bc-mfoot a { color: var(--accent); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+  @media (min-width: 62rem) {
+    .bc-method { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .bc-mblock:nth-child(odd) { padding-right: var(--sp-8); }
+    .bc-mblock:nth-child(even) { padding-left: var(--sp-8); border-left: 1px solid var(--rule-hair); }
+  }
+
+  /* KaTeX, typeset at build time. Inline math is set a step under KaTeX's
+     own 1.21em: Ubuntu's x-height is large and Computer Modern's is not, so
+     at 1.21 the symbols stood too big beside the words around them. Display
+     equations take the ink and sit flush left (fleqn), indented one step off
+     the text's edge; one wider than a phone scrolls on its own line rather
+     than pushing the page sideways. */
+  .bc-mblock .katex { font-size: 1.1em; color: var(--ink-1); }
+  .bc-eq {
+    margin: var(--sp-3) 0 var(--sp-4);
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  .bc-eq + .bc-eq { margin-top: calc(-1 * var(--sp-1)); }
+  .bc-eq .katex-display { margin: 0; }
+  /* One indent, this page's step rather than KaTeX's 2em on top of it. A
+     phone gets none, and a size down, which is what keeps the belt-length
+     line whole at 360px. */
+  .bc-eq .katex-display.fleqn > .katex { padding-left: var(--sp-6); font-size: 1.16em; }
+  @media (max-width: 30rem) {
+    .bc-eq .katex-display.fleqn > .katex { padding-left: 0; font-size: 1.04em; }
+  }
+
+  .bc-mtable { margin-top: var(--sp-2); }
+  .bc-mtable th[scope="row"] a { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+  .bc-mfoot {
+    margin: var(--sp-5) 0 0;
+    font: var(--t-body);
+    color: var(--ink-2);
+  }
+
+  .bc-srsum,
+  .bc-visually-hidden {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* ─── HOVER, fine pointer only: colour moves, geometry never does ────── */
+  @media (hover: hover) and (pointer: fine) {
+    .bc-btn:hover { background: var(--accent); border-color: var(--accent); color: var(--on-ink-1); }
+    .bc-btn-ghost:hover { background: transparent; border-color: transparent; color: var(--accent-ink); }
+    .bc-shell a.bc-back:hover { color: var(--accent); }
+    .bc-session button:hover { color: var(--accent-ink); }
+    .bc-buy a:hover .bc-part { color: var(--accent-ink); }
+    .bc-shell .bc-board-recipe a:hover { color: var(--on-ink-1); }
+  }
+
+  /* ─── TAP TARGETS ────────────────────────────────────────────────────── */
+  @media (max-width: 64rem), (pointer: coarse) {
+    .bc-btn { min-height: 44px; }
+    .bc-check { min-height: 44px; }
+    .bc-shell input[type="number"],
+    .bc-shell select { height: 44px; }
+  }
+</style>
+
+<script>
+  // Plain DOM, re-initializable across view transitions (site convention).
+  import { beltLength, centreDistance, pitchDia, wrap } from '../lib/belt-geometry';
+  import { BELTS, MAKERS, PRESETS, PLD, type Belt, type Profile } from '../data/belts';
+
+  type Drv = 'cc' | 'bt' | 'bl';
+  const DRVS: Drv[] = ['cc', 'bt', 'bl'];
+  const TEETH_MIN = 8, TEETH_MAX = 200;
+  // goBILDA's rounding advice is the pick rule, quoted in Method.
+  const STORE = 'bc-cfg';
+
+  const init = () => {
+    const shell = document.querySelector<HTMLElement>('.bc-shell');
+    if (!shell || shell.dataset.bcInit) return;
+    shell.dataset.bcInit = 'true';
+    const $ = <T extends HTMLElement = HTMLElement>(id: string) => shell.querySelector<T>('#' + id)!;
+    const input = (id: string) => $<HTMLInputElement>(id);
+    const num = (id: string) => { const v = input(id).value.trim(); return v === '' ? NaN : Number(v); };
+    const fix = (x: number, d = 2) => (isFinite(x) ? x.toFixed(d) : '–');
+    // Trimmed figures for the solved fields: 510, 101.37, never 510.00.
+    const trim = (x: number, d = 2) => (isFinite(x) ? String(Number(x.toFixed(d))) : '');
+    const signed = (x: number) => (x > 0 ? '+' : x < 0 ? '−' : '±') + Math.abs(x).toFixed(2);
+    const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!));
+    const isWhole = (x: number) => Math.abs(x - Math.round(x)) < 1e-6;
+
+    const makerBy = Object.fromEntries(MAKERS.map((m) => [m.id, m]));
+    const makerBoxes = [...shell.querySelectorAll<HTMLInputElement>('.bc-makers input[type="checkbox"]')];
+
+    let drv: Drv = 'cc';
+    // The ratio the lock holds, driven over driving, as it was when locked.
+    // Stored rather than re-read so a pulley that had to round can come back
+    // to the exact ratio when the other one moves again.
+    let lockRatio = 0;
+    // Set while a shared link's payload is on screen; the first edit after it
+    // drops the fragment, so a reload shows your own work, not the link again.
+    let fromLink = false;
+    // The field that drove before the current one, and what it held, so a
+    // reader who clears a solved field and walks away gets the old drive
+    // back instead of a page of dashes.
+    let handBack: { drv: Drv; val: string } | null = null;
+    // Nothing is saved until the reader changes something: a first visit
+    // that only looked should not come back as "your last session".
+    let touched = false;
+
+    // ── Profile ──────────────────────────────────────────────────────────
+    interface Prof { pitch: number; cat: Profile | null; pulleys: number[] | null; pld: number | null; maker: string | null }
+    const prof = (): Prof => {
+      const k = $<HTMLSelectElement>('prof').value;
+      const p = PRESETS[k];
+      if (p) return { pitch: p.pitch, cat: p.profile, pulleys: p.pulleys, pld: PLD[p.profile], maker: 'goBILDA' };
+      const form = $<HTMLSelectElement>('form').value;
+      const pitch = num('pitch');
+      // A custom belt only meets the catalog when it IS one of its profiles:
+      // a 5 mm GT2 or a T5 shares HTD 5's pitch and fits none of its pulleys.
+      const cat: Profile | null = form === 'gt2' && Math.abs(pitch - 2) < 1e-9 ? 'GT2-2mm'
+        : form === 'htd' && Math.abs(pitch - 5) < 1e-9 ? 'HTD-5mm' : null;
+      return { pitch, cat, pulleys: null, pld: cat ? PLD[cat] : null, maker: null };
+    };
+    const makersOn = () => new Set(makerBoxes.filter((b) => b.checked).map((b) => b.value));
+
+    // Stocked belts for this profile and width in the checked catalogs, by
+    // tooth count, each list in the catalog's maker order.
+    const stockFor = (p: Prof, width: number) => {
+      const m = new Map<number, Belt[]>();
+      if (!p.cat || !isFinite(width)) return m;
+      const on = makersOn();
+      for (const b of BELTS) {
+        if (b.profile !== p.cat || Math.abs(b.width - width) > 0.01 || !on.has(b.maker)) continue;
+        if (!m.has(b.teeth)) m.set(b.teeth, []);
+        m.get(b.teeth)!.push(b);
+      }
+      return m;
+    };
+
+    // ── Lists the fields offer ───────────────────────────────────────────
+    const syncLists = (p: Prof) => {
+      $('bc-teeth').innerHTML = (p.pulleys ?? []).map((t) => `<option value="${t}"></option>`).join('');
+      const widths = p.cat ? [...new Set(BELTS.filter((b) => b.profile === p.cat).map((b) => b.width))].sort((a, b) => a - b) : [];
+      $('bc-widths').innerHTML = widths.map((w) => `<option value="${w}"></option>`).join('');
+      // Arrow keys on the length step whole belts.
+      const bl = input('bl');
+      if (isFinite(p.pitch) && p.pitch > 0) { bl.step = String(p.pitch); bl.min = String(p.pitch); }
+    };
+    const syncCustom = () => {
+      const custom = $<HTMLSelectElement>('prof').value === 'custom';
+      shell.querySelectorAll<HTMLElement>('[data-custom]').forEach((el) => { el.hidden = !custom; });
+    };
+
+    // ── Driver ───────────────────────────────────────────────────────────
+    const markDriver = () => {
+      for (const id of DRVS) {
+        const f = shell.querySelector<HTMLElement>(`.bc-field[data-drv="${id}"]`)!;
+        f.dataset.role = id === drv ? 'driver' : 'solved';
+        f.querySelector('[data-drv-sr]')!.textContent = id === drv ? ', set by you' : ', solved';
+      }
+    };
+
+    // ── Ratio lock ───────────────────────────────────────────────────────
+    const lockMsg = (text: string, off = false) => {
+      const m = $('lockMsg');
+      m.textContent = text;
+      m.classList.toggle('is-off', off);
+    };
+    const ratioText = (r: number) => `${r.toFixed(2)}:1`;
+    // The pulley that follows a locked ratio: the nearest stocked size on a
+    // preset (a ratio nobody sells is no use), the nearest whole tooth on a
+    // custom belt. A tie goes to the larger pulley.
+    const follow = (want: number, p: Prof) => {
+      if (p.pulleys && p.pulleys.length) {
+        return p.pulleys.reduce((best, t) => {
+          const d = Math.abs(t - want), db = Math.abs(best - want);
+          return d < db - 1e-9 || (Math.abs(d - db) <= 1e-9 && t > best) ? t : best;
+        }, p.pulleys[0]);
+      }
+      return Math.min(TEETH_MAX, Math.max(TEETH_MIN, Math.round(want)));
+    };
+    const applyLock = (moved: 'na' | 'nb') => {
+      if (!input('lock').checked || !(lockRatio > 0)) return;
+      const p = prof();
+      const src = num(moved);
+      if (!(src >= 1)) return;
+      const other = moved === 'na' ? 'nb' : 'na';
+      const want = moved === 'na' ? src * lockRatio : src / lockRatio;
+      const got = follow(want, p);
+      input(other).value = String(got);
+      const nowR = num('nb') / num('na');
+      if (Math.abs(got - want) < 1e-6) { lockMsg(`Locked at ${ratioText(lockRatio)}.`); return; }
+      const need = `${ratioText(lockRatio)} needs ${trim(want)}T.`;
+      lockMsg(p.pulleys
+        ? `${need} Nearest ${p.maker} pulley is ${got}T, so ${ratioText(nowR)}.`
+        : `${need} Took ${got}T, so ${ratioText(nowR)}.`, true);
+    };
+    const setLock = (on: boolean) => {
+      input('lock').checked = on;
+      if (on) {
+        const a = num('na'), b = num('nb');
+        lockRatio = a > 0 && b > 0 ? b / a : 0;
+        lockMsg(lockRatio ? `Locked at ${ratioText(lockRatio)}.` : '');
+      } else {
+        lockRatio = 0;
+        lockMsg('');
+      }
+    };
+
+    // ── Snapshot, persist, share ─────────────────────────────────────────
+    const FIELDS = ['prof', 'form', 'pitch', 'width', 'na', 'nb', 'tol'];
+    const snapshot = () => {
+      const f: Record<string, string> = {};
+      for (const id of FIELDS) f[id] = input(id).value;
+      return {
+        v: 1, f, drv, val: input(drv).value,
+        lock: input('lock').checked, lr: lockRatio,
+        off: makerBoxes.filter((b) => !b.checked).map((b) => b.value),
+      };
+    };
+    const DEFAULTS = (() => {
+      const f: Record<string, string> = {};
+      for (const id of FIELDS) f[id] = input(id).defaultValue ?? '';
+      f.prof = 'htd5'; f.form = 'htd';
+      return { v: 1, f, drv: 'cc' as Drv, val: input('cc').defaultValue, lock: false, lr: 0, off: [] as string[] };
+    })();
+    // Payloads arrive from URLs; never trust the shape.
+    const applySnapshot = (d: Record<string, unknown>) => {
+      const f = (d.f && typeof d.f === 'object' ? d.f : {}) as Record<string, unknown>;
+      const profSel = $<HTMLSelectElement>('prof');
+      for (const id of FIELDS) {
+        const v = f[id];
+        const el = input(id);
+        const dv = (DEFAULTS.f as Record<string, string>)[id];
+        if (typeof v !== 'string') { el.value = dv; continue; }
+        if (el instanceof HTMLSelectElement) {
+          el.value = v;
+          if (!el.value) el.value = dv;
+        } else {
+          const n = Number(v);
+          el.value = v.trim() !== '' && isFinite(n) ? v : dv;
+        }
+      }
+      if (!profSel.value) profSel.value = 'htd5';
+      drv = DRVS.includes(d.drv as Drv) ? (d.drv as Drv) : 'cc';
+      for (const id of DRVS) input(id).value = '';
+      const val = typeof d.val === 'string' && isFinite(Number(d.val)) && d.val.trim() !== '' ? d.val : '';
+      input(drv).value = val || (drv === 'cc' ? DEFAULTS.val : '');
+      if (!input(drv).value) { drv = 'cc'; input('cc').value = DEFAULTS.val; }
+      const off = new Set(Array.isArray(d.off) ? (d.off as unknown[]).filter((x) => typeof x === 'string') as string[] : []);
+      makerBoxes.forEach((b) => { b.checked = !off.has(b.value); });
+      input('lock').checked = d.lock === true;
+      lockRatio = d.lock === true && typeof d.lr === 'number' && d.lr > 0 && d.lr < 100 ? d.lr : 0;
+      if (input('lock').checked && !lockRatio) setLock(true);
+      lockMsg(input('lock').checked ? `Locked at ${ratioText(lockRatio)}.` : '');
+      syncCustom();
+      syncLists(prof());
+      markDriver();
+    };
+    const persist = () => {
+      if (!touched) return;
+      try { localStorage.setItem(STORE, JSON.stringify(snapshot())); } catch { /* private mode */ }
+    };
+    const encodeShare = (snap: Record<string, unknown>) =>
+      btoa(unescape(encodeURIComponent(JSON.stringify(snap)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    const decodeShare = (s: string): Record<string, unknown> | null => {
+      try { return JSON.parse(decodeURIComponent(escape(atob(s.replace(/-/g, '+').replace(/_/g, '/'))))); }
+      catch { return null; }
+    };
+
+    // ── Recompute ────────────────────────────────────────────────────────
+    let raf = 0;
+    const schedule = () => { if (raf) return; raf = requestAnimationFrame(() => { raf = 0; recompute(); }); };
+    // The screen-reader line waits for typing to stop: a polite region that
+    // spoke on every keystroke would talk over the reader's own echo.
+    let srTimer = 0;
+    const speak = (text: string) => {
+      window.clearTimeout(srTimer);
+      srTimer = window.setTimeout(() => { $('srSum').textContent = text; }, 700);
+    };
+
+    const recompute = () => {
+      const p = prof();
+      const na = num('na'), nb = num('nb'), width = num('width');
+      const tol = Math.max(0, isFinite(num('tol')) ? num('tol') : 0);
+      const pitchOk = p.pitch > 0 && isFinite(p.pitch);
+      const pulleysOk = na >= 1 && nb >= 1;
+      const d1 = pitchOk ? pitchDia(na, p.pitch) : NaN, d2 = pitchOk ? pitchDia(nb, p.pitch) : NaN;
+      const ok = pitchOk && pulleysOk;
+
+      // Solve from the driver.
+      let c = NaN, len = NaN, teeth = NaN;
+      const v = num(drv);
+      if (ok && isFinite(v) && v > 0) {
+        if (drv === 'cc') { c = v; len = beltLength(c, d1, d2); teeth = len / p.pitch; }
+        else if (drv === 'bt') { teeth = v; len = teeth * p.pitch; c = centreDistance(len, d1, d2); }
+        else { len = v; teeth = len / p.pitch; c = centreDistance(len, d1, d2); }
+      }
+      if (drv !== 'cc') input('cc').value = trim(c);
+      if (drv !== 'bt') input('bt').value = trim(teeth);
+      if (drv !== 'bl') input('bl').value = trim(len);
+
+      // The stocked-belt picker: one entry per tooth count, with the makers
+      // that list it. It shows the belt on screen when that belt is stocked,
+      // and it offers only belts that go round these two pulleys without
+      // their teeth touching: a belt the geometry rejects is not a choice.
+      const stock = stockFor(p, width);
+      const keys = [...stock.keys()].sort((a, b) => a - b);
+      const reach = ok ? (d1 + d2) / 2 - (p.pld !== null ? 2 * p.pld : 0) : 0;
+      const fits = (t: number) => !ok || centreDistance(t * p.pitch, d1, d2) > reach;
+      const stockSel = $<HTMLSelectElement>('stock');
+      const opts = ['<option value="">–</option>'].concat(keys.filter(fits).map((t) => {
+        const who = [...new Set(stock.get(t)!.map((b) => makerBy[b.maker]?.short ?? b.maker))].join(', ');
+        return `<option value="${t}">${t}T, ${trim(t * p.pitch, 1)} mm (${esc(who)})</option>`;
+      })).join('');
+      if (stockSel.dataset.opts !== opts) { stockSel.innerHTML = opts; stockSel.dataset.opts = opts; }
+      stockSel.value = isFinite(teeth) && isWhole(teeth) && stock.has(Math.round(teeth)) ? String(Math.round(teeth)) : '';
+
+      // Readouts at the spacing in the fields.
+      // A spacing inside the radius difference is a finite number with no
+      // belt geometry behind it, so the wrap comes back NaN and counts as none.
+      const w0 = ok && isFinite(c) ? wrap(c, na, nb, p.pitch) : null;
+      const w = w0 && isFinite(w0.small) ? w0 : null;
+      const tim = w ? w.teethInMesh : NaN;
+      const span = w ? c * Math.cos(Math.asin(Math.abs(d1 - d2) / (2 * c))) : NaN;
+      const gap = w && p.pld !== null ? c - (d1 + d2) / 2 + 2 * p.pld : NaN;
+      $('roRatio').textContent = pulleysOk ? ratioText(nb / na) : '–';
+      $('roPd').textContent = ok ? `${fix(d1)} / ${fix(d2)} mm` : '–';
+      $('roWrap').textContent = w ? `${fix(w.small * 180 / Math.PI, 1)}°` : '–';
+      $('roTim').textContent = fix(tim, 1);
+      $('roSpan').textContent = isFinite(span) ? `${fix(span)} mm` : '–';
+      $('roGap').textContent = isFinite(gap) ? `${fix(gap)} mm` : '–';
+      $('roTimWrap').classList.toggle('is-warn', tim < 6);
+      $('roGapWrap').classList.toggle('is-warn', gap < 0);
+
+      const warns: string[] = [];
+      if (ok && isFinite(v) && v > 0 && !w) {
+        warns.push(drv === 'cc'
+          ? 'No belt wraps these pulleys at this spacing.'
+          : 'No center distance fits: this belt is shorter than one turn around the large pulley.');
+      }
+      if (tim < 6) warns.push('Under 6 teeth in mesh on the small pulley. Gates derates the belt below 6.');
+      if (gap < 0) warns.push('The pulleys overlap at this spacing.');
+      $('warn').textContent = warns.join(' ');
+
+      // ── Candidates ─────────────────────────────────────────────────────
+      // The whole-tooth belts either side of the exact one, plus the nearest
+      // stocked belt on each side when those two are not stocked themselves.
+      const body = $('candBody');
+      if (!isFinite(teeth) || !isFinite(c)) {
+        body.innerHTML = `<tr><td colspan="3" class="bc-empty">–</td></tr>`;
+        paintBoard(null, p, c, teeth, tol, false);
+        persist();
+        speak('');
+        return;
+      }
+      // Whole is tested with a tolerance, never by floor and ceil alone: a
+      // spacing that solves to 99.9999999 teeth IS the 100 tooth belt.
+      const whole = isWhole(teeth);
+      // A belt you named (by teeth, or by a length that is whole teeth) is
+      // the belt. A spacing that happens to land on whole teeth is still a
+      // spacing looking for a belt; the rule below just finds it exact.
+      const given = whole && drv !== 'cc';
+      const t0 = Math.round(teeth);
+      const lo = whole ? t0 : Math.floor(teeth), hi = whole ? t0 : Math.ceil(teeth);
+      const set = new Set<number>([lo, hi]);
+      const below = keys.filter((t) => (whole ? t < t0 : t <= lo)).pop();
+      const above = keys.find((t) => (whole ? t > t0 : t >= hi));
+      if (below !== undefined) set.add(below);
+      if (above !== undefined) set.add(above);
+      const rows = [...set].sort((a, b) => a - b).map((t) => {
+        const ct = centreDistance(t * p.pitch, d1, d2);
+        return { t, c: ct, d: ct - c, belts: stock.get(t) ?? [] };
+      }).filter((r) => isFinite(r.c));
+
+      // The pick. A belt you named is the belt. Otherwise the closest belt
+      // inside the tolerance, else the next longer one (goBILDA: rounding
+      // down runs too tight), else the next shorter one when nothing longer
+      // is stocked. Stocked belts are preferred at every step; with nothing
+      // stocked the rule runs on whole teeth alone.
+      let pick: typeof rows[number] | undefined;
+      if (given) pick = rows.find((r) => r.t === t0);
+      else {
+        const pool = rows.some((r) => r.belts.length) ? rows.filter((r) => r.belts.length) : rows.filter((r) => r.t === lo || r.t === hi);
+        const close = pool.filter((r) => Math.abs(r.d) <= tol + 1e-9).sort((a, b) => Math.abs(a.d) - Math.abs(b.d))[0];
+        pick = close ?? pool.filter((r) => r.d > 0).sort((a, b) => a.t - b.t)[0] ?? pool.filter((r) => r.d < 0).sort((a, b) => b.t - a.t)[0];
+      }
+
+      const fitWord = (d: number) => (Math.abs(d) <= tol + 1e-9 ? 'fits' : d > 0 ? 'loose' : 'tight');
+      body.innerHTML = rows.map((r) => {
+        const isPick = r === pick;
+        const yours = given && r.t === t0;
+        const fit = yours ? 'your belt' : `${signed(r.d)} ${fitWord(r.d)}`;
+        const where = r.belts.length
+          ? `<ul class="bc-buy">${r.belts.map((b) => `<li><a href="${esc(b.url)}" target="_blank" rel="noopener"><span class="bc-maker">${esc(makerBy[b.maker]?.name ?? b.maker)}</span><span class="bc-part">${esc(b.part)}</span><span class="bc-visually-hidden"> (opens in a new tab)</span></a></li>`).join('')}</ul>`
+          : `<span class="bc-none">Not in database</span>`;
+        return `<tr${isPick ? ' class="is-pick"' : ''}>`
+          + `<th scope="row"><b>${r.t}T</b><span class="bc-sub">${trim(r.t * p.pitch, 1)} mm</span>${isPick ? '<span class="bc-tag">pick</span>' : ''}</th>`
+          + `<td class="is-numeric"><b>${fix(r.c)}</b><span class="bc-sub">${fit}</span></td>`
+          + `<td>${where}</td></tr>`;
+      }).join('');
+
+      paintBoard(pick ?? null, p, c, teeth, tol, given);
+      persist();
+      speak(pick
+        ? `${given ? 'Your belt' : 'Belt to order'}: ${pick.t} teeth, ${pick.belts.length ? 'stocked by ' + [...new Set(pick.belts.map((b) => makerBy[b.maker]?.name ?? b.maker))].join(', ') : 'not in database'}. Center to center ${fix(pick.c)} millimetres.`
+        : '');
+    };
+
+    // The board shows three sources at most; the table under it lists all.
+    const BOARD_BUY = 3;
+    const paintBoard = (pick: { t: number; c: number; d: number; belts: Belt[] } | null, p: Prof, c: number, teeth: number, tol: number, given: boolean) => {
+      $('beltK').textContent = given ? 'Your belt' : 'Belt to order';
+      if (!pick) {
+        $('beltN').textContent = '–';
+        $('beltBuy').textContent = '–';
+        $('beltSub').textContent = '';
+        $('ccN').textContent = '–';
+        $('ccSub').textContent = '';
+        $('pickRule').textContent = '';
+        return;
+      }
+      $('beltN').textContent = String(pick.t);
+      const more = pick.belts.length - BOARD_BUY;
+      $('beltBuy').innerHTML = pick.belts.length
+        ? pick.belts.slice(0, BOARD_BUY).map((b) => `<a href="${esc(b.url)}" target="_blank" rel="noopener">${esc(makerBy[b.maker]?.short ?? b.maker)} ${esc(b.part)}<span class="bc-visually-hidden"> (opens in a new tab)</span></a>`).join('<span class="bc-sep"> · </span>')
+          + (more > 0 ? `<span class="bc-sep"> · ${more} more below</span>` : '')
+        : 'Not in database';
+      $('beltSub').innerHTML = `<b>${trim(pick.t * p.pitch, 1)} mm</b> pitch length${given || isWhole(teeth) ? '' : `, exact belt ${trim(teeth)}T`}`;
+      $('ccN').textContent = fix(pick.c);
+      const sub = $('ccSub');
+      if (given) {
+        sub.textContent = '';
+      } else {
+        const d = pick.d;
+        const how = Math.abs(d) <= tol + 1e-9 ? 'inside your tolerance'
+          : d > 0 ? 'loose at your spacing: add a tensioner or slot a pulley'
+          : 'tight at your spacing: move a pulley in on a slot';
+        sub.innerHTML = `<b>${signed(d)} mm</b> against your ${fix(c)}, ${how}`;
+        sub.classList.toggle('is-warn', Math.abs(d) > tol + 1e-9);
+      }
+      $('pickRule').textContent = given ? ''
+        : `The pick: the closest belt within ${trim(tol)} mm of your spacing, otherwise the next longer one. goBILDA advises against rounding down.`;
+    };
+
+    // ── Restore: URL hash beats localStorage; both get a visible note ────
+    const note = $('sessionNote'), noteText = $('sessionNoteText');
+    const restore = () => {
+      const hash = location.hash.match(/[#&]s=([A-Za-z0-9_-]+)/);
+      if (hash) {
+        const data = decodeShare(hash[1]);
+        if (data) {
+          // A garbled payload degrades to defaults, never to a dead page.
+          try { applySnapshot(data); } catch { applySnapshot(DEFAULTS); }
+          note.hidden = false;
+          noteText.textContent = 'Shared setup loaded from the link.';
+          fromLink = true;
+          return;
+        }
+      }
+      let stored: Record<string, unknown> | null = null;
+      try {
+        const raw = localStorage.getItem(STORE);
+        const d = raw ? JSON.parse(raw) : null;
+        if (d && typeof d === 'object' && d.v === 1) stored = d;
+      } catch { /* private mode, or a corrupt entry: start clean */ }
+      if (!stored) return;
+      try {
+        applySnapshot(stored);
+        note.hidden = false;
+        noteText.textContent = 'Restored your last session.';
+      } catch { applySnapshot(DEFAULTS); }
+    };
+    const dropLink = () => {
+      if (!fromLink) return;
+      fromLink = false;
+      if (location.hash) history.replaceState(history.state, '', location.pathname + location.search);
+    };
+    const resetAll = () => {
+      try { localStorage.removeItem(STORE); } catch { /* private mode */ }
+      fromLink = false;
+      touched = false;
+      handBack = null;
+      if (location.hash) history.replaceState(history.state, '', location.pathname + location.search);
+      applySnapshot(DEFAULTS);
+      note.hidden = true;
+      schedule();
+    };
+
+    // Blur-time tidy for typed numbers. Only when focus leaves, so nobody
+    // has a half-typed value rewritten under them: empty or garbage returns
+    // to the last good value, anything past the field's range lands on its
+    // end, and tooth counts land on whole teeth.
+    const lastGood: Record<string, string> = {};
+    const tidy = (el: HTMLInputElement) => {
+      const lo = parseFloat(el.min), hi = parseFloat(el.max);
+      let v = el.value.trim() === '' ? NaN : Number(el.value);
+      if (!isFinite(v)) {
+        // A spacing field that took the drive and was left empty hands the
+        // drive back to the field that had it, with the value it had.
+        if (el.id === drv && handBack) {
+          drv = handBack.drv;
+          input(drv).value = handBack.val;
+          handBack = null;
+          markDriver();
+          return;
+        }
+        if (el.id in lastGood) el.value = lastGood[el.id];
+        return;
+      }
+      if (el.id === 'na' || el.id === 'nb' || el.id === 'bt') v = Math.round(v);
+      if (isFinite(lo)) v = Math.max(lo, v);
+      if (isFinite(hi)) v = Math.min(hi, v);
+      if (Number(el.value) !== v) el.value = String(Math.round(v * 1e4) / 1e4);
+      lastGood[el.id] = el.value;
+      if (el.id === drv) handBack = null;
+    };
+
+    // ── Wiring ───────────────────────────────────────────────────────────
+    applySnapshot(DEFAULTS);
+    restore();
+    for (const id of [...FIELDS, ...DRVS]) if (input(id).value) lastGood[id] = input(id).value;
+
+    const edited = () => { touched = true; dropLink(); schedule(); };
+    $('bc-inputs').addEventListener('input', (e) => {
+      const t = e.target as HTMLElement;
+      if (t.id === 'cc' || t.id === 'bt' || t.id === 'bl') {
+        if (drv !== t.id) {
+          handBack = { drv, val: input(drv).value };
+          drv = t.id as Drv;
+          markDriver();
+        }
+      } else if (t.id === 'na' || t.id === 'nb') {
+        applyLock(t.id);
+      }
+      edited();
+    });
+    $('bc-inputs').addEventListener('change', (e) => {
+      const t = e.target as HTMLElement;
+      if (t instanceof HTMLInputElement && t.type === 'number') {
+        tidy(t);
+        if (t.id === 'na' || t.id === 'nb') applyLock(t.id);
+        edited();
+      }
+    });
+    $('prof').addEventListener('change', () => {
+      const p = PRESETS[$<HTMLSelectElement>('prof').value];
+      // A preset brings its own width; Custom keeps whatever was there.
+      if (p) input('width').value = String(p.width);
+      syncCustom();
+      syncLists(prof());
+      edited();
+    });
+    $('form').addEventListener('change', () => { syncLists(prof()); edited(); });
+    $('pitch').addEventListener('input', () => syncLists(prof()));
+    $('lock').addEventListener('change', () => { setLock(input('lock').checked); edited(); });
+    // Naming a stocked belt is typing its teeth: the belt drives.
+    $('stock').addEventListener('change', () => {
+      const v = $<HTMLSelectElement>('stock').value;
+      if (!v) return;
+      input('bt').value = v;
+      lastGood.bt = v;
+      drv = 'bt';
+      handBack = null;
+      markDriver();
+      edited();
+    });
+    $('sessionReset').addEventListener('click', resetAll);
+    $('resetBtn').addEventListener('click', resetAll);
+
+    const copyBtn = $<HTMLButtonElement>('copyLink');
+    let copyTimer = 0;
+    copyBtn.addEventListener('click', async () => {
+      const url = location.origin + location.pathname + '#s=' + encodeShare(snapshot());
+      const done = (label: string) => {
+        copyBtn.textContent = label;
+        window.clearTimeout(copyTimer);
+        copyTimer = window.setTimeout(() => { copyBtn.textContent = 'Copy link'; }, 1400);
+      };
+      try { await navigator.clipboard.writeText(url); done('Copied'); }
+      catch { prompt('Copy this link:', url); }
+    });
+
+    // A shared link opened while already on the page is a same-document
+    // navigation: no reload, no init. Apply the payload on hashchange.
+    const onHash = () => {
+      const m = location.hash.match(/[#&]s=([A-Za-z0-9_-]+)/);
+      if (!m) return;
+      const data = decodeShare(m[1]);
+      if (!data) return;
+      try { applySnapshot(data); } catch { return; }
+      note.hidden = false;
+      noteText.textContent = 'Shared setup loaded from the link.';
+      fromLink = true;
+      schedule();
+    };
+    window.addEventListener('hashchange', onHash);
+    document.addEventListener('astro:before-swap', () => {
+      window.removeEventListener('hashchange', onHash);
+      cancelAnimationFrame(raf);
+      window.clearTimeout(srTimer);
+    }, { once: true });
+
+    recompute();
+  };
+
+  init();
+  document.addEventListener('astro:page-load', init);
+</script>

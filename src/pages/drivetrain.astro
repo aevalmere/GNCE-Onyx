@@ -32,7 +32,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
 
 <BaseLayout
   title="FTC drivetrain simulator"
-  description="An FTC drivetrain calculator that charges braking time, models the fuse as thermal, recommends gearing you can order, shows its uncertainty windows, and animates the run."
+  description="An FTC drivetrain calculator that charges braking and the fuse, recommends gearing you can order, works out what your robot can push, and times Pedro Pathing 3 paths on it."
   light
   keepHash
 >
@@ -172,7 +172,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
           <dl class="dt-readouts">
             <div><dt>Total reduction</dt><dd id="roG">–</dd></div>
             <div><dt>Wheel free speed</dt><dd id="roRPM">–</dd></div>
-            <div><dt>Stall torque at wheel</dt><dd id="roTau">–</dd></div>
+            <div><dt>Wheel stall torque, per motor</dt><dd id="roTau">–</dd></div>
             <div><dt>Net drive efficiency</dt><dd id="roEta">–</dd></div>
           </dl>
         </div>
@@ -247,6 +247,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
           <div class="dt-chartbox"><canvas id="cProfile" role="img" aria-label="Robot speed in tiles per second versus time, including the braking phase"></canvas></div>
           <p class="dt-legend">
             <span><i class="dt-sw dt-sw-model"></i>model (tiles/s)</span>
+            <span><i class="dt-sw dt-sw-brake"></i>braking (tiles/s)</span>
             <span><i class="dt-sw dt-sw-ref"></i>top speed (tiles/s)</span>
           </p>
           <p class="dt-srsum" id="srProfile"></p>
@@ -268,12 +269,34 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
           <div class="dt-chartbox"><canvas id="cAmp" role="img" aria-label="Total current draw versus robot speed with the sustained and burst current limits"></canvas></div>
           <p class="dt-legend">
             <span><i class="dt-sw dt-sw-model"></i>total draw (A)</span>
+            <span><i class="dt-sw dt-sw-over"></i>draw over the sustained limit</span>
             <span><i class="dt-sw dt-sw-limit"></i>sustained limit (A)</span>
             <span><i class="dt-sw dt-sw-dash"></i>burst limit (A)</span>
           </p>
           <p class="dt-srsum" id="srAmp"></p>
         </figure>
       </div>
+
+      <!-- Pushing: the same wheel force the figures above draw, read at a
+           standstill and set against what is in the way. Defender constants
+           and their sources: docs/drivetrain-research-notes.md, "Pushing". -->
+      <figure class="dt-sheet dt-sheet-push">
+        <figcaption class="dt-sheet-h" id="pushHead">Pushing</figcaption>
+        <div class="dt-stats" id="pushStats"></div>
+        <div class="dt-pin-scroll dt-push-scroll">
+          <table class="dt-pintable dt-pushtable" aria-labelledby="pushHead">
+            <thead><tr>
+              <th scope="col">Opponent</th>
+              <th scope="col" class="is-numeric">Mecanum, wheels locked <span class="dt-th-u">(tiles/s)</span></th>
+              <th scope="col" class="is-numeric">Traction, wheels locked <span class="dt-th-u">(tiles/s)</span></th>
+              <th scope="col" class="is-numeric">Coasting <span class="dt-th-u">(tiles/s)</span></th>
+              <th scope="col">Robot like yours</th>
+            </tr></thead>
+            <tbody id="pushBody"></tbody>
+          </table>
+        </div>
+        <p class="dt-srsum" id="srPush"></p>
+      </figure>
 
 
       <!-- The pit-session fold that used to sit here is gone: section 03 IS
@@ -293,7 +316,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
         <div class="dt-pins">
           <div class="dt-pin-scroll" id="pinScroll" hidden>
             <table class="dt-pintable">
-              <thead><tr><th scope="col">Setup</th><th scope="col" class="is-numeric">Top (tiles/s)</th><th scope="col" class="is-numeric">Launch (tiles/s&sup2;)</th><th scope="col" class="is-numeric">Time (s)</th><th scope="col" class="dt-pin-acts"><span class="dt-visually-hidden">Actions</span></th></tr></thead>
+              <thead><tr><th scope="col">Setup</th><th scope="col" class="is-numeric">Top <span class="dt-th-u">(tiles/s)</span></th><th scope="col" class="is-numeric">Launch <span class="dt-th-u">(tiles/s&sup2;)</span></th><th scope="col" class="is-numeric">Time <span class="dt-th-u">(s)</span></th><th scope="col" class="dt-pin-acts"><span class="dt-visually-hidden">Actions</span></th></tr></thead>
               <tbody id="pinBody"></tbody>
             </table>
           </div>
@@ -362,7 +385,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
               <p class="dt-key-h">On the field</p>
               <p class="dt-legend">
                 <span><i class="dt-sw dt-sw-model"></i>the chain</span>
-                <span><i class="dt-sw dt-sw-limit"></i>where the corner binds</span>
+                <span><i class="dt-sw dt-sw-over"></i>where the corner binds</span>
                 <span><i class="dt-sq dt-sq-open"></i>bezier control point</span>
                 <span><i class="dt-tri"></i>start pose and heading</span>
                 <span><i class="dt-cross"></i>end of the chain</span>
@@ -462,28 +485,29 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
             <summary>What the editor accepts</summary>
             <div class="dt-fold-body prose">
               <p>
-                Pedro 3 paths: <span class="dt-num">PoseFactory.degrees()</span>,
+                Pedro 3.0.1 paths: <span class="dt-num">PoseFactory.degrees()</span>,
                 <span class="dt-num">PoseFactory.radians()</span>,
                 <span class="dt-num">of</span>,
+                <span class="dt-num">mirrorX</span>,
+                <span class="dt-num">mirrorY</span>,
+                <span class="dt-num">mirrorAroundPoint</span>,
+                <span class="dt-num">rotateAround</span>,
                 <span class="dt-num">line</span>,
                 <span class="dt-num">curve</span>,
+                <span class="dt-num">through</span>,
                 <span class="dt-num">path</span>,
                 <span class="dt-num">linear</span>,
                 <span class="dt-num">constant</span>,
                 <span class="dt-num">tangent</span>,
                 <span class="dt-num">reverseTangent</span>,
-                <span class="dt-num">facingPoint</span>,
-                <span class="dt-num">mirrorX</span>,
-                <span class="dt-num">mirrorY</span>. A degrees factory reads its
-                headings in degrees, a radians factory in radians. Bare numbers
-                in <span class="dt-num">linear</span> and
-                <span class="dt-num">constant</span> are radians, as in Pedro.
-                <span class="dt-num">facingPoint</span> is drawn as a straight
-                turn between the heading at the start and the one at the end.
-                <span class="dt-num">through</span> and
-                <span class="dt-num">heading(Interpolator…)</span> do not load
-                yet, and say so when you paste them. Code out of this editor is
-                Pedro 3.
+                <span class="dt-num">facingPoint</span> and
+                <span class="dt-num">heading(Interpolator…)</span>, piecewise included. A call may
+                carry the <span class="dt-num">Paths.</span> prefix, and a path can be a variable or
+                a method that returns one. A degrees factory reads its headings
+                in degrees, a radians factory in radians; bare numbers in
+                <span class="dt-num">linear</span> and <span class="dt-num">constant</span> are radians, as in Pedro.
+                When the code calls <span class="dt-num">follow</span>, the paths it follows are the
+                ones driven. Code out of this editor is Pedro 3.0.1.
               </p>
               <p>
                 Pedro 2.1.2 builder code still loads:
@@ -524,11 +548,14 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
       <div class="dt-body">
       <h2 class="dt-panel-h dt-method-h" id="secMethod">Credits</h2>
       <p class="dt-credit">
-        Physics core from <em>Drivetrain Minmax</em> by Ethan Zhang
-        (<a href="https://darkelights.pages.dev/blog/calculating-the-ideal-drivetrain" target="_blank" rel="noopener">write-up</a>).
+        Physics core from <em>Drivetrain Minmax</em> by Ethan Zhang.
         Motor dyno data from the <a href="https://gm0.org/en/latest/docs/power-and-electronics/motor-guide/motor-power.html" target="_blank" rel="noopener">gm0 motor guide</a>.
         Prior art: <a href="https://www.reca.lc/drive" target="_blank" rel="noopener">ReCalc</a> and the
         <a href="https://github.com/flybotix/drivetrainsim" target="_blank" rel="noopener">ILITE drivetrain simulator</a>.
+      </p>
+      <p class="dt-credit">
+        Running a belt stage? The <a href={`${base}/belt/`}>belt calculator</a> gives the exact
+        belt and center distance for any two pulleys, and where to buy the belt.
       </p>
       </div>
     </section>
@@ -1659,6 +1686,12 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
   .dt-sw-limit { background: repeating-linear-gradient(90deg, var(--sr-2) 0 6px, transparent 6px 10px); }
   .dt-sw-ref   { background: repeating-linear-gradient(90deg, var(--sr-3) 0 4px, transparent 4px 7px); }
   .dt-sw-dash  { background: repeating-linear-gradient(90deg, var(--sr-2) 0 3px, transparent 3px 6px); }
+  /* The braking stretch: the model's own hue on the reference dash, which is
+     how the profile draws it. */
+  .dt-sw-brake { height: 1.5px; background: repeating-linear-gradient(90deg, var(--sr-1) 0 4px, transparent 4px 7px); }
+  /* Solid warning stroke: a series while it is past a limit, or a corner
+     setting the speed. Heavier than the model line, as on the canvas. */
+  .dt-sw-over  { height: 3px; background: var(--sr-2); }
   .dt-sw-band  { height: 8px; background: var(--sr-band-flat); border: 1px solid var(--rule); box-sizing: border-box; }
   .dt-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex: none; background: var(--sr-1); }
   .dt-dia { width: 8px; height: 8px; transform: rotate(45deg); display: inline-block; flex: none; background: var(--ink-1); }
@@ -1782,6 +1815,9 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     white-space: nowrap;
   }
   .dt-pintable th.is-numeric, .dt-pintable td.is-numeric { text-align: right; }
+  /* A unit in a column head keeps its case: uppercase turns a second into a
+     siemens, the same rule the legends follow. */
+  .dt-pintable th .dt-th-u { text-transform: none; letter-spacing: 0.02em; }
   .dt-pintable td.dt-pin-lbl {
     white-space: normal;
     font-family: var(--dt-font-sans);
@@ -1811,6 +1847,34 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
   .dt-pin-row-new { animation: dt-row-in 200ms var(--dt-ease) both; }
   @keyframes dt-row-in { from { opacity: 0; } to { opacity: 1; } }
   .dt-empty { margin: var(--sp-3) 0 0; font: var(--t-caption); color: var(--ink-3); }
+
+  /* ─── PUSHING: the ledger's cards, then the same datasheet table ───────
+     Column heads carry their units and may wrap, so five columns fit a
+     laptop without scrolling; the opponent column is a row head set in the
+     figures' own face, and the "heaviest" row closes the table under a rule
+     of its own. */
+  .dt-sheet-push .dt-stats { margin-bottom: var(--sp-4); }
+  /* A tank drive on a hard fuse has two figures here, not five; empty tracks
+     keep each card the width it has in the ledger above instead of letting
+     two cards stretch across the page. */
+  @media (min-width: 62rem) {
+    .dt-sheet-push .dt-stats { grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); }
+  }
+  .dt-pushtable thead th { white-space: normal; vertical-align: bottom; line-height: 1.3; }
+  .dt-pushtable tbody th {
+    font: var(--t-num);
+    font-variant-numeric: lining-nums tabular-nums;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--ink-1);
+    background: none;
+    padding: 9px 10px;
+    border-bottom: 1px solid var(--rule-hair);
+    white-space: nowrap;
+  }
+  .dt-pushtable .dt-push-max th,
+  .dt-pushtable .dt-push-max td { border-top: 1px solid var(--rule-axis); }
+  .dt-pushtable .dt-push-max th { font: var(--t-label); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
 
   /* Print only. */
   .dt-printfoot { display: none; }
@@ -1981,14 +2045,25 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
   // Every row here is a BARE MOTOR: the model multiplies tau by the gearbox
   // ratio and by the efficiency to reach the wheel, so anything already
   // measured at a gearbox output has to be divided by both on the way in.
+  // Each vendor's own sheet is a `spec` row and gm0's dyno table is the other
+  // basis; the toggle shows wherever both exist. Every number is checked
+  // against its source in docs/drivetrain-research-notes.md, "Vendor sheets,
+  // re-read".
   const MOTORS: Record<string, { rpm: number; tau: number; is: number; ifree: number }> = {
     yjspec:   { rpm: 6000, tau: 0.144, is: 9.2,  ifree: 0.25 },
     gobilda:  { rpm: 5900, tau: 0.19,  is: 11,   ifree: 0.3  },
+    // REV's own HD Hex sheet (REV-41-1291): 6000 rpm, 0.105 N·m, 8.5 A stall,
+    // 400 mA free, 15 W. gm0 measured the same motor much stronger.
+    revspec:  { rpm: 6000, tau: 0.105, is: 8.5,  ifree: 0.4  },
     revhd:    { rpm: 6000, tau: 0.18,  is: 11,   ifree: 0.3  },
-    // AndyMark publishes no bare-motor sheet, but it does publish an Orbital
-    // 1:1 at about 6600 rpm, and every geared Orbital and Classic rung it sells
-    // back-solves onto that figure within a few per cent. Torque and current
-    // stay on the gm0 dyno row, which is where they have always been.
+    // AndyMark does publish a bare-motor sheet after all (am-3104): 6000 rpm
+    // plus or minus 10 per cent, 0.062 N·m, 11.5 A stall, 0.4 A free. Free
+    // speed is kept at 6600 on both rows, the top of that tolerance and the
+    // figure every geared Orbital and Classic rung it sells back-solves onto
+    // within a few per cent, so the picker's labels keep matching the readout.
+    // gm0's dyno row carries the torque and current; its 5500 rpm is recorded
+    // in the notes and not used, for the same reason.
+    amspec:   { rpm: 6600, tau: 0.062, is: 11.5, ifree: 0.4  },
     neverest: { rpm: 6600, tau: 0.17,  is: 9.8,  ifree: 0.4  },
     // Core Hex is one sealed 72:1 gearmotor, not a cartridge on the HD Hex.
     // Its published figures are at the OUTPUT (125 rpm free, 3.2 N·m stall,
@@ -1999,8 +2074,8 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     // is already NET of the box, so the ratio alone is not enough to back it
     // out: divide by the efficiency too, or the model would apply that loss a
     // second time and print 2.98 N·m against REV's own 3.2. Free current is
-    // the one figure REV does not publish, so it stays on the HD Hex row.
-    revcore:  { rpm: 125 * 72, tau: 3.2 / 72 / GB_EFF, is: 4.4, ifree: 0.3 },
+    // the one figure REV's page leaves out; gm0's Core Hex row has it at 0.2 A.
+    revcore:  { rpm: 125 * 72, tau: 3.2 / 72 / GB_EFF, is: 4.4, ifree: 0.2 },
   };
 
   // A gearbox mounts to exactly one brand of motor. goBILDA's cartridges key
@@ -2073,7 +2148,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     },
     rev: {
       label: 'REV HD Hex',
-      dyno: 'revhd', dflt: String(gbRound(UP.four * UP.four)),
+      spec: 'revspec', dyno: 'revhd', dflt: String(gbRound(UP.four * UP.four)),
       boxes: [
         { label: 'Bare HD Hex, no cartridge (1:1)', short: 'direct', v: 1 },
         ...upStacks(),
@@ -2083,7 +2158,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     },
     am: {
       label: 'AndyMark NeveRest',
-      dyno: 'neverest', dflt: String(byRpm(AM_FREE, 340)),
+      spec: 'amspec', dyno: 'neverest', dflt: String(byRpm(AM_FREE, 340)),
       boxes: [
         { label: 'Bare am-3104, no gearbox (6600 rpm)', short: 'direct', v: 1 },
         { label: 'Orbital 3.7:1 (1784 rpm)', short: 'Orbital 3.7:1', v: byRpm(AM_FREE, 1784) },
@@ -2192,38 +2267,65 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     voc: number; rint: number; ilim: number; iburst: number; tburst: number;
     fuse: 'hard' | 'burst';
     dist: number;
-    stopAtEnd: boolean; brakeFrac: number; strafe: boolean;
+    stopAtEnd: boolean; strafe: boolean;
     dia: number; cgH: number; cgX: number;
   }
   interface Sim { T: number[]; V: number[]; X: number[]; I: number[]; thermalHit: boolean }
 
   // Physics
-  const forceAt = (v: number, c: Cfg, iCap: number) => {
+  // Which way the robot is driving relative to the way it faces. A mecanum
+  // robot running at angle th off its own heading needs |cos th| + |sin th| /
+  // STRAFE_F of the wheel speed a straight run needs: Pedro 3's own
+  // Mecanum.interpolateVelocity diamond, with the strafe leg derated for roller
+  // losses. Wheel force follows by the same factor, because the power in and the
+  // power out are the same power. Grip blends from forward to the strafe
+  // fraction on cos^2 / sin^2. A tank drive only ever runs at k = 1.
+  interface Dir { k: number; muF: number }
+  const DIR_FWD: Dir = { k: 1, muF: 1 };
+  const DIR_STRAFE: Dir = { k: 1 / STRAFE_F, muF: STRAFE_MU };
+  const dirAt = (th: number): Dir => {
+    const co = Math.abs(Math.cos(th)), si = Math.abs(Math.sin(th));
+    return { k: co + si / STRAFE_F, muF: co * co + STRAFE_MU * si * si };
+  };
+
+  // Below free speed the torque line is linear in the supply voltage,
+  //   tau(V) = tau0 * (V / 12 - wm / wf0),
+  // so the sag loop V = voc - R * I(V) solves in closed form. The six-step
+  // fixed point that used to sit here only converges while R times the draw's
+  // slope stays under one: four motors on a 0.34 ohm loop, a worn pack, already
+  // sit past that, and the loop then oscillated and returned whichever wrong
+  // voltage the sixth step landed on.
+  const forceAt = (v: number, c: Cfg, iCap: number, dir: Dir = c.strafe ? DIR_STRAFE : DIR_FWD) => {
     const wf0 = c.rpm0 * Math.PI / 30;
     const Kt = c.tau0 / Math.max(0.05, c.is0 - c.if0);
-    const dirF = c.strafe ? STRAFE_F : 1;
-    const mu = c.strafe ? c.mu * STRAFE_MU : c.mu;
-    const wm = (v / c.r) * c.Gtot / dirF;
-    const Ftrac = mu * c.m * GRAV;
-    let V = c.voc, F = 0, Itot = 0, limit = 'motor';
-    for (let k = 0; k < 6; k++) {
-      const s = Math.max(0.25, V / 12);
-      const wf = wf0 * s, taus = c.tau0 * s;
-      const tfull = wm >= wf ? 0 : taus * (1 - wm / wf);
-      const Ffull = c.n * tfull * c.Gtot * c.eta * dirF / c.r;
-      F = Math.min(Ffull, Ftrac);
-      limit = Ffull > Ftrac ? 'grip' : 'motor';
-      let tdel = F * c.r / (c.n * c.Gtot * c.eta * dirF);
-      let Iper = c.if0 + tdel / Kt;
-      Itot = c.n * Iper;
-      if (Itot > iCap) {
-        Itot = iCap;
-        tdel = Math.max(0, iCap / c.n - c.if0) * Kt;
-        F = c.n * tdel * c.Gtot * c.eta * dirF / c.r;
-        limit = 'current';
-      }
-      V = Math.max(3, c.voc - Itot * c.rint);
+    const wm = (v / c.r) * c.Gtot * dir.k;
+    const per = c.Gtot * c.eta / (c.r * dir.k);       // wheel newtons per motor newton-metre
+    const Ftrac = c.mu * dir.muF * c.m * GRAV;
+    const If = c.n * c.if0;
+    const torqueAt = (V: number) => Math.max(0, c.tau0 * (Math.max(0.25, V / 12) - wm / wf0));
+    // Motor-limited operating point: I = If + B * V - A.
+    const B = c.n * c.tau0 / (12 * Kt), A = c.n * c.tau0 * (wm / wf0) / Kt;
+    let V = Math.max(3, (c.voc - c.rint * (If - A)) / (1 + c.rint * B));
+    let tau = torqueAt(V);
+    if (tau <= 0) V = Math.max(3, c.voc - c.rint * If);
+    let F = c.n * tau * per, limit = 'motor';
+    if (F > Ftrac) {
+      // The wheels slip first: the draw is what grip lets the motors deliver,
+      // and the sag follows that smaller draw.
+      tau = Ftrac / (c.n * per);
+      F = Ftrac;
+      limit = 'grip';
     }
+    let Itot = If + c.n * tau / Kt;
+    if (Itot > iCap) {
+      // A cap under the motors' own no-load draw leaves them no torque, but it
+      // cannot make them draw less than spinning free costs.
+      Itot = Math.max(If, iCap);
+      tau = Math.max(0, iCap / c.n - c.if0) * Kt;
+      F = c.n * tau * per;
+      limit = 'current';
+    }
+    V = Math.max(3, c.voc - Itot * c.rint);
     return { F, Itot, V, limit, Ftrac };
   };
 
@@ -2232,6 +2334,12 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
 
   const budget0 = (c: Cfg) =>
     c.fuse === 'burst' ? Math.max(0, (c.iburst * c.iburst - c.ilim * c.ilim) * c.tburst) : 0;
+  // The i²t budget spends above the sustained rating and fills back below it,
+  // never past where it started: the first-order thermal integrator a blade
+  // fuse is rated against. A sprint never sees the refill; a 30 s chain with a
+  // cruise between two launches does.
+  const spend = (c: Cfg, budget: number, I: number, dt: number) =>
+    c.fuse === 'burst' ? Math.min(budget0(c), budget - (I * I - c.ilim * c.ilim) * dt) : budget;
 
   // xNeed stops the integration the first step past a distance, for callers
   // that only score an objective. Since x never decreases, the retained prefix
@@ -2247,10 +2355,8 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     const steps = Math.round(tMax / dt);
     for (let i = 0; i < steps; i++) {
       const fa = forceAt(v, c, capAt(c, budget));
-      if (c.fuse === 'burst' && fa.Itot > c.ilim) {
-        budget -= (fa.Itot * fa.Itot - c.ilim * c.ilim) * dt;
-        if (budget <= 0) thermalHit = true;
-      }
+      budget = spend(c, budget, fa.Itot, dt);
+      if (c.fuse === 'burst' && budget <= 0) thermalHit = true;
       const a = (fa.F - drag) / c.m;
       v = Math.max(0, v + a * dt);
       x += v * dt; t += dt;
@@ -2260,9 +2366,56 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     return { T, V: VV, X: XX, I: II, thermalHit };
   };
 
-  const brakeDecel = (c: Cfg) => {
-    const mu = c.strafe ? c.mu * STRAFE_MU : c.mu;
-    return Math.max(0.2, (c.brakeFrac * mu + c.crr) * GRAV);
+  // ── Braking ─────────────────────────────────────────────────────────────
+  // Pedro 3's Foresight plans every stop on the drivetrain's own braking: its
+  // tuner fits stopping distance against speed from runs that brake at a
+  // command of 0.001 rather than 0, which reads as a deliberate way to get the
+  // hub's braking drive instead of a float (inferred from the code, not stated
+  // by it; see the notes), and the follower starts braking the moment that
+  // predicted distance reaches the end of the path. The reverse power it may add on top (maxBrakingPower,
+  // 0.2) only corrects a predicted overshoot. So the stop drawn here is that
+  // natural curve, built from this page's own motor line: a shorted winding
+  // brakes with tau0 * w / wf0, the motor's own friction adds Kt * I_free, a
+  // back-driven gear train takes its loss out of the wheel (divide by eta, not
+  // multiply), and grip caps it. Back-EMF braking scales with the square of the
+  // reduction, which is why a fast-geared robot coasts so far. Sources and the
+  // tuner code: docs/drivetrain-research-notes.md, "Pedro Pathing 3.0.1".
+  const brakeAccel = (v: number, c: Cfg, gripLeft: number, dir: Dir = DIR_FWD) => {
+    const wf0 = c.rpm0 * Math.PI / 30;
+    const Kt = c.tau0 / Math.max(0.05, c.is0 - c.if0);
+    const wm = (v / c.r) * c.Gtot * dir.k;
+    const tau = c.tau0 * wm / wf0 + Kt * c.if0;
+    const F = c.n * tau * c.Gtot / (c.eta * c.r * dir.k);
+    return Math.max(0.2, (Math.min(F, gripLeft * c.m) + c.crr * c.m * GRAV) / c.m);
+  };
+  // Distance and time to stop from each speed, integrated once per config on a
+  // speed grid, so a straight-line stop is two lookups however often the
+  // ladder asks.
+  interface BrakeTab { dv: number; D: Float64Array; T: Float64Array }
+  const BRAKE_N = 64;
+  const brakeTable = (c: Cfg): BrakeTab => {
+    const dir = c.strafe ? DIR_STRAFE : DIR_FWD;
+    const grip = c.mu * dir.muF * GRAV;
+    const vFree = (c.rpm0 * Math.max(1, c.voc / 12) / c.Gtot) * (Math.PI / 30) * c.r / dir.k;
+    const dv = Math.max(0.5, vFree * 1.25) / BRAKE_N;
+    const D = new Float64Array(BRAKE_N + 1), T = new Float64Array(BRAKE_N + 1);
+    let a0 = brakeAccel(0, c, grip, dir);
+    for (let i = 1; i <= BRAKE_N; i++) {
+      const v0 = (i - 1) * dv, v1 = i * dv;
+      const a1 = brakeAccel(v1, c, grip, dir);
+      T[i] = T[i - 1] + dv * (1 / a0 + 1 / a1) / 2;
+      D[i] = D[i - 1] + dv * (v0 / a0 + v1 / a1) / 2;
+      a0 = a1;
+    }
+    return { dv, D, T };
+  };
+  const brakeAt = (tab: BrakeTab, v: number) => {
+    const x = Math.max(0, v) / tab.dv;
+    const i = Math.min(BRAKE_N - 1, Math.floor(x)), f = x - i;
+    return {
+      D: tab.D[i] + (tab.D[i + 1] - tab.D[i]) * f,
+      T: tab.T[i] + (tab.T[i + 1] - tab.T[i]) * f,
+    };
   };
 
   const timeFor = (sim: Sim, d: number) => {
@@ -2275,21 +2428,31 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     return T[lo] + f * (T[hi] - T[lo]);
   };
 
-  const timeForStop = (sim: Sim, c: Cfg, d: number) => {
-    if (d <= 0) return { t: 0, tBrake: 0, vPeak: 0, iSwitch: 0 };
-    const ab = brakeDecel(c);
+  // Brake the moment the stopping distance from here reaches the end. The
+  // switch is interpolated between the two samples that straddle it, so the
+  // stop time is continuous in the gearing and the sweep has no stair steps
+  // the size of one integration step.
+  const timeForStop = (sim: Sim, c: Cfg, d: number, tab: BrakeTab = brakeTable(c)) => {
+    if (d <= 0) return { t: 0, tBrake: 0, vPeak: 0, tSwitch: 0 };
     const X = sim.X, V = sim.V, T = sim.T;
-    for (let i = 0; i < X.length; i++) {
-      if (X[i] + (V[i] * V[i]) / (2 * ab) >= d) {
-        return { t: T[i] + V[i] / ab, tBrake: V[i] / ab, vPeak: V[i], iSwitch: i };
+    let prev = -d;
+    for (let i = 1; i < X.length; i++) {
+      const f = X[i] + brakeAt(tab, V[i]).D - d;
+      if (f >= 0) {
+        const u = -prev / Math.max(1e-12, f - prev);
+        const tS = T[i - 1] + u * (T[i] - T[i - 1]);
+        const vS = V[i - 1] + u * (V[i] - V[i - 1]);
+        const b = brakeAt(tab, vS);
+        return { t: tS + b.T, tBrake: b.T, vPeak: vS, tSwitch: tS };
       }
+      prev = f;
     }
-    return { t: NaN, tBrake: NaN, vPeak: NaN, iSwitch: -1 };
+    return { t: NaN, tBrake: NaN, vPeak: NaN, tSwitch: NaN };
   };
 
   // The straight-sprint objective: one distance, stopped or flown through.
-  const objective = (sim: Sim, c: Cfg) =>
-    c.stopAtEnd ? timeForStop(sim, c, c.dist * TILE).t : timeFor(sim, c.dist * TILE);
+  const objective = (sim: Sim, c: Cfg, tab?: BrakeTab) =>
+    c.stopAtEnd ? timeForStop(sim, c, c.dist * TILE, tab).t : timeFor(sim, c.dist * TILE);
 
   // ── Overall movement ────────────────────────────────────────────────────
   // What the board scores. A gear ratio is a standing bet between launch and
@@ -2316,13 +2479,16 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
   const LADDER_MAX = Math.max(...LADDER) * TILE;
   const overall = (c: Cfg) => {
     let sum = 0;
+    // Shorted-winding braking does not depend on the pack, so one table
+    // serves both batteries.
+    const tab = brakeTable(c);
     for (const voc of [c.voc, drained(c.voc)]) {
       // One integration per battery: the ladder reads its rungs off the same
       // curve, so five distances cost what one does.
       const cs: Cfg = { ...c, voc, stopAtEnd: true };
       const sim = simulate(cs, 0.005, 10, LADDER_MAX);
       for (const d of LADDER) {
-        const t = timeForStop(sim, cs, d * TILE).t;
+        const t = timeForStop(sim, cs, d * TILE, tab).t;
         if (!isFinite(t)) return NaN;
         sum += t;
       }
@@ -2330,23 +2496,53 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     return sum / (LADDER.length * 2);
   };
 
+  // Terminal speed: where the force the wheels can put down falls to the
+  // rolling drag. Solved, not read off the end of the integration, because a
+  // tall-geared or heavy robot is still gaining speed at the 8 s the sprint
+  // stops at, and the last sample of that run understated it. At cruise the
+  // draw is under the sustained rating, so the sustained cap is the one that
+  // holds there.
+  const terminalSpeed = (c: Cfg, dir: Dir = c.strafe ? DIR_STRAFE : DIR_FWD) => {
+    const drag = c.crr * c.m * GRAV;
+    if (forceAt(0, c, c.ilim, dir).F <= drag) return 0;
+    let lo = 0, hi = (c.rpm0 * Math.max(1, c.voc / 12) / c.Gtot) * (Math.PI / 30) * c.r / dir.k;
+    for (let k = 0; k < 40; k++) {
+      const mid = (lo + hi) / 2;
+      if (forceAt(mid, c, c.ilim, dir).F > drag) lo = mid; else hi = mid;
+    }
+    return lo;
+  };
+
   const metrics = (c: Cfg) => {
     const sim = simulate(c);
     const launch = forceAt(0, c, capAt(c, budget0(c)));
     const drag = c.crr * c.m * GRAV;
     const a0 = (launch.F - drag) / c.m;
-    const vtop = sim.V[sim.V.length - 1];
+    const vtop = terminalSpeed(c);
     let t90 = NaN;
     for (let i = 0; i < sim.V.length; i++) { if (sim.V[i] >= 0.9 * vtop) { t90 = sim.T[i]; break; } }
-    const vfree12 = Math.PI * (c.r * 2) * (c.rpm0 / c.Gtot) / 60;
+    // The cost of a standing start is the time lost against a robot already at
+    // top speed: the integral of (1 - v / vtop). vtop / a0 is that integral
+    // only for a launch on a pure exponential, and the launch here is clipped
+    // by grip or by the fuse first. A run that has not closed to within half a
+    // per cent of top speed by the end of the sprint has no honest answer.
+    let lost = 0;
+    for (let i = 1; i < sim.V.length; i++) {
+      const u0 = 1 - sim.V[i - 1] / vtop, u1 = 1 - sim.V[i] / vtop;
+      lost += (sim.T[i] - sim.T[i - 1]) * (u0 + u1) / 2;
+    }
+    const closed = vtop > 0 && sim.V[sim.V.length - 1] >= 0.995 * vtop;
+    // Free speed at the pack's own rest voltage, so the ideal can never read
+    // slower than the real top speed sitting beside it.
+    const vfree = Math.PI * (c.r * 2) * (c.rpm0 * (c.voc / 12) / c.Gtot) / 60;
+    const tab = brakeTable(c);
     return {
-      sim, launch, a0, vtop, t90,
-      tauC: a0 > 0 ? vtop / a0 : NaN,
-      vfree12,
+      sim, launch, a0, vtop, t90, tab,
+      tauC: closed ? lost : NaN,
+      vfree,
       wheelRpm: c.rpm0 / c.Gtot,
-      objT: objective(sim, c),
+      objT: objective(sim, c, tab),
       overallT: overall(c),
-      push: launch.F,
       thermalHit: sim.thermalHit,
     };
   };
@@ -2363,12 +2559,24 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     const pts: { x: number; y: number }[] = [];
     let best = { N: NaN, t: Infinity };
     const steps = 72;
+    let bi = -1;
     for (let i = 0; i <= steps; i++) {
       const N = lo + (hi - lo) * i / steps;
       const c2 = { ...c, Gtot: c.rpm0 / N, eta: c.etaGb };
       const t = overall(c2);
       pts.push({ x: N, y: t });
-      if (isFinite(t) && t < best.t) best = { N, t };
+      if (isFinite(t) && t < best.t) { best = { N, t }; bi = i; }
+    }
+    // The grid is 12.5 rpm wide, so a minimum read straight off it is a
+    // multiple of 12.5 rpm. A parabola through the best sample and its two
+    // neighbours puts the vertex between them at no extra integration.
+    if (bi > 0 && bi < steps) {
+      const a = pts[bi - 1].y, b = pts[bi].y, d = pts[bi + 1].y;
+      const den = a - 2 * b + d;
+      if (isFinite(a) && isFinite(d) && den > 1e-12) {
+        const h = (hi - lo) / steps, off = 0.5 * (a - d) / den;
+        if (Math.abs(off) <= 1) best = { N: best.N + off * h, t: b - 0.25 * (a - d) * off };
+      }
     }
     return { pts, best, lo, hi };
   };
@@ -2382,10 +2590,13 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
   };
 
   const sensitivity = (c: Cfg, baseSweep: Sweep) => {
+    // Each side is clamped to the same bounds readCfg already holds the base
+    // inside, so the low variant can never land above the base or the high
+    // one below it.
     const variants = [
-      { ...c, mu: Math.max(0.2, c.mu - MU_BAND) },
-      { ...c, mu: Math.min(2.0, c.mu + MU_BAND) },
-      { ...c, rint: Math.max(0.02, c.rint - R_BAND) },
+      { ...c, mu: Math.max(0.05, c.mu - MU_BAND) },
+      { ...c, mu: Math.min(2.5, c.mu + MU_BAND) },
+      { ...c, rint: Math.max(0, c.rint - R_BAND) },
       { ...c, rint: c.rint + R_BAND },
     ];
     const sweeps = variants.map((cv) => sweepFor(cv));
@@ -2407,7 +2618,10 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
   // Recipes only name gearboxes that mount on the platform in front of the
   // reader: no recipe ever tells a goBILDA team to buy an UltraPlanetary.
   // The caller passes which of that platform's rungs are on the table.
-  const buildables = (c: Cfg, wantLo: number, wantHi: number, boxes: Box[], keep = 3): Recipe[] => {
+  // famEff carries the reader's own efficiency for any stage family they
+  // already run, so a recipe in that family is scored on the number they
+  // measured and building it leaves that number where it was.
+  const buildables = (c: Cfg, wantLo: number, wantHi: number, boxes: Box[], keep = 3, famEff: Record<string, number> = {}): Recipe[] => {
     // Recipes are complete drivetrains: gearbox efficiency + (optionally)
     // their OWN stage's efficiency; never the user's currently-configured
     // external stage losses, which a recipe replaces along with the reduction.
@@ -2418,16 +2632,24 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
       for (const so of STAGE_OPTS) {
         const G = box.v * so.dout / so.din;
         if (G < 1 || G > 40) continue;
-        combos.push({ box, stage: stageText(so), G, eta: c.etaGb * so.eff, st: so });
+        const eff = famEff[so.kind] ?? so.eff;
+        combos.push({ box, stage: stageText(so), G, eta: c.etaGb * eff, st: { ...so, eff } });
       }
     }
-    const seen = new Set<string>(); const out: Recipe[] = [];
+    // Two builds that land on the same ratio differ only in their losses, so
+    // the more efficient one is the only one worth timing; on a tie the build
+    // with fewer parts stays.
+    const byG = new Map<string, (typeof combos)[number]>();
     for (const cb of combos) {
       const N = c.rpm0 / cb.G;
       if (N < wantLo || N > wantHi) continue;
       const key = cb.G.toFixed(2);
-      if (seen.has(key)) continue;
-      seen.add(key);
+      const had = byG.get(key);
+      if (!had || cb.eta > had.eta + 1e-9) byG.set(key, cb);
+    }
+    const out: Recipe[] = [];
+    for (const cb of byG.values()) {
+      const N = c.rpm0 / cb.G;
       const c2 = { ...c, Gtot: cb.G, eta: cb.eta };
       // Recipes are ranked on the same composite the curve is drawn from, so
       // the winning tick and the bottom of the bowl mean the same thing.
@@ -2451,7 +2673,10 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
   const WIN_MIN_SPAN = 100;    // rpm: keeps a frame readable when the marks pile up
   const WIN_CLEAR = 0.05;      // minimum clearance from either frame edge
   const sweepWindow = (marks: number[], lo: number, hi: number) => {
-    const ms = marks.filter((v) => isFinite(v) && v > 0);
+    // Only marks inside the swept domain can anchor the window: a gearing
+    // outside it has no curve under it to read against, and letting it pull
+    // the window used to turn the window inside out.
+    const ms = marks.filter((v) => isFinite(v) && v >= lo && v <= hi);
     if (!ms.length) return { xLo: lo, xHi: hi };
     const mLo = Math.min(...ms), mHi = Math.max(...ms);
     const pad = (mHi - mLo) * WIN_PAD;
@@ -2474,6 +2699,41 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
   const tipCheck = (a0: number, xIn: number, hIn: number) => {
     const aTip = (xIn / Math.max(0.5, hIn)) * GRAV;
     return { aTip, ratio: aTip > 0 ? a0 / aTip : Infinity };
+  };
+
+  // ── Pushing ─────────────────────────────────────────────────────────────
+  // What this drivetrain can shove, off the same forceAt every other figure
+  // on the page reads: the wheel force at stall, capped by this robot's own
+  // grip (so its weight matters) and by the fuse, less what rolling this
+  // robot costs. "Held" runs on the sustained rating, because a shove lasts
+  // longer than a burst does. The defenders are fixed page constants, not
+  // inputs, and every one of them is sourced in
+  // docs/drivetrain-research-notes.md, "Pushing".
+  const LBF = 0.224809;                        // pound-force per newton
+  const BOX_MU = 0.6;                          // a box sliding on foam tile
+  // A locked mecanum wheel still turns on its rollers, which leaves one
+  // diagonal free: pushed straight, only the roller-axis share of the slide,
+  // cos 45, meets friction. A locked traction wheel slides on its tread. A
+  // coasting robot rolls on free wheels and costs only its rolling drag.
+  const DEFENDERS = [
+    { key: 'mec', mu: WHEELS.mecanum.mu * Math.SQRT1_2 },
+    { key: 'grip', mu: WHEELS.traction.mu },
+    { key: 'coast', mu: WHEELS.mecanum.crr },
+  ];
+  const OPP_KG = [10, 12.5, 15, 17.5, 20];     // the FTC weight range, about 22 to 44 lb
+  const pushNet = (c: Cfg, v: number, iCap: number, dir: Dir = DIR_FWD) =>
+    forceAt(v, c, iCap, dir).F - c.crr * c.m * GRAV;
+  // The speed this robot holds while shoving a steady resistance R, or NaN
+  // when it cannot move it at all. At top speed the net shove is zero, so the
+  // root always sits between standing still and top speed.
+  const pushSpeed = (c: Cfg, R: number) => {
+    if (pushNet(c, 0, c.ilim) <= R) return NaN;
+    let lo = 0, hi = Math.max(0.01, terminalSpeed(c));
+    for (let k = 0; k < 40; k++) {
+      const mid = (lo + hi) / 2;
+      if (pushNet(c, mid, c.ilim) > R) lo = mid; else hi = mid;
+    }
+    return lo;
   };
 
   // Charts: hand-rolled canvas, colors read live from the tokens. The box
@@ -2595,8 +2855,18 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
 
   // Tick labels: leading zero always, a real minus, one decimal count per
   // axis taken from the step, and a thin space only past four digits.
+  // The decimal count is the step's own: the fewest places that write the step
+  // exactly. Reading it off the step's magnitude alone printed a 2.5 step as
+  // 3, 5, 8 and a 0.25 step as 0.3, 0.5, 0.8.
+  const stepDp = (step: number) => {
+    for (let d = 0; d < 6; d++) {
+      const s = step * Math.pow(10, d);
+      if (Math.abs(s - Math.round(s)) < 1e-6 * Math.max(1, s)) return d;
+    }
+    return 6;
+  };
   const tickNum = (v: number, step: number) => {
-    const dp = step >= 1 ? 0 : step >= 0.1 ? 1 : 2;
+    const dp = stepDp(step);
     let s = Math.abs(v) < step * 1e-6 ? (0).toFixed(dp) : v.toFixed(dp);
     let sign = '';
     if (s.charAt(0) === '-') { sign = '−'; s = s.slice(1); }
@@ -2706,7 +2976,26 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
   const FIELD_IN = 144;
   const RAD = (d: number) => (d * Math.PI) / 180;
   const DEG = (r: number) => (r * 180) / Math.PI;
-  interface PvSeg { pts: [number, number][]; mode: 'linear' | 'constant' | 'tangent'; h0?: number; h1?: number; rev?: boolean }
+  // A heading program, the way Pedro 3's Interpolator describes one. Linear
+  // runs on path completion, which is arc length, not the bezier parameter;
+  // tangent and facingPoint are geometric and read the curve where the robot
+  // is; a piecewise program hands each stretch of completion to its own.
+  type Interp =
+    | { k: 'tangent'; rev?: boolean }
+    | { k: 'linear'; h0: number; h1: number; long?: boolean }
+    | { k: 'constant'; h: number }
+    | { k: 'facing'; x: number; y: number; rev?: boolean }
+    | { k: 'piece'; parts: { until: number; it: Interp }[] };
+  // mode/h0/h1/rev are the simple heading every dialect can carry. `it`, when
+  // present, is the full program and wins. `span` is the stretch of its
+  // governing path's completion this segment covers, which is how an
+  // interpolator set on a path(...) of several legs runs across all of them
+  // by length; `grp` keeps those legs together when the chain is written back
+  // out as code.
+  interface PvSeg {
+    pts: [number, number][]; mode: 'linear' | 'constant' | 'tangent'; h0?: number; h1?: number; rev?: boolean;
+    it?: Interp; span?: [number, number]; grp?: number;
+  }
   interface PvPreset { label: string; segs: PvSeg[]; code: string; shift?: [number, number] }
 
   const D_START: [number, number] = [22, 122], D_SCORE: [number, number] = [60, 84];
@@ -2788,14 +3077,17 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
         { pts: [[59.25, 38], [30, 16], [6, 56], [14, 108]], mode: 'linear', h0: RAD(90), h1: RAD(180) },
       ],
       code: `import static com.pedropathing.api.Paths.*;
+import com.pedropathing.api.PoseFactory;
+import com.pedropathing.math.Pose;
+import com.pedropathing.paths.Path;
 
 PoseFactory p = PoseFactory.degrees();
 
-Pose startPose = p.of(56.000, 9.000, 90.0);
-Pose launchPose = p.of(59.250, 38.000, 90.0);
-Pose outControl = p.of(30.000, 16.000);
-Pose upControl = p.of(6.000, 56.000);
-Pose parkPose = p.of(14.000, 108.000, 180.0);
+Pose startPose = p.of(56, 9, 90);
+Pose launchPose = p.of(59.25, 38, 90);
+Pose outControl = p.of(30, 16, 0);
+Pose upControl = p.of(6, 56, 0);
+Pose parkPose = p.of(14, 108, 180);
 
 Path leg1 = line(startPose, launchPose).linear(startPose, launchPose);
 Path leg2 = curve(launchPose, outControl, upControl, parkPose).linear(launchPose, parkPose);
@@ -2810,12 +3102,15 @@ follower.follow(chain);`,
         { pts: [[56, 9], [18, 44], [14, 108]], mode: 'linear', h0: RAD(90), h1: RAD(180) },
       ],
       code: `import static com.pedropathing.api.Paths.*;
+import com.pedropathing.api.PoseFactory;
+import com.pedropathing.math.Pose;
+import com.pedropathing.paths.Path;
 
 PoseFactory p = PoseFactory.degrees();
 
-Pose startPose = p.of(56.000, 9.000, 90.0);
-Pose parkControl = p.of(18.000, 44.000);
-Pose parkPose = p.of(14.000, 108.000, 180.0);
+Pose startPose = p.of(56, 9, 90);
+Pose parkControl = p.of(18, 44, 0);
+Pose parkPose = p.of(14, 108, 180);
 
 Path leg1 = curve(startPose, parkControl, parkPose).linear(startPose, parkPose);
 
@@ -2832,17 +3127,20 @@ follower.follow(chain);`,
         { pts: [[59.25, 38], [30, 16], [6, 56], [14, 108]], mode: 'linear', h0: RAD(90), h1: RAD(180) },
       ],
       code: `import static com.pedropathing.api.Paths.*;
+import com.pedropathing.api.PoseFactory;
+import com.pedropathing.math.Pose;
+import com.pedropathing.paths.Path;
 
 PoseFactory p = PoseFactory.degrees();
 
-Pose startPose = p.of(56.000, 9.000, 90.0);
-Pose launchPose = p.of(59.250, 38.000, 90.0);
-Pose downControl = p.of(36.000, 20.000);
-Pose gardenPose = p.of(15.000, 13.000, 225.0);
-Pose upControl = p.of(34.000, 18.000);
-Pose parkControl1 = p.of(30.000, 16.000);
-Pose parkControl2 = p.of(6.000, 56.000);
-Pose parkPose = p.of(14.000, 108.000, 180.0);
+Pose startPose = p.of(56, 9, 90);
+Pose launchPose = p.of(59.25, 38, 90);
+Pose downControl = p.of(36, 20, 0);
+Pose gardenPose = p.of(15, 13, 225);
+Pose upControl = p.of(34, 18, 0);
+Pose parkControl1 = p.of(30, 16, 0);
+Pose parkControl2 = p.of(6, 56, 0);
+Pose parkPose = p.of(14, 108, 180);
 
 Path leg1 = line(startPose, launchPose).linear(startPose, launchPose);
 Path leg2 = curve(launchPose, downControl, gardenPose).linear(launchPose, gardenPose);
@@ -3036,22 +3334,121 @@ follower.followPath(lane);`,
   };
   const wrapPi = (a: number) => { let x = a; while (x > Math.PI) x -= 2 * Math.PI; while (x < -Math.PI) x += 2 * Math.PI; return x; };
   const angLerp = (a: number, b: number, t: number) => a + wrapPi(b - a) * t;
+  const norm2Pi = (a: number) => ((a % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+
+  // A segment's heading program, with the simple fields turned into one.
+  const segInterp = (sg: PvSeg): Interp => sg.it
+    || (sg.mode === 'linear' ? { k: 'linear', h0: sg.h0 || 0, h1: sg.h1 || 0 }
+      : sg.mode === 'constant' ? { k: 'constant', h: sg.h0 || 0 }
+        : { k: 'tangent', rev: !!sg.rev });
+  // Pedro 3's interpolators, at completion c of the path that owns them, with
+  // the curve's tangent and the robot's position at that point. longLinear is
+  // Interpolator.longLinear: the other way round, the long way, as written.
+  const evalInterp = (it: Interp, c: number, tan: number, x: number, y: number): number => {
+    switch (it.k) {
+      case 'tangent': return tan + (it.rev ? Math.PI : 0);
+      case 'constant': return it.h;
+      case 'facing': return Math.atan2(it.y - y, it.x - x) + (it.rev ? Math.PI : 0);
+      case 'linear': {
+        if (!it.long) return it.h0 + wrapPi(it.h1 - it.h0) * c;
+        const e = norm2Pi(it.h1 - it.h0), dir = e <= Math.PI ? 1 : -1;
+        return it.h0 - dir * (2 * Math.PI - Math.min(e, 2 * Math.PI - e)) * c;
+      }
+      case 'piece': {
+        // The stretch whose `until` is the first at or past c, rescaled to
+        // its own 0 to 1, which is what the library does once its piecewise
+        // fix lands (see notes); geometric parts ignore the rescale anyway.
+        let lo = 0;
+        for (const p of it.parts) {
+          if (c <= p.until + 1e-12) return evalInterp(p.it, (c - lo) / Math.max(1e-9, p.until - lo), tan, x, y);
+          lo = p.until;
+        }
+        const tail = it.parts[it.parts.length - 1];
+        return tail ? evalInterp(tail.it, 1, tan, x, y) : tan;
+      }
+    }
+  };
+  // The heading on segment sg at its own completion cl (by arc length).
+  const segHeading = (sg: PvSeg, cl: number, tan: number, x: number, y: number) => {
+    const c = sg.span ? sg.span[0] + (sg.span[1] - sg.span[0]) * cl : cl;
+    // A 2.1.2 setReversed on a linear or constant path turns the robot round;
+    // on a tangent one it is the reversed tangent, carried inside segInterp.
+    const turn = !sg.it && sg.rev && sg.mode !== 'tangent' ? Math.PI : 0;
+    return evalInterp(segInterp(sg), c, tan, x, y) + turn;
+  };
+  // Arc length of a bezier, by the same chord sampling the sampler uses.
+  const bezLen = (P: [number, number][], n = 64) => {
+    let L = 0, a = bezAt(P, 0);
+    for (let i = 1; i <= n; i++) { const b = bezAt(P, i / n); L += Math.hypot(b[0] - a[0], b[1] - a[1]); a = b; }
+    return L;
+  };
+  // Put one heading program on a path. On one segment it is that segment's
+  // own; on several, the path is a compound and the program runs across all
+  // of them by arc length, the way CompoundPath hands its interpolator the
+  // whole curve's completion and overrides every leg's own.
+  const applyHeading = (list: PvSeg[], it: Interp, grp: number) => {
+    if (list.length === 1) {
+      const sg = list[0];
+      delete sg.span; delete sg.grp; delete sg.it; delete sg.rev;
+      if (it.k === 'linear' && !it.long) { sg.mode = 'linear'; sg.h0 = it.h0; sg.h1 = it.h1; }
+      else if (it.k === 'constant') { sg.mode = 'constant'; sg.h0 = it.h; sg.h1 = it.h; }
+      else if (it.k === 'tangent') { sg.mode = 'tangent'; delete sg.h0; delete sg.h1; if (it.rev) sg.rev = true; }
+      else { sg.mode = 'tangent'; sg.it = it; }
+      return;
+    }
+    const lens = list.map((sg) => bezLen(sg.pts));
+    const total = lens.reduce((a, b) => a + b, 0) || 1;
+    let acc = 0;
+    list.forEach((sg, i) => {
+      sg.it = it; sg.grp = grp; delete sg.rev;
+      sg.span = [acc / total, (acc + lens[i]) / total];
+      acc += lens[i];
+    });
+  };
+  // Pedro 3's BezierCurve.through: the one bezier of degree n - 1 that passes
+  // through all n poses at evenly spaced t. Its control points solve the
+  // Bernstein system B C = P, done here by Gaussian elimination.
+  const throughCtrl = (Q: [number, number][]): [number, number][] => {
+    const n = Q.length, deg = n - 1;
+    const binom = (k: number) => { let r = 1; for (let i = 1; i <= k; i++) r = r * (deg - k + i) / i; return r; };
+    const M = Q.map((_, i) => {
+      const t = i / deg;
+      return Array.from({ length: n }, (_, j) => binom(j) * Math.pow(t, j) * Math.pow(1 - t, deg - j));
+    });
+    const R = Q.map((q) => [q[0], q[1]]);
+    for (let col = 0; col < n; col++) {
+      let piv = col;
+      for (let r = col + 1; r < n; r++) if (Math.abs(M[r][col]) > Math.abs(M[piv][col])) piv = r;
+      [M[col], M[piv]] = [M[piv], M[col]]; [R[col], R[piv]] = [R[piv], R[col]];
+      for (let r = 0; r < n; r++) {
+        if (r === col) continue;
+        const f = M[r][col] / M[col][col];
+        for (let k = col; k < n; k++) M[r][k] -= f * M[col][k];
+        R[r][0] -= f * R[col][0]; R[r][1] -= f * R[col][1];
+      }
+    }
+    return R.map((r, i) => [r[0] / M[i][i], r[1] / M[i][i]] as [number, number]);
+  };
 
   // ── Custom chains ────────────────────────────────────────────────────────
-  // Three input languages, one output shape. Java covers two dialects in one
-  // pass: the Pedro 3 Paths API (PoseFactory, line, curve, path) and the 2.1.2
-  // pathBuilder surface as a team still writes it. The third is the JSON body
-  // of a .pp file, whose schema is the official visualiser's SaveData. None of
-  // it is executed: the reader is parsed by hand so a paste can never run.
+  // Three input languages, one output shape. Java covers every dialect in one
+  // pass: the Pedro 3.0.1 Paths API (PoseFactory, line, curve, through, path,
+  // the heading calls and Interpolator), the 2.1.2 pathBuilder surface as a
+  // team still writes it, and 1.0.x Point code. The third is the JSON body of
+  // a .pp file, whose schema is the official visualizer's SaveData, old shape
+  // and new. None of it is executed: the reader is parsed by hand so a paste
+  // can never run.
   class PathSyntaxError extends Error {
     line: number;
     constructor(line: number, msg: string) { super(msg); this.line = line; }
   }
   interface ParsedChain { segs: PvSeg[]; notes: string[]; kind: 'java' | 'pp' }
   type PoseV = { x: number; y: number; h: number };
-  // A Pedro 3 PoseFactory: the heading unit it was built with, plus either
-  // alliance mirror if one is chained on.
-  type PoseFac = { deg: boolean; mx: number | null; my: number | null };
+  // A Pedro 3 PoseFactory: the heading unit it was built with, and the
+  // operations chained onto it, applied in the order they were written, the
+  // way Operation.andThen composes them. short counts of() calls that left
+  // the heading off, which 3.0.1 does not compile.
+  type PoseFac = { deg: boolean; ops: ((p: PoseV) => PoseV)[]; short: number };
 
   // Comments and string bodies become spaces, so every index in the scrubbed
   // text still maps to its original line.
@@ -3209,11 +3606,12 @@ follower.followPath(lane);`,
   };
   const expr0 = (s: string) => s.trim().replace(/\s+/g, ' ').slice(0, 34);
 
-  // new Pose(x, y[, heading]) / new Point(x, y[, …]) / factory.of(x, y[, h]) /
-  // a declared pose name.
+  // new Pose(x, y[, heading]) / new Point(x, y[, …]) / factory.of(x, y, h) /
+  // Pose.zero() / Vector2D.cartesian(x, y) / Vector2D.polar(r, theta) / a
+  // declared pose name.
   const readPose = (arg: string, poses: Record<string, PoseV>, nums: Record<string, number>, ln: number, facs: Record<string, PoseFac> = {}): PoseV => {
     const t = arg.trim();
-    // Pedro 3: the factory decides the heading unit and carries the mirror.
+    // Pedro 3: the factory decides the heading unit and carries its operations.
     const ofM = /^([A-Za-z_$][\w$]*)\s*\.\s*of\s*\(/.exec(t);
     if (ofM) {
       const fac = facs[ofM[1]];
@@ -3222,16 +3620,23 @@ follower.followPath(lane);`,
       const closeO = matchParen(t, openO);
       if (closeO < 0) throw new PathSyntaxError(ln, `${ofM[1]}.of( is never closed`);
       const argsO = splitArgs(t.slice(openO + 1, closeO));
-      if (argsO.length < 2) throw new PathSyntaxError(ln, `${ofM[1]}.of needs at least an x and a y`);
-      let x = readNum(argsO[0], poses, nums, ln);
-      let y = readNum(argsO[1], poses, nums, ln);
-      let h = argsO.length > 2 ? readNum(argsO[2], poses, nums, ln) : 0;
-      if (fac.deg) h = RAD(h);
-      // Matches PoseFactory.mirrorX/mirrorY in core/src/main/java/com/pedropathing/api/PoseFactory.java:
-      // mirrorX flips x and negates heading, mirrorY flips y and leaves heading unchanged.
-      if (fac.mx !== null) { x = 2 * fac.mx - x; h = -h; }
-      if (fac.my !== null) { y = 2 * fac.my - y; }
-      return { x, y, h };
+      if (argsO.length < 2) throw new PathSyntaxError(ln, `${ofM[1]}.of needs an x, a y and a heading`);
+      const x = readNum(argsO[0], poses, nums, ln);
+      const y = readNum(argsO[1], poses, nums, ln);
+      if (argsO.length === 2) fac.short++;
+      const h0 = argsO.length > 2 ? readNum(argsO[2], poses, nums, ln) : 0;
+      return fac.ops.reduce((p, op) => op(p), { x, y, h: fac.deg ? RAD(h0) : h0 });
+    }
+    if (/^Pose\s*\.\s*zero\s*\(\s*\)$/.test(t)) return { x: 0, y: 0, h: 0 };
+    const vec = /^Vector2D\s*\.\s*(cartesian|polar)\s*\(/.exec(t);
+    if (vec) {
+      const open = t.indexOf('(', vec[0].length - 1);
+      const close = matchParen(t, open);
+      if (close < 0) throw new PathSyntaxError(ln, `Vector2D.${vec[1]}( is never closed`);
+      const args = splitArgs(t.slice(open + 1, close));
+      if (args.length < 2) throw new PathSyntaxError(ln, `Vector2D.${vec[1]} needs two numbers`);
+      const a = readNum(args[0], poses, nums, ln), b = readNum(args[1], poses, nums, ln);
+      return vec[1] === 'cartesian' ? { x: a, y: b, h: 0 } : { x: a * Math.cos(b), y: a * Math.sin(b), h: 0 };
     }
     const ctor = /^new\s+(Pose|Point|FuturePose)\s*\(/.exec(t);
     if (ctor) {
@@ -3240,6 +3645,9 @@ follower.followPath(lane);`,
       if (close < 0) throw new PathSyntaxError(ln, `new ${ctor[1]}( is never closed`);
       const args = splitArgs(t.slice(open + 1, close))
         .filter((a) => !/^Point\s*\.\s*(CARTESIAN|POLAR)$/.test(a.trim()));
+      // 1.0.x wrapped a pose as new Point(pose), which is how the bucket
+      // example writes every one of its lines.
+      if (args.length === 1) return readPose(args[0], poses, nums, ln, facs);
       if (args.length < 2) throw new PathSyntaxError(ln, `new ${ctor[1]} needs at least an x and a y`);
       return {
         x: readNum(args[0], poses, nums, ln),
@@ -3251,8 +3659,64 @@ follower.followPath(lane);`,
     if (plain && poses[t]) return poses[t];
     const copy = /^([A-Za-z_$][\w$]*)\s*\.\s*copy\s*\(\s*\)$/.exec(t);
     if (copy && poses[copy[1]]) return poses[copy[1]];
-    if (plain) throw new PathSyntaxError(ln, `${t} is not a declared pose; write "Pose ${t} = new Pose(x, y, heading);" above the chain`);
-    throw new PathSyntaxError(ln, `expected new Pose(x, y) or a declared pose, found "${expr0(t)}"`);
+    if (plain) throw new PathSyntaxError(ln, `${t} is not a declared pose; write "Pose ${t} = p.of(x, y, heading);" above the chain`);
+    throw new PathSyntaxError(ln, `expected p.of(x, y, heading), new Pose(x, y) or a declared pose, found "${expr0(t)}"`);
+  };
+
+  // PoseFactory.degrees() or .radians(), or another factory, then any of
+  // Pedro 3.0.1's operations. The mirrors follow 3.0.1, which fixed 3.0.0's:
+  // mirrorX(a) reflects across x = a and sends heading h to pi - h, mirrorY(a)
+  // reflects across y = a and sends h to -h. rotateAround reads its angle in
+  // the factory's own unit; mirrorAroundPoint is that rotation by half a turn.
+  // The map family takes Java lambdas, which this page will not run.
+  const readFactory = (expr: string, facs: Record<string, PoseFac>, poses: Record<string, PoseV>, nums: Record<string, number>, ln: number): PoseFac => {
+    const t = expr.trim();
+    const base = /^(?:PoseFactory\s*\.\s*(degrees|radians)\s*\(\s*\)|([A-Za-z_$][\w$]*))/.exec(t);
+    if (!base) throw new PathSyntaxError(ln, `a PoseFactory starts from PoseFactory.degrees() or PoseFactory.radians(), found "${expr0(t)}"`);
+    let fac: PoseFac;
+    if (base[1]) fac = { deg: base[1] === 'degrees', ops: [], short: 0 };
+    else {
+      const from = facs[base[2]];
+      if (!from) throw new PathSyntaxError(ln, `${base[2]} is not a declared PoseFactory`);
+      fac = { deg: from.deg, ops: from.ops.slice(), short: 0 };
+    }
+    let tail = t.slice(base[0].length).trim();
+    while (tail) {
+      const cm = /^\.\s*([A-Za-z_$][\w$]*)\s*\(/.exec(tail);
+      if (!cm) throw new PathSyntaxError(ln, `could not read "${expr0(tail)}" on a PoseFactory`);
+      const open = tail.indexOf('(', cm[0].length - 1);
+      const close = matchParen(tail, open);
+      if (close < 0) throw new PathSyntaxError(ln, `.${cm[1]}( is never closed`);
+      const args = splitArgs(tail.slice(open + 1, close));
+      const num = (i: number) => readNum(args[i], poses, nums, ln);
+      const turn = (cx: number, cy: number, rad: number) => {
+        const co = Math.cos(rad), si = Math.sin(rad);
+        fac.ops.push((p) => ({ x: cx + (p.x - cx) * co - (p.y - cy) * si, y: cy + (p.x - cx) * si + (p.y - cy) * co, h: p.h + rad }));
+      };
+      const unit = (a: number) => (fac.deg ? RAD(a) : a);
+      switch (cm[1]) {
+        case 'mirrorX': { const a = args.length ? num(0) : FIELD_IN / 2; fac.ops.push((p) => ({ x: 2 * a - p.x, y: p.y, h: Math.PI - p.h })); break; }
+        case 'mirrorY': { const a = args.length ? num(0) : FIELD_IN / 2; fac.ops.push((p) => ({ x: p.x, y: 2 * a - p.y, h: -p.h })); break; }
+        case 'mirrorAroundPoint': {
+          if (args.length === 1) { const c = readPose(args[0], poses, nums, ln, facs); turn(c.x, c.y, Math.PI); }
+          else if (args.length >= 2) turn(num(0), num(1), Math.PI);
+          else throw new PathSyntaxError(ln, '.mirrorAroundPoint needs a point: an x and a y, or a pose');
+          break;
+        }
+        case 'rotateAround': {
+          if (args.length === 2) { const c = readPose(args[0], poses, nums, ln, facs); turn(c.x, c.y, unit(num(1))); }
+          else if (args.length >= 3) turn(num(0), num(1), unit(num(2)));
+          else throw new PathSyntaxError(ln, '.rotateAround needs a centre and an angle');
+          break;
+        }
+        case 'map': case 'mapX': case 'mapY': case 'mapHeading':
+          throw new PathSyntaxError(ln, `.${cm[1]}(…) takes a Java lambda, which this page does not run; write those poses out as numbers`);
+        default:
+          throw new PathSyntaxError(ln, `.${cm[1]}() is not a PoseFactory operation this page reads`);
+      }
+      tail = tail.slice(close + 1).trim();
+    }
+    return fac;
   };
 
   const parsePedroJava = (raw: string): ParsedChain => {
@@ -3267,32 +3731,40 @@ follower.followPath(lane);`,
     for (let m = numRe.exec(src); m; m = numRe.exec(src)) {
       try { nums[m[1]] = readNum(m[2], poses, nums, lineOf(src, m.index)); } catch { /* a constant this page cannot read is simply unavailable */ }
     }
-    const poseRe = /(?:^|[;{}()\s])(?:(?:public|private|protected|static|final)\s+)*(?:Pose|Point)\s+([A-Za-z_$][\w$]*)\s*=\s*(new\s+(?:Pose|Point)\s*\()/g;
-    for (let m = poseRe.exec(src); m; m = poseRe.exec(src)) {
-      const open = src.indexOf('(', m.index + m[0].length - 1);
-      const close = matchParen(src, open);
-      if (close < 0) throw new PathSyntaxError(lineOf(src, open), `the pose ${m[1]} has an opening bracket that is never closed`);
-      poses[m[1]] = readPose(src.slice(m.index + m[0].length - m[2].length, close + 1), poses, nums, lineOf(src, m.index));
-    }
 
-    // Pedro 3 pose factories, then the poses they make. The factory name is
-    // whatever the team called it, so both are read by shape, not by name.
-    const facRe = /(?:^|[;{}()\s])(?:(?:public|private|protected|static|final)\s+)*PoseFactory\s+([A-Za-z_$][\w$]*)\s*=\s*PoseFactory\s*\.\s*(degrees|radians)\s*\(\s*\)([^;]*);/g;
-    for (let m = facRe.exec(src); m; m = facRe.exec(src)) {
-      const ln = lineOf(src, m.index);
-      const fac: PoseFac = { deg: m[2] === 'degrees', mx: null, my: null };
-      const mirRe = /\.\s*mirror([XY])\s*\(([^)]*)\)/g;
-      for (let k = mirRe.exec(m[3]); k; k = mirRe.exec(m[3])) {
-        const axis = k[2].trim() ? readNum(k[2], poses, nums, ln) : FIELD_IN / 2;
-        if (k[1] === 'X') fac.mx = axis; else fac.my = axis;
-      }
-      const junk = m[3].replace(/\.\s*mirror[XY]\s*\([^)]*\)/g, '').trim();
-      if (junk) throw new PathSyntaxError(ln, `a PoseFactory here reads .mirrorX(axis) and .mirrorY(axis) only, found "${expr0(junk)}"`);
-      facs[m[1]] = fac;
+    // Pose factories and the poses they make, in source order, because a
+    // factory can be reassigned (factory = factory.mirrorX(70.75), as the
+    // Pedro docs write it) and the poses above that line keep the factory
+    // they were made with. Factory names are collected first so a
+    // reassignment can be told from any other assignment.
+    const facDeclRe = /(?:^|[;{}()\s])(?:(?:public|private|protected|static|final)\s+)*PoseFactory\s+([A-Za-z_$][\w$]*)\s*=\s*([^;]+);/g;
+    const facNames = new Set<string>();
+    type Ev = { at: number; kind: 'fac' | 'pose'; name: string; expr: string };
+    const evs: Ev[] = [];
+    for (let m = facDeclRe.exec(src); m; m = facDeclRe.exec(src)) {
+      facNames.add(m[1]);
+      evs.push({ at: m.index, kind: 'fac', name: m[1], expr: m[2] });
     }
-    const ofRe = /(?:^|[;{}()\s])(?:(?:public|private|protected|static|final)\s+)*Pose\s+([A-Za-z_$][\w$]*)\s*=\s*([A-Za-z_$][\w$]*\s*\.\s*of\s*\([^;]*\))\s*;/g;
-    for (let m = ofRe.exec(src); m; m = ofRe.exec(src)) {
-      poses[m[1]] = readPose(m[2], poses, nums, lineOf(src, m.index), facs);
+    const asgRe = /(^|[;{}\s])([A-Za-z_$][\w$]*)\s*=(?!=)\s*([^;]+);/g;
+    for (let m = asgRe.exec(src); m; m = asgRe.exec(src)) {
+      if (!facNames.has(m[2])) continue;
+      if (/PoseFactory\s*$/.test(src.slice(0, m.index + m[1].length))) continue;
+      evs.push({ at: m.index, kind: 'fac', name: m[2], expr: m[3] });
+    }
+    // A pose this page cannot read (follower.getPose(), say) is left out
+    // rather than failing the paste; only a chain that names it complains.
+    const poseRe = /(?:^|[;{}()\s])(?:(?:public|private|protected|static|final)\s+)*(?:Pose|Point)\s+([A-Za-z_$][\w$]*)\s*=\s*([^;]+);/g;
+    for (let m = poseRe.exec(src); m; m = poseRe.exec(src)) {
+      const e = m[2].trim();
+      if (/^(new\s+(?:Pose|Point)\s*\(|[A-Za-z_$][\w$]*\s*\.\s*of\s*\(|Pose\s*\.\s*zero\s*\()/.test(e)) {
+        evs.push({ at: m.index, kind: 'pose', name: m[1], expr: e });
+      }
+    }
+    evs.sort((a, b) => a.at - b.at);
+    for (const ev of evs) {
+      const ln = lineOf(src, ev.at);
+      if (ev.kind === 'fac') facs[ev.name] = readFactory(ev.expr, facs, poses, nums, ln);
+      else poses[ev.name] = readPose(ev.expr, poses, nums, ln, facs);
     }
 
     // Then walk the builder calls in source order. addPath (and the legacy
@@ -3328,13 +3800,16 @@ follower.followPath(lane);`,
           const o2 = t.indexOf('(', cm[0].length - 1);
           const c2 = matchParen(t, o2);
           if (c2 < 0) throw new PathSyntaxError(ln, `new ${cm[1]}( is never closed`);
-          const pts = splitArgs(t.slice(o2 + 1, c2))
+          let pts = splitArgs(t.slice(o2 + 1, c2))
             .filter((a) => !/^(new\s+)?PathConstraints\b/.test(a.trim()))
             .map((a) => readPose(a, poses, nums, ln, facs))
             .map((p) => [p.x, p.y] as [number, number]);
           if (cm[1] === 'BezierPoint') { skippedHolds++; continue; }
+          // BezierCurve.through passes through its poses rather than around
+          // them, in 2.1.2 as in 3, so it is solved for its control points.
+          if (/through/.test(cm[0]) && pts.length > 2) pts = throughCtrl(pts);
           if (cm[1] === 'BezierLine' && pts.length !== 2) throw new PathSyntaxError(ln, `BezierLine takes exactly 2 poses, found ${pts.length}`);
-          if (cm[1] === 'BezierCurve' && pts.length < 3) throw new PathSyntaxError(ln, `BezierCurve needs at least 3 poses (start, control, end), found ${pts.length}`);
+          if (cm[1] === 'BezierCurve' && pts.length < 2) throw new PathSyntaxError(ln, `BezierCurve needs at least a start and an end, found ${pts.length}`);
           segs.push({ pts, mode: 'tangent' });
         }
         continue;
@@ -3360,26 +3835,112 @@ follower.followPath(lane);`,
     }
 
     // ── Pedro 3 ───────────────────────────────────────────────────────────
-    // line(a, b) and curve(a, c…, b) make one segment each, path(…) strings
-    // them together, and the interpolation is a call chained onto the shape
-    // instead of a setter on the builder. It lands in the same PvSeg the walk
-    // above fills, so nothing downstream knows which dialect it read.
+    // line(a, b), curve(a, c…, b) and through(a, m…, b) make one segment
+    // each, path(…) strings them together, and the interpolation is a call
+    // chained onto the shape instead of a setter on the builder. It lands in
+    // the same PvSeg the walk above fills, so nothing downstream knows which
+    // dialect it read. Every call may carry the Paths. prefix the official
+    // visualizer writes.
     const pathVars: Record<string, PvSeg[]> = {};
-    const copySegs = (list: PvSeg[]) => list.map((sg) => ({ ...sg, pts: sg.pts.map((p) => [p[0], p[1]] as [number, number]) }));
-    let sawFacing = false;
+    const copySegs = (list: PvSeg[]) => list.map((sg) => ({
+      ...sg, pts: sg.pts.map((p) => [p[0], p[1]] as [number, number]),
+      span: sg.span ? [sg.span[0], sg.span[1]] as [number, number] : undefined,
+    }));
+    let grpSeq = 0, sawWith = 0;
     // A pose where an angle is allowed: .linear and .constant take either.
     const maybePose = (a: string, ln: number): PoseV | null => {
       const s = a.trim();
-      if (!/^(new\s+[A-Za-z_$]|[A-Za-z_$][\w$]*\s*(\.\s*(of|copy)\s*\(|$))/.test(s)) return null;
+      if (!/^(new\s+[A-Za-z_$]|Pose\s*\.\s*zero|Vector2D\s*\.|[A-Za-z_$][\w$]*\s*(\.\s*(of|copy)\s*\(|$))/.test(s)) return null;
       try { return readPose(s, poses, nums, ln, facs); } catch { return null; }
     };
+    const ang = (a: string, ln: number): number => { const p = maybePose(a, ln); return p ? p.h : readNum(a, poses, nums, ln); };
+    const reverseOf = (it: Interp): Interp => {
+      switch (it.k) {
+        case 'tangent': return { k: 'tangent', rev: !it.rev };
+        case 'facing': return { ...it, rev: !it.rev };
+        case 'linear': return { ...it, h0: it.h0 + Math.PI, h1: it.h1 + Math.PI };
+        case 'constant': return { k: 'constant', h: it.h + Math.PI };
+        case 'piece': return { k: 'piece', parts: it.parts.map((p) => ({ until: p.until, it: reverseOf(p.it) })) };
+      }
+    };
+    // Interpolator.tangent, .linear(a, b), .longLinear(a, b), .constant(a),
+    // .facingPoint(p) and .piecewise().until(t, …)…, each optionally
+    // .reverse()d, which is the whole of Pedro 3.0.1's Interpolator.
+    const readInterp = (text: string, ln: number): Interp => {
+      const t = text.trim();
+      const m = /^Interpolator\s*\.\s*([A-Za-z_$][\w$]*)/.exec(t);
+      if (!m) throw new PathSyntaxError(ln, `.heading wants an Interpolator, found "${expr0(t)}"`);
+      let rest = t.slice(m[0].length);
+      const callArgs = (what: string): string[] => {
+        const r = rest.trimStart();
+        if (r[0] !== '(') throw new PathSyntaxError(ln, `${what} needs its own brackets`);
+        const close = matchParen(r, 0);
+        if (close < 0) throw new PathSyntaxError(ln, `${what}( is never closed`);
+        rest = r.slice(close + 1);
+        return splitArgs(r.slice(1, close));
+      };
+      let it: Interp;
+      switch (m[1]) {
+        case 'tangent': it = { k: 'tangent' }; break;
+        case 'linear': case 'longLinear': {
+          const a = callArgs(`Interpolator.${m[1]}`);
+          if (a.length < 2) throw new PathSyntaxError(ln, `Interpolator.${m[1]} needs a start heading and an end heading, or the two poses that carry them`);
+          it = { k: 'linear', h0: ang(a[0], ln), h1: ang(a[1], ln), long: m[1] === 'longLinear' };
+          break;
+        }
+        case 'constant': {
+          const a = callArgs('Interpolator.constant');
+          if (!a.length) throw new PathSyntaxError(ln, 'Interpolator.constant needs one heading, or the pose that carries it');
+          it = { k: 'constant', h: ang(a[0], ln) };
+          break;
+        }
+        case 'facingPoint': {
+          const a = callArgs('Interpolator.facingPoint');
+          const p = a.length ? maybePose(a[0], ln) : null;
+          if (!p) throw new PathSyntaxError(ln, 'Interpolator.facingPoint wants a pose or a Vector2D');
+          it = { k: 'facing', x: p.x, y: p.y };
+          break;
+        }
+        case 'piecewise': {
+          callArgs('Interpolator.piecewise');
+          const parts: { until: number; it: Interp }[] = [];
+          let last = 0;
+          for (;;) {
+            const r = rest.trimStart();
+            if (!/^\.\s*until\s*\(/.test(r)) break;
+            rest = r.slice(r.indexOf('('));
+            const ua = callArgs('.until');
+            if (ua.length < 2) throw new PathSyntaxError(ln, '.until needs a completion and an Interpolator');
+            const until = readNum(ua[0], poses, nums, ln);
+            if (!(until > last) || until > 1) throw new PathSyntaxError(ln, `piecewise .until values climb from 0 to 1 and never repeat; found ${until} after ${last}`);
+            parts.push({ until, it: readInterp(ua[1], ln) });
+            last = until;
+          }
+          if (!parts.length) throw new PathSyntaxError(ln, 'a piecewise heading needs at least one .until(…)');
+          if (last < 1) throw new PathSyntaxError(ln, 'a piecewise heading has to run all the way to 1, which Pedro requires');
+          it = { k: 'piece', parts };
+          break;
+        }
+        default: throw new PathSyntaxError(ln, `Interpolator.${m[1]} is not one this page reads`);
+      }
+      for (;;) {
+        const r = rest.trimStart();
+        const rm = /^\.\s*reverse\s*\(\s*\)/.exec(r);
+        if (!rm) break;
+        rest = r.slice(rm[0].length);
+        it = reverseOf(it);
+      }
+      if (rest.trim()) throw new PathSyntaxError(ln, `could not read "${expr0(rest)}" in the heading`);
+      return it;
+    };
+    const setHeading = (list: PvSeg[], it: Interp) => applyHeading(list, it, ++grpSeq);
     // `off` is where `text` begins in `src`, so the chained-call loop below can
     // report the line a chained .call( actually sits on (a multi-line chain
     // otherwise blames every error on the `Path x = …` statement's own line).
     const readPathExpr = (text: string, off: number, ln: number, strict: boolean): PvSeg[] | null => {
       const lead = text.length - text.trimStart().length;
       const t = text.trim();
-      const call = /^(line|curve|through|path)\s*\(/.exec(t);
+      const call = /^(?:Paths\s*\.\s*)?(line|curve|through|path)\s*\(/.exec(t);
       let list: PvSeg[] = [];
       let tail: string;
       let tailOff: number; // offset of tail[0] within `text`; add `off` for the absolute offset in `src`
@@ -3391,7 +3952,6 @@ follower.followPath(lane);`,
         const afterClose = t.slice(close + 1);
         tail = afterClose.trim();
         tailOff = lead + close + 1 + (afterClose.length - afterClose.trimStart().length);
-        if (call[1] === 'through') throw new PathSyntaxError(ln, 'through(…) is not supported yet: write the same shape as curve(start, control…, end)');
         if (call[1] === 'path') {
           if (!args.length) throw new PathSyntaxError(ln, 'path(…) needs at least one Path inside it');
           const innerText = t.slice(open + 1, close);
@@ -3406,18 +3966,22 @@ follower.followPath(lane);`,
             list = list.concat(sub);
           }
         } else {
-          const pts = args.map((a) => readPose(a, poses, nums, ln, facs)).map((p) => [p.x, p.y] as [number, number]);
+          let pts = args.map((a) => readPose(a, poses, nums, ln, facs)).map((p) => [p.x, p.y] as [number, number]);
           if (call[1] === 'line' && pts.length !== 2) throw new PathSyntaxError(ln, `line takes exactly 2 poses, found ${pts.length}`);
-          if (call[1] === 'curve' && pts.length < 2) throw new PathSyntaxError(ln, `curve needs at least a start and an end, found ${pts.length}`);
+          if (call[1] !== 'line' && pts.length < 2) throw new PathSyntaxError(ln, `${call[1]} needs at least a start and an end, found ${pts.length}`);
+          if (call[1] === 'through' && pts.length > 2) pts = throughCtrl(pts);
           list = [{ pts, mode: 'tangent' }];
         }
       } else {
         const ref = /^[A-Za-z_$][\w$]*/.exec(t);
         if (!ref || !(ref[0] in pathVars)) return null;
         list = copySegs(pathVars[ref[0]]);
-        const afterRef = t.slice(ref[0].length);
+        // A path-returning method is named with its own empty brackets.
+        let afterRef = t.slice(ref[0].length);
+        const mc = /^\s*\(\s*\)/.exec(afterRef);
+        if (mc) afterRef = afterRef.slice(mc[0].length);
         tail = afterRef.trim();
-        tailOff = lead + ref[0].length + (afterRef.length - afterRef.trimStart().length);
+        tailOff = lead + (t.length - afterRef.length) + (afterRef.length - afterRef.trimStart().length);
       }
       for (;;) {
         const cm = /^\.\s*([A-Za-z_$][\w$]*)\s*\(/.exec(tail);
@@ -3428,30 +3992,32 @@ follower.followPath(lane);`,
         const close = matchParen(tail, open);
         if (close < 0) throw new PathSyntaxError(callLn, `.${name}( is never closed`);
         const args = splitArgs(tail.slice(open + 1, close));
-        const ang = (a: string): number => { const p = maybePose(a, callLn); return p ? p.h : readNum(a, poses, nums, callLn); };
         if (name === 'linear') {
           if (args.length < 2) throw new PathSyntaxError(callLn, '.linear needs a start heading and an end heading, or the two poses that carry them');
-          const h0 = ang(args[0]), h1 = ang(args[1]);
-          for (const sg of list) { sg.mode = 'linear'; sg.h0 = h0; sg.h1 = h1; }
+          const h0 = ang(args[0], callLn), h1 = ang(args[1], callLn);
+          const endT = args.length > 2 ? readNum(args[2], poses, nums, callLn) : 1;
+          if (!(endT > 0 && endT <= 1)) throw new PathSyntaxError(callLn, `.linear's third number is where the turn ends, between 0 and 1; found ${endT}`);
+          // Path.linear(a, b, endT) is a piecewise program: turn until endT,
+          // then hold the end heading.
+          setHeading(list, endT >= 1 ? { k: 'linear', h0, h1 }
+            : { k: 'piece', parts: [{ until: endT, it: { k: 'linear', h0, h1 } }, { until: 1, it: { k: 'constant', h: h1 } }] });
         } else if (name === 'constant') {
           if (!args.length) throw new PathSyntaxError(callLn, '.constant needs one heading, or the pose that carries it');
-          const h = ang(args[0]);
-          for (const sg of list) { sg.mode = 'constant'; sg.h0 = h; sg.h1 = h; }
+          setHeading(list, { k: 'constant', h: ang(args[0], callLn) });
         } else if (name === 'tangent' || name === 'reverseTangent') {
-          for (const sg of list) { sg.mode = 'tangent'; delete sg.h0; delete sg.h1; if (name === 'reverseTangent') sg.rev = true; }
+          setHeading(list, { k: 'tangent', rev: name === 'reverseTangent' });
         } else if (name === 'facingPoint') {
           if (!args.length) throw new PathSyntaxError(callLn, '.facingPoint needs the point to face');
           const tp = maybePose(args[0], callLn);
-          if (!tp) throw new PathSyntaxError(callLn, `.facingPoint wants a pose, found "${expr0(args[0])}"`);
-          for (const sg of list) {
-            const a = sg.pts[0], b = sg.pts[sg.pts.length - 1];
-            sg.mode = 'linear';
-            sg.h0 = Math.atan2(tp.y - a[1], tp.x - a[0]);
-            sg.h1 = Math.atan2(tp.y - b[1], tp.x - b[0]);
-          }
-          sawFacing = true;
+          if (!tp) throw new PathSyntaxError(callLn, `.facingPoint wants a pose or a Vector2D, found "${expr0(args[0])}"`);
+          setHeading(list, { k: 'facing', x: tp.x, y: tp.y });
         } else if (name === 'heading') {
-          throw new PathSyntaxError(callLn, '.heading(Interpolator…) is not supported yet: use .linear, .constant, .tangent, .reverseTangent or .facingPoint');
+          if (!args.length) throw new PathSyntaxError(callLn, '.heading needs an Interpolator');
+          setHeading(list, readInterp(args[0], callLn));
+        } else if (name === 'with') {
+          // Per-path constraints (maxPathSpeed and the like) change how the
+          // follower drives, not where; they are read past and said so.
+          sawWith++;
         } else {
           throw new PathSyntaxError(callLn, `.${name}() is not a call this page reads on a path`);
         }
@@ -3466,42 +4032,103 @@ follower.followPath(lane);`,
       return list;
     };
 
-    // Path declarations in source order, so a later one can name an earlier
-    // one; then the path(…) compositions, which win when the file has any.
-    const declared: PvSeg[][] = [];
+    // Path declarations and path-returning methods (the shape the Pedro docs
+    // recommend and the official visualizer exports). A method may name one
+    // declared further down, so anything that fails is retried once the rest
+    // are in, and only what still fails reports its error.
+    type Decl = { name: string; at: number; rhs: string; rhsAt: number };
+    const decls: Decl[] = [];
     const declRe = /(?:^|[;{}()\s])(?:(?:public|private|protected|static|final)\s+)*(?:Path|CompoundPath)\s+([A-Za-z_$][\w$]*)\s*=\s*([^;]*);/g;
     for (let m = declRe.exec(src); m; m = declRe.exec(src)) {
-      const off = m.index + m[0].length - 1 - m[2].length; // m[2]'s own offset in src (m[0] ends "…m[2];")
-      const got = readPathExpr(m[2], off, lineOf(src, m.index), true);
-      if (got) { pathVars[m[1]] = got; declared.push(got); }
+      const rhsAt = m.index + m[0].length - 1 - m[2].length; // m[2]'s own offset in src (m[0] ends "…m[2];")
+      decls.push({ name: m[1], at: m.index, rhs: m[2], rhsAt });
     }
-    const compRe = /(?:^|[^\w$.])path\s*\(/g;
-    const composed: PvSeg[] = [];
+    const methRe = /(?:^|[;{}()\s])(?:(?:public|private|protected|static|final)\s+)*(?:Path|CompoundPath)\s+([A-Za-z_$][\w$]*)\s*\(\s*\)\s*\{\s*return\s+([^;]*);\s*\}/g;
+    for (let m = methRe.exec(src); m; m = methRe.exec(src)) {
+      const rhsAt = src.indexOf(m[2], m.index + m[0].indexOf('return') + 6);
+      decls.push({ name: m[1], at: m.index, rhs: m[2], rhsAt });
+    }
+    decls.sort((a, b) => a.at - b.at);
+    const declared: PvSeg[][] = [];
+    let pending = decls.slice();
+    for (let pass = 0; pending.length && pass < 8; pass++) {
+      const next: Decl[] = [];
+      for (const d of pending) {
+        try {
+          const got = readPathExpr(d.rhs, d.rhsAt, lineOf(src, d.at), true);
+          if (got) { pathVars[d.name] = got; declared.push(got); }
+        } catch (e) { if (e instanceof PathSyntaxError) next.push(d); else throw e; }
+      }
+      if (next.length === pending.length) {
+        // Nothing new resolved: the first one left fails for a real reason.
+        const d = next[0];
+        readPathExpr(d.rhs, d.rhsAt, lineOf(src, d.at), true);
+      }
+      pending = next;
+    }
+    // The path(…) compositions. One that is a declaration's whole right-hand
+    // side and is named inside another composition is a piece of that one,
+    // not a chain of its own, so it is not driven twice.
+    const compRe = /(^|[^\w$.])((?:Paths\s*\.\s*)?path\s*\()/g;
+    const comps: { at: number; close: number; owner?: string; inner: string }[] = [];
     for (let m = compRe.exec(src); m; m = compRe.exec(src)) {
-      const at = m.index + m[0].length - 5;
+      const at = m.index + m[1].length;
       const open = m.index + m[0].length - 1;
       const close = matchParen(src, open);
-      const ln = lineOf(src, at);
-      if (close < 0) throw new PathSyntaxError(ln, 'path( is never closed');
-      const semi = src.indexOf(';', close);
-      const got = readPathExpr(src.slice(at, semi < 0 ? src.length : semi), at, ln, false);
-      if (got) composed.push(...got);
+      if (close < 0) throw new PathSyntaxError(lineOf(src, at), 'path( is never closed');
+      const owner = decls.find((d) => d.rhsAt + (d.rhs.length - d.rhs.trimStart().length) === at)?.name;
+      comps.push({ at, close, owner, inner: src.slice(open + 1, close) });
       compRe.lastIndex = close + 1;
     }
-    for (const sg of (composed.length ? composed : ([] as PvSeg[]).concat(...declared))) segs.push(sg);
-    if (sawFacing) notes.push('facingPoint is drawn as a straight turn between the heading at the start and the one at the end');
+    const composed: PvSeg[] = [];
+    for (const cp of comps) {
+      if (cp.owner) {
+        const re = new RegExp(`(^|[^\\w$.])${cp.owner.replace(/\$/g, '\\$')}(?![\\w$])`);
+        if (comps.some((o) => o !== cp && re.test(o.inner))) continue;
+      }
+      const semi = src.indexOf(';', cp.close);
+      const got = readPathExpr(src.slice(cp.at, semi < 0 ? src.length : semi), cp.at, lineOf(src, cp.at), false);
+      if (got) composed.push(...got);
+    }
+    // What is followed is what is driven: follower.follow(x) in an OpMode,
+    // follow(follower, x()) under Ivy. Those calls, in the order they are
+    // written, beat every other reading of the file.
+    const followed: PvSeg[] = [];
+    const folRe = /(^|[^\w$])follow\s*\(/g;
+    for (let m = folRe.exec(src); m; m = folRe.exec(src)) {
+      const open = m.index + m[0].length - 1;
+      const close = matchParen(src, open);
+      if (close < 0) break;
+      const inner = src.slice(open + 1, close);
+      const args = splitArgs(inner);
+      const a = args[args.length - 1];
+      if (a) {
+        try {
+          const got = readPathExpr(a, open + 1 + inner.lastIndexOf(a), lineOf(src, open), false);
+          if (got) followed.push(...copySegs(got));
+        } catch { /* a 2.1.2 chain or something else this reading does not own */ }
+      }
+      folRe.lastIndex = close + 1;
+    }
+    const v3 = followed.length ? followed : composed.length ? composed : ([] as PvSeg[]).concat(...declared);
+    for (const sg of v3) segs.push(sg);
+    const waits = (src.match(/(^|[^\w$])wait(?:Ms|Seconds)?\s*\(/g) || []).length;
 
     if (!segs.length) {
       throw new PathSyntaxError(1, sawBuilder
         ? 'the chain builds nothing: add at least one .addPath(new BezierLine(…)) or .addPath(new BezierCurve(…))'
-        : 'no Pedro path here. Start with Path leg = line(poseA, poseB), or with follower.pathBuilder() and one .addPath(new BezierLine(new Pose(x, y), new Pose(x, y)))');
+        : 'no Pedro path here. Start with Path leg = line(poseA, poseB).linear(poseA, poseB), or with follower.pathBuilder() and one .addPath(new BezierLine(new Pose(x, y), new Pose(x, y)))');
     }
     if (globalMode) {
       for (const sg of segs) { sg.mode = globalMode; if (globalMode !== 'tangent') { sg.h0 = globalH0; sg.h1 = globalH1; } }
     }
     if (globalRev) for (const sg of segs) sg.rev = true;
+    const short = Object.values(facs).reduce((n, f) => n + f.short, 0);
+    if (short) notes.push(`${short} p.of() call${short > 1 ? 's' : ''} had no heading, which Pedro 3 needs on every pose; read as 0`);
     if (skippedHolds) notes.push(`${skippedHolds} BezierPoint hold${skippedHolds > 1 ? 's' : ''} skipped: nothing to drive.`);
     if (sawCallback) notes.push('Callbacks parsed and ignored: this page times driving only.');
+    if (waits) notes.push(`${waits} wait${waits > 1 ? 's' : ''} skipped: this page times driving only.`);
+    if (sawWith) notes.push('with(…) constraints read past: these times are this drivetrain at full power');
     for (let i = 1; i < segs.length; i++) {
       const a = segs[i - 1].pts[segs[i - 1].pts.length - 1], b = segs[i].pts[0];
       const gap = Math.hypot(a[0] - b[0], a[1] - b[1]);
@@ -3510,54 +4137,126 @@ follower.followPath(lane);`,
     return { segs, notes, kind: 'java' };
   };
 
-  // The official visualiser's .pp save file: JSON with a startPoint, a list of
-  // lines whose control-point count decides line-versus-curve, and an optional
-  // sequence that reorders them. Schema adapted from Pedro-Pathing/Visualizer.
+  // The official visualizer's .pp save file, JSON. A current file keeps each
+  // path's heading on the path itself ({ type: linear | constant |
+  // tangential | piecewise }), nests legs in { kind: "compound", segments,
+  // heading? }, and may list throughPoints for Paths.through. An older file
+  // kept the heading fields on the endpoint. Both read, the way the
+  // visualizer's own normalizePaths reads them. Each path starts where the
+  // one before it in the file ends; an optional sequence reorders what is
+  // driven. Schema adapted from Pedro-Pathing/Visualizer (Apache-2.0).
   const parsePedroPP = (raw: string): ParsedChain => {
     let data: Record<string, unknown>;
     try { data = JSON.parse(raw); } catch (e) {
       throw new PathSyntaxError(1, 'that is not valid JSON: ' + ((e as Error).message || 'unreadable'));
     }
     if (!data || typeof data !== 'object') throw new PathSyntaxError(1, 'a .pp file is a JSON object');
+    type Stored = Record<string, unknown>;
     const notes: string[] = [];
-    const sp = data.startPoint as Record<string, unknown> | undefined;
+    const sp = data.startPoint as Stored | undefined;
     if (!sp || !isFinite(Number(sp.x)) || !isFinite(Number(sp.y))) {
       throw new PathSyntaxError(1, 'no startPoint with an x and a y; this does not look like a .pp file');
     }
-    const rawLines = Array.isArray(data.lines) ? (data.lines as Record<string, unknown>[]) : [];
+    const rawLines = Array.isArray(data.lines) ? (data.lines as Stored[]) : [];
     if (!rawLines.length) throw new PathSyntaxError(1, 'the file has a startPoint but no lines to drive');
-    // Annotated: spreading a Record<string, unknown> into an object literal
-    // drops the index signature, so the rows below would lose endPoint and
-    // controlPoints to the type checker while still carrying them at runtime.
-    const withIds: Record<string, unknown>[] = rawLines.map((l, i) => ({ ...l, id: typeof l.id === 'string' ? l.id : `line-${i + 1}` }));
-    let ordered = withIds;
-    if (Array.isArray(data.sequence)) {
-      const byId = new Map(withIds.map((l) => [l.id as string, l]));
-      const picked = (data.sequence as Record<string, unknown>[])
-        .filter((s) => s && s.kind === 'path' && byId.has(s.lineId as string))
-        .map((s) => byId.get(s.lineId as string)!);
-      const waits = (data.sequence as Record<string, unknown>[]).filter((s) => s && s.kind === 'wait').length;
-      if (picked.length) ordered = picked;
-      if (waits) notes.push(`${waits} wait step${waits > 1 ? 's' : ''} skipped: this page times driving only.`);
-    }
-    const segs: PvSeg[] = [];
+    const xy = (p: unknown): [number, number] | null => {
+      const o = p as Stored | null;
+      return o && isFinite(Number(o.x)) && isFinite(Number(o.y)) ? [Number(o.x), Number(o.y)] : null;
+    };
+    const deg = (v: unknown) => RAD(Number(v) || 0);
+    const pieceOf = (s: Stored, prevEnd: number | null): Interp => {
+      const pr = (s.parameters || {}) as Stored;
+      // continueFromPrevious takes the start angle from where the previous
+      // stretch ended, which the visualizer bakes into the export as well.
+      const start = s.continueFromPrevious && prevEnd !== null ? prevEnd : null;
+      switch (s.interpolationType) {
+        case 'linear': return { k: 'linear', h0: start ?? deg(pr.startDeg), h1: deg(pr.endDeg) };
+        case 'constant': return { k: 'constant', h: start ?? deg(pr.degrees) };
+        case 'facing-point': { const q = xy(pr.point); return q ? { k: 'facing', x: q[0], y: q[1], rev: !!s.reversed } : { k: 'tangent', rev: !!s.reversed }; }
+        default: return { k: 'tangent', rev: !!s.reversed };
+      }
+    };
+    const toInterp = (h: Stored): Interp => {
+      switch (h.type) {
+        case 'linear': return { k: 'linear', h0: deg(h.startDeg), h1: deg(h.endDeg) };
+        case 'constant': return { k: 'constant', h: deg(h.degrees) };
+        case 'piecewise': {
+          const segsP = [...((((h.piecewiseHeading || {}) as Stored).segments || []) as Stored[])]
+            .filter((s) => s && typeof s === 'object')
+            .sort((a, b) => Number(a.startProgress) - Number(b.startProgress));
+          const parts: { until: number; it: Interp }[] = [];
+          let last = 0, prevEnd: number | null = null;
+          for (const s of segsP) {
+            const until = Math.min(1, Math.max(0, Number(s.endProgress)));
+            if (!(until > last)) continue;
+            const it = pieceOf(s, prevEnd);
+            prevEnd = it.k === 'linear' ? it.h1 : it.k === 'constant' ? it.h : null;
+            parts.push({ until, it });
+            last = until;
+          }
+          if (!parts.length) return { k: 'tangent' };
+          // Pedro throws unless the stretches run to 1; the visualizer
+          // extends the last one, and so does this.
+          parts[parts.length - 1].until = 1;
+          return { k: 'piece', parts };
+        }
+        default: return { k: 'tangent', rev: !!h.reverse };
+      }
+    };
+    const lineHeading = (ln: Stored): Interp => {
+      const h = ln.heading;
+      if (h && typeof h === 'object' && typeof (h as Stored).type === 'string') return toInterp(h as Stored);
+      const ep = (ln.endPoint || {}) as Stored;
+      return toInterp({ ...ep, type: typeof h === 'string' ? h : ep.heading });
+    };
     let prev: [number, number] = [Number(sp.x), Number(sp.y)];
-    for (const ln of ordered) {
-      const ep = ln.endPoint as Record<string, unknown> | undefined;
-      if (!ep || !isFinite(Number(ep.x)) || !isFinite(Number(ep.y))) { notes.push('A line without a usable endPoint was skipped.'); continue; }
-      const ctrl = Array.isArray(ln.controlPoints) ? (ln.controlPoints as Record<string, unknown>[]) : [];
-      const pts: [number, number][] = [prev];
-      for (const cp of ctrl) if (isFinite(Number(cp.x)) && isFinite(Number(cp.y))) pts.push([Number(cp.x), Number(cp.y)]);
-      pts.push([Number(ep.x), Number(ep.y)]);
-      const mode = ep.heading === 'linear' ? 'linear' : ep.heading === 'constant' ? 'constant' : 'tangent';
-      segs.push({
-        pts, mode,
-        h0: mode === 'linear' ? RAD(Number(ep.startDeg) || 0) : mode === 'constant' ? RAD(Number(ep.degrees) || 0) : undefined,
-        h1: mode === 'linear' ? RAD(Number(ep.endDeg) || 0) : mode === 'constant' ? RAD(Number(ep.degrees) || 0) : undefined,
-        rev: mode === 'tangent' && !!ep.reverse,
-      });
-      prev = [Number(ep.x), Number(ep.y)];
+    let grpSeq = 0, waits = 0, skipped = 0;
+    const byId = new Map<string, PvSeg[]>();
+    const walk = (items: Stored[]): PvSeg[] => {
+      const out: PvSeg[] = [];
+      for (const ln of items) {
+        if (!ln || typeof ln !== 'object') continue;
+        const wb = Number(ln.waitBeforeMs ?? (ln.waitBefore as Stored | undefined)?.durationMs);
+        const wa = Number(ln.waitAfterMs ?? (ln.waitAfter as Stored | undefined)?.durationMs);
+        waits += (wb > 0 ? 1 : 0) + (wa > 0 ? 1 : 0);
+        let mine: PvSeg[] = [];
+        if (Array.isArray(ln.segments)) {
+          mine = walk(ln.segments as Stored[]);
+          const h = ln.heading;
+          // A group's own heading, when it has one, runs across its legs and
+          // overrides theirs; the outermost group is applied last, so it wins.
+          if (mine.length && h && typeof h === 'object' && typeof (h as Stored).type === 'string') {
+            applyHeading(mine, toInterp(h as Stored), ++grpSeq);
+          }
+        } else {
+          const end = xy(ln.endPoint);
+          if (!end) { skipped++; continue; }
+          const thr = Array.isArray(ln.throughPoints) ? (ln.throughPoints as unknown[]).map(xy).filter((q): q is [number, number] => !!q) : [];
+          const ctrl = Array.isArray(ln.controlPoints) ? (ln.controlPoints as unknown[]).map(xy).filter((q): q is [number, number] => !!q) : [];
+          const pts = thr.length ? throughCtrl([prev, ...thr, end]) : [prev, ...ctrl, end];
+          const sg: PvSeg = { pts, mode: 'tangent' };
+          applyHeading([sg], lineHeading(ln), 0);
+          mine = [sg];
+          prev = end;
+        }
+        if (typeof ln.id === 'string') byId.set(ln.id, mine);
+        out.push(...mine);
+      }
+      return out;
+    };
+    let segs = walk(rawLines);
+    if (Array.isArray(data.sequence)) {
+      const picked: PvSeg[] = [];
+      for (const s of data.sequence as Stored[]) {
+        if (!s || typeof s !== 'object') continue;
+        if (s.kind === 'wait') waits++;
+        const got = s.kind === 'path' ? byId.get(s.lineId as string) : undefined;
+        if (got) picked.push(...got.map((sg) => ({ ...sg, pts: sg.pts.map((q) => [q[0], q[1]] as [number, number]) })));
+      }
+      if (picked.length) segs = picked;
     }
+    if (skipped) notes.push(`${skipped} line${skipped > 1 ? 's' : ''} without a usable endPoint skipped.`);
+    if (waits) notes.push(`${waits} wait step${waits > 1 ? 's' : ''} skipped: this page times driving only.`);
     if (!segs.length) throw new PathSyntaxError(1, 'none of the lines in the file had a usable endPoint');
     return { segs, notes, kind: 'pp' };
   };
@@ -3571,53 +4270,134 @@ follower.followPath(lane);`,
     return t.startsWith('{') ? parsePedroPP(t) : parsePedroJava(t);
   };
 
-  // Java emitter. Template shape follows the official visualiser's exporter,
-  // so what comes out of here is what a team would have got out of the real
-  // tool: Pedro 3, a degrees PoseFactory, named poses to three decimals, one
-  // Path per segment, and a path(…) that composes them. A pose is declared
-  // once and reused, so a shared end and start print as one name.
+  // Java emitter, Pedro 3.0.1. The shape follows the official visualizer's
+  // own exporter: the imports it writes, a degrees PoseFactory, every pose
+  // through p.of(x, y, heading) to four decimals (control points included,
+  // at heading 0, because 3.0.1's of() takes no two-argument form), the
+  // headings as .linear / .constant / .tangent / .reverseTangent /
+  // .facingPoint, and anything those cannot say as .heading(Interpolator…).
+  // Legs that share one heading program over a path(…) are written back as
+  // that group, so the program still runs across them by length. Every leg
+  // carries a heading call, because 3.0.1 throws on a path without one.
   const chainToJava = (segs: PvSeg[]) => {
-    const N = (n: number) => n.toFixed(3);
-    const A = (h: number) => (((DEG(h) % 360) + 360) % 360).toFixed(1);
+    const N = (n: number) => String(Math.round(n * 1e4) / 1e4);
+    const A = (h: number) => N(DEG(norm2Pi(h)) % 360);
     const decls: string[] = [];
     const named = new Map<string, string>();
-    let np = 0, nc = 0;
-    // A control point carries no heading, so it prints as the two-argument of.
-    const poseName = (p: [number, number], deg: string | null, ctrl = false) => {
-      const key = `${N(p[0])}|${N(p[1])}|${deg ?? ''}|${ctrl ? 'c' : 'p'}`;
+    const counts = { pose: 0, control: 0, target: 0 };
+    let needInterp = false;
+    const poseName = (p: [number, number], d: string, kind: 'pose' | 'control' | 'target') => {
+      const key = `${N(p[0])}|${N(p[1])}|${d}|${kind}`;
       const had = named.get(key);
       if (had) return had;
-      const nm = ctrl ? `control${++nc}` : `pose${++np}`;
+      const nm = `${kind}${++counts[kind]}`;
       named.set(key, nm);
-      decls.push(`Pose ${nm} = p.of(${N(p[0])}, ${N(p[1])}${deg === null ? '' : `, ${deg}`});`);
+      decls.push(`Pose ${nm} = p.of(${N(p[0])}, ${N(p[1])}, ${d});`);
       return nm;
     };
-    const legs = segs.map((sg, i) => {
-      // .linear/.constant have no reversed() call to carry sg.rev, so a reversed
-      // segment bakes it into the printed headings instead (buildPath/segEndPose
-      // add PI to the driven heading when rev is set; adding it here to both
-      // ends before printing drives the same heading with rev cleared).
-      const bake = sg.rev && (sg.mode === 'linear' || sg.mode === 'constant');
-      const h0 = (sg.h0 || 0) + (bake ? Math.PI : 0);
-      const h1 = (sg.h1 || 0) + (bake ? Math.PI : 0);
-      const ends = sg.mode === 'tangent' ? [null, null] : sg.mode === 'constant' ? [A(h0), null] : [A(h0), A(h1)];
-      const a = poseName(sg.pts[0], ends[0]);
-      const b = poseName(sg.pts[sg.pts.length - 1], ends[1]);
-      const mid = sg.pts.slice(1, -1).map((p) => poseName(p, null, true));
-      const shape = mid.length ? `curve(${[a, ...mid, b].join(', ')})` : `line(${a}, ${b})`;
-      const head = sg.mode === 'linear' ? `.linear(${a}, ${b})`
-        : sg.mode === 'constant' ? `.constant(${a})`
-          : sg.rev ? '.reverseTangent()' : '.tangent()';
-      return `Path leg${i + 1} = ${shape}${head};`;
-    });
-    const names = segs.map((_, i) => `leg${i + 1}`).join(', ');
-    return `import static com.pedropathing.api.Paths.*;\n\nPoseFactory p = PoseFactory.degrees();\n\n${decls.join('\n')}\n\n${legs.join('\n')}\n\nPath chain = path(${names});\n\nfollower.follow(chain);`;
+    // A 2.1.2 setReversed on a linear or constant path has no 3.0.1 call of
+    // its own, so the half turn is baked into the headings it prints.
+    const progOf = (sg: PvSeg): Interp => {
+      const it = segInterp(sg);
+      if (sg.it || !sg.rev || sg.mode === 'tangent') return it;
+      return it.k === 'linear' ? { ...it, h0: it.h0 + Math.PI, h1: it.h1 + Math.PI }
+        : it.k === 'constant' ? { k: 'constant', h: it.h + Math.PI } : it;
+    };
+    const interpJava = (it: Interp): string => {
+      switch (it.k) {
+        case 'tangent': return it.rev ? 'Interpolator.tangent.reverse()' : 'Interpolator.tangent';
+        case 'linear': return `Interpolator.${it.long ? 'longLinear' : 'linear'}(Math.toRadians(${A(it.h0)}), Math.toRadians(${A(it.h1)}))`;
+        case 'constant': return `Interpolator.constant(Math.toRadians(${A(it.h)}))`;
+        case 'facing': return `Interpolator.facingPoint(${poseName([it.x, it.y], '0', 'target')})${it.rev ? '.reverse()' : ''}`;
+        case 'piece': return 'Interpolator.piecewise()' + it.parts.map((q) => `.until(${N(q.until)}, ${interpJava(q.it)})`).join('');
+      }
+    };
+    const suffix = (it: Interp, a: string, b: string) => {
+      if (it.k === 'tangent') return it.rev ? '.reverseTangent()' : '.tangent()';
+      if (it.k === 'linear' && !it.long) return `.linear(${a}, ${b})`;
+      if (it.k === 'constant') return `.constant(${a})`;
+      if (it.k === 'facing' && !it.rev) return `.facingPoint(${poseName([it.x, it.y], '0', 'target')})`;
+      needInterp = true;
+      return `.heading(${interpJava(it)})`;
+    };
+    // The heading a segment really has at either end, so a pose a team
+    // copies out (into setPose, say) faces the way the robot does there.
+    const endHeads = (sg: PvSeg): [number, number] => {
+      const P = sg.pts, D = bezDeriv(P);
+      const [ax, ay] = bezAt(D, 0), [bx, by] = bezAt(D, 1);
+      return [segHeading(sg, 0, Math.atan2(ay, ax), P[0][0], P[0][1]), segHeading(sg, 1, Math.atan2(by, bx), P[P.length - 1][0], P[P.length - 1][1])];
+    };
+    const shape = (sg: PvSeg, a: string, b: string) => {
+      const mid = sg.pts.slice(1, -1).map((q) => poseName(q, '0', 'control'));
+      return mid.length ? `curve(${[a, ...mid, b].join(', ')})` : `line(${a}, ${b})`;
+    };
+    const stmts: string[] = [];
+    const top: string[] = [];
+    let legN = 0, grpN = 0;
+    for (let i = 0; i < segs.length;) {
+      const sg = segs[i];
+      if (sg.grp && sg.it) {
+        let j = i;
+        while (j + 1 < segs.length && segs[j + 1].grp === sg.grp) j++;
+        const legs: string[] = [];
+        let first = '', last = '';
+        for (let k = i; k <= j; k++) {
+          const [h0, h1] = endHeads(segs[k]);
+          const a = poseName(segs[k].pts[0], A(h0), 'pose');
+          const b = poseName(segs[k].pts[segs[k].pts.length - 1], A(h1), 'pose');
+          if (k === i) first = a;
+          last = b;
+          const nm = `leg${++legN}`;
+          stmts.push(`Path ${nm} = ${shape(segs[k], a, b)};`);
+          legs.push(nm);
+        }
+        const g = `group${++grpN}`;
+        stmts.push(`Path ${g} = path(${legs.join(', ')})${suffix(sg.it, first, last)};`);
+        top.push(g);
+        i = j + 1;
+      } else {
+        const [h0, h1] = endHeads(sg);
+        const a = poseName(sg.pts[0], A(h0), 'pose');
+        const b = poseName(sg.pts[sg.pts.length - 1], A(h1), 'pose');
+        const nm = `leg${++legN}`;
+        stmts.push(`Path ${nm} = ${shape(sg, a, b)}${suffix(progOf(sg), a, b)};`);
+        top.push(nm);
+        i++;
+      }
+    }
+    const imports = [
+      'import static com.pedropathing.api.Paths.*;',
+      'import com.pedropathing.api.PoseFactory;',
+      'import com.pedropathing.math.Pose;',
+      'import com.pedropathing.paths.Path;',
+      ...(needInterp ? ['import com.pedropathing.paths.interpolator.Interpolator;'] : []),
+    ];
+    return `${imports.join('\n')}\n\nPoseFactory p = PoseFactory.degrees();\n\n${decls.join('\n')}\n\n${stmts.join('\n')}\n\nPath chain = path(${top.join(', ')});\n\nfollower.follow(chain);`;
   };
 
   const niceStep = (range: number, target = 5) => {
     const raw = range / target, mag = Math.pow(10, Math.floor(Math.log10(raw)));
     for (const m of [1, 2, 2.5, 5, 10]) if (raw <= m * mag) return m * mag;
     return 10 * mag;
+  };
+  // The next round step up from one already round, for thinning a crowded
+  // axis: doubling walked 2.5 to 5 but also 2 to 4 and 4 to 8, which are
+  // steps no axis on this page should be read in.
+  const nextNice = (step: number) => {
+    const mag = Math.pow(10, Math.floor(Math.log10(step) + 1e-9)), m = step / mag;
+    return (m < 1.999 ? 2 : m < 4.999 ? 5 : 10) * mag;
+  };
+  // Widen an x step until the widest of its labels clears its neighbour by a
+  // gap, so tick labels never touch at a phone's width.
+  const fitXStep = (g: CanvasRenderingContext2D, lo: number, hi: number, span: number, step: number) => {
+    let s = step;
+    for (let guard = 0; guard < 8; guard++) {
+      let w = 0;
+      for (let v = Math.ceil(lo / s) * s; v <= hi + 1e-9; v += s) w = Math.max(w, g.measureText(tickNum(v, s)).width);
+      if (span / ((hi - lo) / s) >= w + 14) break;
+      s = nextNice(s);
+    }
+    return s;
   };
   interface ChartOpts {
     xMin: number; xMax: number; yMin: number; yMax: number;
@@ -3635,6 +4415,8 @@ follower.followPath(lane);`,
     // mark's filled shape, which is a distinction that survives greyscale and
     // every form of colour blindness, unlike the hue on its own.
     scatter?: { pts: { x: number; y: number }[]; color: string; label?: string }[];
+    // What the plot says when its model line has nothing finite in it.
+    empty?: string;
   }
   const drawChart = (cv: HTMLCanvasElement, o: ChartOpts) => {
     const s = sizeCanvas(cv);
@@ -3674,11 +4456,14 @@ follower.followPath(lane);`,
     g.textRendering = 'geometricPrecision';
 
     // Gridlines: horizontal only. X is read off its tick label; a vertical
-    // grid would only add ink. The step doubles until no two lines are closer
-    // than 8 px, below which a grid stops helping a reader estimate a value.
+    // grid would only add ink. Every gridline carries a label, so the step
+    // widens until no two lines are closer than 18 px: an 11 px label needs
+    // that much before it starts to touch the one under it. Both axes step
+    // through round values only.
     let ys = niceStep(yr);
-    for (let guard = 0; guard < 8 && ph / (yr / ys) < 8; guard++) ys *= 2;
-    const xs = niceStep(xr, 6);
+    for (let guard = 0; guard < 8 && ph / (yr / ys) < 18; guard++) ys = nextNice(ys);
+    g.font = FONT_TICK;
+    const xs = fitXStep(g, o.xMin, o.xMax, pw, niceStep(xr, 6));
     g.lineWidth = W_HAIR;
     g.strokeStyle = P.grid;
     g.beginPath();
@@ -3699,7 +4484,9 @@ follower.followPath(lane);`,
     }
     g.textAlign = 'center'; g.textBaseline = 'top';
     for (let xv = Math.ceil(o.xMin / xs) * xs; xv <= o.xMax + 1e-9; xv += xs) {
-      g.fillText(tickNum(xv, xs), X(xv), y1 + 10);
+      // A label at the far end is held inside the canvas rather than cut by it.
+      const t = tickNum(xv, xs), hw = g.measureText(t).width / 2;
+      g.fillText(t, Math.min(W - 2 - hw, X(xv)), y1 + 10);
     }
 
     // Axis titles.
@@ -3829,7 +4616,10 @@ follower.followPath(lane);`,
       if (mk.label) {
         g.font = FONT_LABEL;
         g.textAlign = 'center'; g.textBaseline = 'bottom';
-        halo(g, mk.label, clampX(X(mk.x), x0 + 34, x1 - 34), Y(mk.y) - 9, P.ink1, P.panel);
+        // Held inside the plot by the label's own measured width, so a long
+        // label beside the frame never runs over the axis and its ticks.
+        const hw = g.measureText(mk.label).width / 2 + HALO_PAD + 2;
+        halo(g, mk.label, clampX(X(mk.x), x0 + hw, Math.max(x0 + hw, x1 - hw)), Y(mk.y) - 9, P.ink1, P.panel);
       }
     }
 
@@ -3858,10 +4648,17 @@ follower.followPath(lane);`,
       halo(g, sr.label as string, (out ? x1 : lx) + 6,
         Math.min(y1 - 6, Math.max(y0 + 2, out ? ly : ly + (under ? 7 : -7))), sr.color, P.panel);
     }
+    // Each limit is named just over its own line; one that would land on a
+    // name already placed goes just under its line instead.
+    const placed: number[] = [];
     for (const h of o.hlines || []) {
       if (!h.label || !isFinite(h.y)) continue;
-      g.textAlign = 'right'; g.textBaseline = 'bottom';
-      halo(g, h.label, x1 - 2, Math.max(y0 + 11, Y(h.y) - 4), h.warn ? P.warnText : P.ink3, P.panel);
+      g.textAlign = 'right';
+      let ly = Math.max(y0 + 11, Y(h.y) - 4);
+      g.textBaseline = 'bottom';
+      if (placed.some((p) => Math.abs(p - ly) < 13)) { ly = Math.min(y1 - 4, Y(h.y) + 4); g.textBaseline = 'top'; }
+      placed.push(g.textBaseline === 'top' ? ly + 9 : ly);
+      halo(g, h.label, x1 - 2, ly, h.warn ? P.warnText : P.ink3, P.panel);
     }
     // A named x position reads off the x axis, so its label sits on the axis,
     // not up in the data where it would fight a limit label.
@@ -3877,6 +4674,14 @@ follower.followPath(lane);`,
       const cl = X(crossX) + 4 + cw < x1 - 2;
       g.textAlign = cl ? 'left' : 'right'; g.textBaseline = 'bottom';
       halo(g, tickNum(crossX, xs / 10), X(crossX) + (cl ? 4 : -4), y1 - 5, P.warnText, P.panel);
+    }
+
+    // A model line with nothing finite to draw says so in the plot, rather than
+    // leaving an empty frame that reads as a rendering fault.
+    if (o.empty && !(primary && primary.filter((p) => isFinite(p.y)).length > 1)) {
+      g.font = FONT_LABEL;
+      g.textAlign = 'center'; g.textBaseline = 'middle';
+      halo(g, o.empty, x0 + pw / 2, y0 + ph / 2, P.ink3, P.panel);
     }
 
     // The figure states what it drew, so a check can read it back: both axis
@@ -3966,9 +4771,6 @@ follower.followPath(lane);`,
     // The pit protocol, inverted. Every formula fires only when its own inputs
     // are present, so an empty section leaves every constant on the published
     // value and every number on this page byte-identical to before it existed.
-    // g in in/s², expressed on THIS page's own 9.81 m/s² rather than a quoted
-    // 386.09, so a derived Crr means exactly what the model's drag term means.
-    const G_IN_S2 = GRAV / 0.0254;
     // An empty field is "not measured". A filled one is taken at face value
     // inside the bounds its own control declares.
     interface Meas {
@@ -4010,6 +4812,9 @@ follower.followPath(lane);`,
       let Gtot = isFinite(gbRatio) && gbRatio > 0 ? gbRatio : gbDflt;
       let eta = etaGb;
       for (const s of stages) { Gtot *= s.dout / s.din; eta *= s.eff; }
+      // The burst floor is the sustained value as the model will hold it, not
+      // as typed, or a typed 2 A would let the burst sit under its own floor.
+      const ilim = clamp(num('ilim', 20), 3, 80);
       return {
         rpm0: Math.max(200, num('mFree', 6000)), tau0: Math.max(0.01, num('mTau', 0.144)),
         is0: Math.max(0.5, num('mIs', 9.2)), if0: Math.max(0, num('mIf', 0.25)),
@@ -4021,18 +4826,19 @@ follower.followPath(lane);`,
         mu: clamp(ms.mu ?? num('mu', 0.7), 0.05, 2.5), crr: clamp(ms.crr ?? num('crr', 0.045), 0, 0.3),
         m: Math.max(2, num('wt', 29) * LB), lb: num('wt', 29),
         voc: clamp(num('voc', 13.5), 6, 15), rint: clamp(ms.rint ?? num('rint', 0.14), 0, 1.5),
-        ilim: clamp(num('ilim', 20), 3, 80),
-        iburst: clamp(num('iburst', 35), num('ilim', 20), 90),
+        ilim,
+        iburst: clamp(num('iburst', 35), ilim, 90),
         tburst: clamp(num('tburst', 1.5), 0.2, 12),
         fuse: state.fuse,
-        // The chain is the one objective now. dist and brakeFrac survive as
-        // constants: the stopping figures still quote a three-tile reference
-        // leg, and the sprint machinery underneath still compiles.
+        // The chain is the one objective now. dist survives as a constant:
+        // the stopping figures still quote a three-tile reference leg, and
+        // the sprint machinery underneath still compiles.
         dist: 3,
         // A Pedro chain ends where it ends: the follower brakes onto its
         // last pose, so the stop is always charged.
         stopAtEnd: true,
-        brakeFrac: 0.6,
+        // Straight-line figures are forward runs. The chain reads its own
+        // direction per sample off the heading and the tangent.
         strafe: false,
         dia: num('wDia', 96), cgH: num('cgH', 5), cgX: num('cgX', 5),
       };
@@ -4192,6 +4998,62 @@ follower.followPath(lane);`,
 
     const statCard = (k: string, v: string, u: string, warn = false) =>
       `<dl class="dt-stat${warn ? ' is-warn' : ''}"><dt class="k">${k}</dt><dd class="v">${v}</dd><dd class="u">${u}</dd></dl>`;
+    // The word for whichever ceiling bound a force: the cap is the burst one
+    // only while a burst budget is what is being spent.
+    const LIMIT_TXT = (c: Cfg, limit: string, burst = c.fuse === 'burst') =>
+      ({ grip: 'grip-limited', current: burst ? 'burst-limited' : 'fuse-limited', motor: 'torque-limited' } as Record<string, string>)[limit] || limit;
+    const fmtKg = (kg: number) => (isFinite(kg) ? kg.toFixed(Math.abs(kg % 1) > 1e-9 && kg < 100 ? 1 : 0) : '–');
+    const massTxt = (kg: number) => `${fmtKg(kg)} kg · ${fmt(kg / LB, 0)} lb`;
+
+    // Pushing: four figures in the ledger's own cards, then one table of
+    // opponents across the FTC weight range. Every force here is net of this
+    // robot's own rolling drag, the way a drawbar pull is quoted.
+    const renderPush = (c: Cfg) => {
+      const own = c.crr * c.m * GRAV;
+      const held = forceAt(0, c, c.ilim);
+      const netHeld = Math.max(0, held.F - own);
+      const burst = forceAt(0, c, capAt(c, budget0(c)));
+      const netBurst = Math.max(0, burst.F - own);
+      const mec = ($('wType') as HTMLSelectElement).value === 'mecanum';
+      const side = forceAt(0, c, c.ilim, DIR_STRAFE);
+      const netSide = Math.max(0, side.F - own);
+      const boxKg = netHeld / (BOX_MU * GRAV), boxSideKg = netSide / (BOX_MU * GRAV);
+      $('pushStats').innerHTML =
+        statCard('Push, held', fmt(netHeld, 0), `N · ${fmt(netHeld * LBF, 0)} lbf · <b class="dt-lim">${LIMIT_TXT(c, held.limit, false)}</b>`) +
+        (c.fuse === 'burst' && netBurst > netHeld + 0.5
+          ? statCard('Push, burst', fmt(netBurst, 0), `N · ${fmt(netBurst * LBF, 0)} lbf for the first ${fmt(c.tburst, 1)} s`) : '') +
+        (mec ? statCard('Strafe push, held', fmt(netSide, 0), `N · ${fmt(netHeld > 0 ? netSide / netHeld * 100 : NaN, 0)}% of forward`) : '') +
+        statCard('Heaviest box on tile', fmtKg(boxKg), `kg · ${fmt(boxKg / LB, 0)} lb`) +
+        (mec ? statCard('Heaviest box, strafing', fmtKg(boxSideKg), `kg · ${fmt(boxSideKg / LB, 0)} lb`) : '');
+
+      // Against a robot like yours, both push flat out from a standstill, so
+      // it is wheel force against wheel force. Theirs differs from yours only
+      // in its grip ceiling, which follows its weight.
+      const mine = held.F;
+      const theirs = (kg: number) => forceAt(0, { ...c, m: kg }, c.ilim).F;
+      const rows = OPP_KG.map((kg) => {
+        const cells = DEFENDERS.map((d) => {
+          const v = pushSpeed(c, d.mu * kg * GRAV);
+          return `<td class="is-numeric">${isFinite(v) ? fmt(v / TILE, 2) : 'stalls'}</td>`;
+        }).join('');
+        const diff = mine - theirs(kg);
+        const h2h = Math.abs(diff) < 1 ? 'even' : diff > 0 ? `you, by ${fmt(diff, 0)} N` : `them, by ${fmt(-diff, 0)} N`;
+        return `<tr><th scope="row">${massTxt(kg)}</th>${cells}<td>${h2h}</td></tr>`;
+      }).join('');
+      // A grip-limited robot meets its match at its own weight. One the fuse
+      // or the motors hold back first is never out-pushed by its twin; the
+      // twin only draws level once it is heavy enough to reach the same cap.
+      const evenKg = held.limit === 'grip' ? c.m : mine / (c.mu * GRAV);
+      const maxRow = `<tr class="dt-push-max"><th scope="row">Heaviest you move</th>${DEFENDERS.map((d) =>
+        `<td class="is-numeric">${massTxt(netHeld / (d.mu * GRAV))}</td>`).join('')}<td>even ${held.limit === 'grip' ? 'at' : 'from'} ${massTxt(evenKg)}</td></tr>`;
+      $('pushBody').innerHTML = rows + maxRow;
+      $('srPush').textContent =
+        `Pushing summary: ${fmt(netHeld, 0)} newtons held, ${LIMIT_TXT(c, held.limit, false)}. `
+        + `Heaviest box on tile ${fmtKg(boxKg)} kilograms. `
+        + `Heaviest robot moved: ${fmtKg(netHeld / (DEFENDERS[0].mu * GRAV))} kilograms with mecanum wheels locked, `
+        + `${fmtKg(netHeld / (DEFENDERS[1].mu * GRAV))} with traction wheels locked. `
+        + `A robot like yours draws even ${held.limit === 'grip' ? 'at' : 'from'} ${fmtKg(evenKg)} kilograms.`;
+    };
     // THE LEDGER'S TWO KINDS OF NUMBER, which a datasheet separates into two
     // tables and this page used to mix into one rank. A ceiling is a number
     // the robot must not cross: cross it and grip breaks, or the fuse opens,
@@ -4261,6 +5123,19 @@ follower.followPath(lane);`,
         else if (DEFAULTS.fields[id] !== undefined) ($(id) as HTMLInputElement).value = DEFAULTS.fields[id];
       });
       setGearboxValue(typeof fields.gbSel === 'string' || typeof fields.gbSel === 'number' ? String(fields.gbSel) : platform().dflt);
+      // REV and AndyMark had no vendor row until this pass, so their links
+      // were saved under the default "spec" basis while carrying gm0's dyno
+      // numbers. The numbers restore as saved; only the toggle is set to say
+      // which row they actually are.
+      {
+        const p = platform();
+        const row = (k?: string) => {
+          const r = k ? MOTORS[k] : undefined;
+          return !!r && [['mFree', r.rpm], ['mTau', r.tau], ['mIs', r.is], ['mIf', r.ifree]]
+            .every(([id, val]) => Math.abs(parseFloat(($(id as string) as HTMLInputElement).value) - (val as number)) < 1e-6);
+        };
+        if (p.spec && state.basis === 'spec' && !currentBox()?.motor && row(p.dyno) && !row(p.spec)) setBasis('dyno');
+      }
       syncBasisVisibility();
       // Snapshots written before the pack field existed carry only the loop.
       const packEl = $('packIR') as HTMLInputElement;
@@ -4319,26 +5194,61 @@ follower.followPath(lane);`,
       const i = platform().boxes.indexOf(r.box);
       if (i >= 0 && i < sel.options.length) sel.value = sel.options[i].value;
       ($('gbCustomWrap') as HTMLElement).hidden = sel.value !== 'custom';
-      stageRows().forEach((row) => row.remove());
-      if (r.st) addStageRow(r.st.din, r.st.dout, Math.round(r.st.eff * 100), r.st.kind);
+      // A stage the reader already runs in the recipe's own family keeps its
+      // row and its efficiency, which is the number the recipe was scored on:
+      // only its teeth change. Every other external stage is gearing the
+      // recipe replaces, so it goes. A family the reader does not run arrives
+      // as a new row on that family's default, as "Add a stage" would give it.
+      const rows = stageRows();
+      const keepRow = r.st ? rows.find((row) => stageVal(row, 'type') === r.st!.kind) : undefined;
+      rows.forEach((row) => { if (row !== keepRow) row.remove(); });
+      if (r.st && keepRow) {
+        (keepRow.querySelector('[data-st="din"]') as HTMLInputElement).value = String(r.st.din);
+        (keepRow.querySelector('[data-st="dout"]') as HTMLInputElement).value = String(r.st.dout);
+      } else if (r.st) {
+        addStageRow(r.st.din, r.st.dout, Math.round(r.st.eff * 1000) / 10, r.st.kind);
+      }
       // No change event fires from an assignment, so keep the sealed-gearmotor
       // latch honest for whatever the reader picks by hand next.
       lastBoxSealed = !!currentBox()?.motor;
       schedule();
     };
 
+    // The closest tooth pair to a ratio, both counts inside the field's own
+    // 1 to 200: under a thousandth of the ratio off for anything a stage
+    // could plausibly carry.
+    const toothPair = (ratio: number): [number, number] => {
+      let best: [number, number] = [1, 1], err = Infinity;
+      for (let din = 1; din <= TEETH_MAX; din++) {
+        const dout = clamp(Math.round(ratio * din), 1, TEETH_MAX);
+        const e = Math.abs(Math.log(dout / din / ratio));
+        if (e < err - 1e-12) { err = e; best = [din, dout]; }
+      }
+      return best;
+    };
+
     // "Build the ideal": land the wheel rpm exactly on the continuous
     // optimum. No stocked part reaches an arbitrary rpm, so this one writes
     // the custom gearbox ratio and clears the stage list; everything else
-    // stays where the reader put it.
+    // stays where the reader put it. A sealed gearmotor's gearbox cannot come
+    // off, so on one the gearmotor stays and the rest of the ratio goes into a
+    // single custom stage behind it. That stage runs at 100 per cent, because
+    // the ideal is a ratio and nothing else: it lands on the curve's own
+    // basis, the gearbox's efficiency alone.
     const buildIdeal = () => {
       settle();
       if (!last || !isFinite(last.sw.best.N)) return;
       const G = last.c.rpm0 / last.sw.best.N;
-      ($('gbSel') as HTMLSelectElement).value = 'custom';
-      ($('gbCustom') as HTMLInputElement).value = String(Math.round(G * 10000) / 10000);
-      ($('gbCustomWrap') as HTMLElement).hidden = false;
+      const box = currentBox();
       stageRows().forEach((row) => row.remove());
+      if (box && box.motor && typeof box.v === 'number') {
+        const [din, dout] = toothPair(G / box.v);
+        addStageRow(din, dout, 100, 'custom');
+      } else {
+        ($('gbSel') as HTMLSelectElement).value = 'custom';
+        ($('gbCustom') as HTMLInputElement).value = String(Math.round(G * 10000) / 10000);
+        ($('gbCustomWrap') as HTMLElement).hidden = false;
+      }
       lastBoxSealed = !!currentBox()?.motor;
       schedule();
     };
@@ -4368,7 +5278,14 @@ follower.followPath(lane);`,
       const pool = picked?.motor
         ? [picked]
         : plat.boxes.filter((b) => typeof b.v === 'number' && !b.motor);
-      const recipes = isFinite(sw.best.N) ? buildables(c, wantLo, wantHi, pool) : [];
+      // The reader's own efficiency for each stage family they run, first row
+      // of a family wins: the row "Build the recommendation" would keep.
+      const famEff: Record<string, number> = {};
+      for (const row of stageRows()) {
+        const k = stageVal(row, 'type'), e = parseFloat(stageVal(row, 'eff'));
+        if (STAGE_TYPES[k]?.teeth && !(k in famEff) && isFinite(e)) famEff[k] = clamp(e, 30, 100) / 100;
+      }
+      const recipes = isFinite(sw.best.N) ? buildables(c, wantLo, wantHi, pool, 3, famEff) : [];
       last = { c, met, sw, sens, recipes };
 
 
@@ -4383,16 +5300,19 @@ follower.followPath(lane);`,
       ($('roEta') as HTMLElement).textContent = fmt(c.eta * 100, 0) + '%';
 
       // Stats
-      const vtopT = met.vtop / TILE, vfreeT = met.vfree12 / TILE, a0T = met.a0 / TILE;
-      const limitTxt = ({ grip: 'grip-limited', current: c.fuse === 'burst' ? 'burst-limited' : 'fuse-limited', motor: 'torque-limited' } as Record<string, string>)[met.launch.limit];
+      const vtopT = met.vtop / TILE, vfreeT = met.vfree / TILE, a0T = met.a0 / TILE;
+      const limitTxt = LIMIT_TXT(c, met.launch.limit);
       const capNow = c.fuse === 'burst' ? c.iburst : c.ilim;
       const overAmp = met.launch.Itot >= capNow - 0.05;
       const tip = tipCheck(met.a0, c.cgX, c.cgH);
       const tipWarn = tip.ratio > 0.85;
-      // Both stopping figures come off the integration already run: no second
-      // model, no new physics. The reference leg is the three-tile constant
-      // readCfg carries.
-      const ab = brakeDecel(c);
+      // Both stopping figures come off the integration already run and the
+      // one braking model the chain uses: no second model, no new physics.
+      // The reference leg is the three-tile constant readCfg carries. Braking
+      // slows as the speed falls, so the rate is quoted as the average over
+      // the whole stop, v² / 2d.
+      const stopB = brakeAt(met.tab, met.vtop);
+      const abAvg = stopB.D > 0 ? met.vtop * met.vtop / (2 * stopB.D) : NaN;
       const flyT = objective(met.sim, { ...c, stopAtEnd: false });
       // The path engine drives off `last`, so the chain is re-timed before the
       // board is written: the chain half of the board IS that chain's time,
@@ -4406,16 +5326,16 @@ follower.followPath(lane);`,
       // THE LEDGER: one flat rank of figures. No group titles and no rules
       // between rows; the cards are the structure.
       $('stats').innerHTML =
-        statCard('Push force', fmt(met.push, 0), `N · ${fmt(met.push * 0.2248, 0)} lbf drawbar`) +
         statCard('Launch draw', fmt(met.launch.Itot, 1), `A · sags to ${fmt(met.launch.V, 1)} V${met.thermalHit ? ' · i²t spent' : overAmp ? ' · at the cap' : ''}`, overAmp || met.thermalHit) +
-        statCard('Tip margin', fmt(tip.ratio * 100, 0) + '%', `of tipping accel · CG ${fmt(c.cgH, 1)}″ up${tipWarn ? ' · near the limit' : ''}`, tipWarn) +
+        statCard('Launch tip margin', fmt(tip.ratio * 100, 0) + '%', `of tipping accel · CG ${fmt(c.cgH, 1)}″ up${tipWarn ? ' · near the limit' : ''}`, tipWarn) +
         statCard('Launch accel', fmt(a0T, 1), `tiles/s² · <b class="dt-lim">${limitTxt}</b>`) +
         statCard('0 → 90% speed', fmt(met.t90, 2), 's') +
         statCard('Cost of starting', fmt(met.tauC, 2), 's per standing start') +
         statCard('Top speed (real)', fmt(vtopT, 2), `tiles/s · ${fmt(met.vtop, 2)} m/s`) +
-        statCard('Free speed (ideal)', fmt(vfreeT, 2), `tiles/s at 12 V · ${fmt(met.wheelRpm, 0)} rpm`) +
-        statCard('Stopping distance', fmt(met.vtop * met.vtop / (2 * ab) / TILE, 2), `tiles from top speed · ${fmt(ab / TILE, 1)} tiles/s²`) +
+        statCard('Free speed (ideal)', fmt(vfreeT, 2), `tiles/s with no load at ${fmt(c.voc, 1)} V`) +
+        statCard('Stopping distance', fmt(stopB.D / TILE, 2), `tiles from top speed · ${fmt(abAvg / TILE, 1)} tiles/s² average`) +
         statCard('Cost of stopping', fmt(met.objT - flyT, 2), 's');
+      renderPush(c);
 
       // Verdict board. What you run leads; the part you can buy sits beside
       // it, and the continuous ideal is a line underneath, because you
@@ -4455,30 +5375,31 @@ follower.followPath(lane);`,
       const { c, met } = last;
       const P = palette();
       const legD = c.dist * TILE;
-      const stop = c.stopAtEnd ? timeForStop(met.sim, c, legD) : null;
+      const stop = c.stopAtEnd ? timeForStop(met.sim, c, legD, met.tab) : null;
       const legT = stop ? stop.t : timeFor(met.sim, legD);
       const tEnd = Math.min(8, Math.max(isFinite(legT) ? legT * 1.08 : 3, (met.t90 || 1) * 2.6, 1.2));
       const stride = Math.max(1, Math.floor(met.sim.T.length / 340));
       const prof: { x: number; y: number }[] = [];
-      const cutT = stop && isFinite(stop.t) ? met.sim.T[stop.iSwitch] : Infinity;
+      const cutT = stop && isFinite(stop.t) ? stop.tSwitch : Infinity;
       for (let i = 0; i < met.sim.T.length; i += stride) {
         if (met.sim.T[i] > Math.min(tEnd, cutT)) break;
         prof.push({ x: met.sim.T[i], y: met.sim.V[i] / TILE });
       }
+      // The run ends exactly where braking takes over, so the two lines meet.
+      if (isFinite(cutT) && stop) prof.push({ x: cutT, y: stop.vPeak / TILE });
       // The model is the solid line; braking is the same model under a
-      // different command, so it is the same hue at the same weight and is
-      // told apart by its dash, not by a second colour.
+      // different command, so it is the same hue and is told apart by its
+      // dash, not by a second colour. It is drawn off the braking table the
+      // stop time came from, so it bends the way shorted windings do: hard at
+      // speed, gently near the end.
       const series: ChartOpts['series'] = [{ pts: prof, color: P.s1, label: 'model' }];
       if (stop && isFinite(stop.t)) {
-        const ab = brakeDecel(c);
+        const b0 = brakeAt(met.tab, stop.vPeak);
         const brake: { x: number; y: number }[] = [];
-        for (let k = 0; k <= 12; k++) {
-          const tt = cutT + (stop.vPeak / ab) * (k / 12);
-          brake.push({ x: tt, y: Math.max(0, (stop.vPeak - ab * (tt - cutT)) / TILE) });
+        for (let k = 0; k <= 24; k++) {
+          const v = stop.vPeak * (1 - k / 24);
+          brake.push({ x: cutT + b0.T - brakeAt(met.tab, v).T, y: v / TILE });
         }
-        // Same model, same hue, told apart by its dash and named in the
-        // caption. A second direct label on a chart this size would cost more
-        // in clutter than it returns.
         series.push({ pts: brake, color: P.s1, dash: DASH_REF, width: W_REF });
       }
       const vlines: ChartOpts['vlines'] = [];
@@ -4550,6 +5471,7 @@ follower.followPath(lane);`,
         aspect: [1.3, 2.6],
         band: { lo: clipWin(sens.muLoPts), hi: clipWin(sens.muHiPts) },
         series: [{ pts: clipWin(sw.pts), color: P.s1, label: 'model' }],
+        empty: 'no gearing from 100 to 1000 rpm finishes the runs',
         ticks,
         markers: [
           { x: met.wheelRpm, y: met.overallT, color: P.s1, label: 'you · ' + fmt(met.overallT, 2) + ' s' },
@@ -4594,7 +5516,8 @@ follower.followPath(lane);`,
       const ampH: ChartOpts['hlines'] = [
         { y: c.ilim, color: P.warnLine, dash: DASH_LIMIT, limit: true, warn: true, label: 'sustained ' + c.ilim + ' A' },
       ];
-      if (c.fuse === 'burst') ampH.push({ y: c.iburst, color: P.warnLine, dash: [2, 4], warn: true, label: 'burst ' + c.iburst + ' A' });
+      // The dash matches the legend's swatch, three on and three off.
+      if (c.fuse === 'burst') ampH.push({ y: c.iburst, color: P.warnLine, dash: [3, 3], warn: true, label: 'burst ' + c.iburst + ' A' });
       drawChart($('cAmp') as HTMLCanvasElement, {
         xMin: 0, xMax: vMax / TILE, yMin: 0, yMax: Math.max(capLaunch, ...apts.map((p) => p.y)) * 1.15,
         xLabel: 'robot speed (tiles/s)', yLabel: 'total draw (A)',
@@ -4610,9 +5533,10 @@ follower.followPath(lane);`,
     // ── Simulate ────────────────────────────────────────────────────────────
     // Pedro supplies the geometry and the heading rules. Every speed below is
     // this page's own physics, driven off the same config the board is scored
-    // on, so re-gearing the robot re-times the chain. One model: the Pedro
-    // follower on this drivetrain, with its centripetal cornering caps and
-    // its zero-power predictive braking (see the passes in buildPath).
+    // on, so re-gearing the robot re-times the chain. One model: Pedro
+    // 3.0.1's follower, Foresight, on this drivetrain: full power down the
+    // tangent, momentum carried across joints, grip setting the corners, and
+    // a stop planned on the drivetrain's own braking (the passes in buildPath).
     interface PvSample { x: number; y: number; s: number; h: number; k: number; v: number; t: number; ph: string }
     interface PvChain { segs: PvSeg[]; label: string; code: string }
     interface PvData {
@@ -4639,26 +5563,12 @@ follower.followPath(lane);`,
     // a chip can never name a phase the engine no longer emits. Each model
     // shows only the phases it can actually produce.
     const M_PER_IN = 0.0254;
-    // What the follower actually brakes at, from PedroPathing 2.1.2, which is
-    // the current release: `main` still reads version=2.1.2 and the quickstart
-    // still pins com.pedropathing:ftc:2.1.2. Three numbers multiply:
-    //   · forwardZeroPowerAcceleration, the robot's own coast-down rate, set
-    //     to -41.278 in/s² by FollowerConstants.defaults(). It is a
-    //     placeholder: the javadoc sends every team to
-    //     ForwardZeroPowerAccelerationTuner for their own.
-    //   · brakingStrength on PathConstraints, "a multiplier for the zero power
-    //     acceleration to change the speed the robot decelerates at the end of
-    //     paths". Default 1, and 1 in the quickstart's own Constants.java.
-    //     This is what the old zeroPowerAccelerationMultiplier became at
-    //     2.0.0; the rename is the whole of the change.
-    //   · a hard 4 that ErrorCalculator applies on top, which is why the docs
-    //     say a brakingStrength of 1 IS the retired ZPAM of 4. The library
-    //     line is forwardZeroPowerAcceleration * (getBrakingStrength() * 4).
-    // Product: 41.278 x 1 x 4 = 165.1 in/s². Provenance and URLs:
-    // docs/drivetrain-research-notes.md.
-    const ZPA_IN_S2 = 41.278;        // FollowerConstants.defaults()
-    const BRAKING_STRENGTH = 1;      // PathConstraints default, and the quickstart's
-    const BRAKING_SCALE = 4;         // ErrorCalculator's own multiplier on it
+    // Braking used to be a constant here, read out of Pedro 2.1.2: its zero
+    // power acceleration (41.278 in/s²) times brakingStrength times the
+    // library's own 4. Pedro 3 replaced that machinery with Foresight, which
+    // plans each stop on the drivetrain's own fitted braking curve, so the
+    // chain now brakes on brakeAccel, the same natural braking the sprint
+    // uses. The 2.1.2 derivation stays in docs/drivetrain-research-notes.md.
     // A joint between two paths is a corner of zero radius, which nothing can
     // drive. Round it over half a robot and cap on that radius; what survives a
     // direction change of psi is cos(psi/2) of it, so a chain that doubles
@@ -4685,10 +5595,23 @@ follower.followPath(lane);`,
     const BB_KEYS = ['bbPreload', 'bbPark', 'bbCycle'];
     const BB_RED = BB_KEYS.map((k) => ({ k, segs: PV_PRESETS[k].segs, code: PV_PRESETS[k].code }));
     const bbAlliance = (): BbSide => (($('bbAlliance') as HTMLSelectElement).value === 'blue' ? 'blue' : 'red');
+    // Half a turn about the centre: every heading turns with the field, a
+    // facing target moves with it, and a tangent follows the geometry by
+    // itself.
+    const rotInterp = (it: Interp): Interp => {
+      switch (it.k) {
+        case 'tangent': return it;
+        case 'linear': return { ...it, h0: it.h0 + Math.PI, h1: it.h1 + Math.PI };
+        case 'constant': return { k: 'constant', h: it.h + Math.PI };
+        case 'facing': return { ...it, x: FIELD_IN - it.x, y: FIELD_IN - it.y };
+        case 'piece': return { k: 'piece', parts: it.parts.map((q) => ({ until: q.until, it: rotInterp(q.it) })) };
+      }
+    };
     const bbMirror = (segs: PvSeg[]): PvSeg[] => segs.map((sg) => {
       const out: PvSeg = { ...sg, pts: sg.pts.map((p) => [FIELD_IN - p[0], FIELD_IN - p[1]] as [number, number]) };
       if (sg.h0 !== undefined) out.h0 = sg.h0 + Math.PI;
       if (sg.h1 !== undefined) out.h1 = sg.h1 + Math.PI;
+      if (sg.it) out.it = rotInterp(sg.it);
       return out;
     });
     const bbApplyAlliance = () => {
@@ -4712,17 +5635,13 @@ follower.followPath(lane);`,
     const BB_GARDEN_IN = 16;       // how near the garden strip a pickup counts
     const BB_TIP_PTS = 20, BB_LEAVE_PTS = 3, BB_PARK_PTS = 5;
 
-    // The pose a segment finishes on, heading included: the same rules the
-    // sampler in buildPath uses, read at t = 1.
+    // The pose a segment finishes on, heading included: the same rule the
+    // sampler in buildPath uses, read at the segment's end.
     const segEndPose = (sg: PvSeg): [number, number, number] => {
       const P = sg.pts;
       const e = P[P.length - 1];
-      let h: number;
-      if (sg.mode === 'constant') h = sg.h0 || 0;
-      else if (sg.mode === 'linear') h = sg.h1 || 0;
-      else { const [dx, dy] = bezAt(bezDeriv(P), 1); h = Math.atan2(dy, dx); }
-      if (sg.rev) h += Math.PI;
-      return [e[0], e[1], h];
+      const [dx, dy] = bezAt(bezDeriv(P), 1);
+      return [e[0], e[1], segHeading(sg, 1, Math.atan2(dy, dx), e[0], e[1])];
     };
 
     interface BbOpts { alliance: BbSide; launchDwell: number; intakeDwell: number; tipCount: number }
@@ -4854,7 +5773,8 @@ follower.followPath(lane);`,
       const bits = [`${segs.length} path${segs.length > 1 ? 's' : ''} parsed`];
       if (parsed.segs.length > segs.length) bits.push(`only the first 80 are driven`);
       if (off) bits.push('some poses sit outside the 144 in field');
-      setMsg(bits.concat(parsed.notes).join('. ') + '.', 'ok');
+      // Each note brings its own full stop or none; the join supplies them once.
+      setMsg(bits.concat(parsed.notes).map((b) => b.replace(/\.+$/, '')).join('. ') + '.', 'ok');
       return true;
     };
 
@@ -4945,8 +5865,12 @@ follower.followPath(lane);`,
 
       // Sample every segment off the real bezier. The chord length sets the
       // sample count, so a 6 in hop is not sampled as finely as a 90 in sweep
-      // and an eight-leg chain stays cheap.
+      // and an eight-leg chain stays cheap. A segment is sampled whole before
+      // any heading is read, because Pedro 3 interpolates heading on path
+      // completion, which is arc length, and the length is only known once
+      // the segment has been walked.
       const S: PvSample[] = [];
+      const tans: number[] = [];
       const joint: number[] = [];
       const ctrl: [number, number][][] = [];
       let s = 0;
@@ -4964,6 +5888,8 @@ follower.followPath(lane);`,
         let chord = 0;
         for (let i = 1; i < P.length; i++) chord += Math.hypot(P[i][0] - P[i - 1][0], P[i][1] - P[i - 1][1]);
         const N = Math.max(12, Math.min(200, perSeg, Math.round(chord * 2.2)));
+        const loc: { x: number; y: number; k: number; tan: number; ls: number }[] = [];
+        let ls = 0, lt = prevTan;
         for (let i = 0; i <= N; i++) {
           const t = i / N;
           const [x, y] = bezAt(P, t);
@@ -4971,48 +5897,59 @@ follower.followPath(lane);`,
           const [ex, ey] = D2.length > 0 ? bezAt(D2, t) : [0, 0];
           const sp = Math.hypot(dx, dy);
           const k = sp > 1e-9 ? Math.abs(dx * ey - dy * ex) / Math.pow(sp * sp, 1.5) : 0;
-          const tan = sp > 1e-9 ? Math.atan2(dy, dx) : prevTan;
+          const tan = sp > 1e-9 ? Math.atan2(dy, dx) : lt;
+          if (i > 0) ls += Math.hypot(x - loc[i - 1].x, y - loc[i - 1].y);
+          loc.push({ x, y, k, tan, ls });
+          lt = tan;
+        }
+        const segLen = Math.max(1e-9, ls);
+        loc.forEach((q, i) => {
           // The shared endpoint is one sample, not two: it carries the turn
           // between the two paths instead of a duplicate position.
           if (i === 0 && prev) {
-            if (S.length) joint[S.length - 1] = Math.abs(wrapPi(tan - prevTan));
-            prevTan = tan;
-            continue;
+            if (S.length) joint[S.length - 1] = Math.abs(wrapPi(q.tan - prevTan));
+            prevTan = q.tan;
+            return;
           }
-          let h = seg.mode === 'tangent' ? tan
-            : seg.mode === 'constant' ? (seg.h0 || 0)
-              : angLerp(seg.h0 || 0, seg.h1 || 0, t);
-          if (seg.rev) h += Math.PI;
-          if (prev) s += Math.hypot(x - prev[0], y - prev[1]);
-          prev = [x, y];
-          prevTan = tan;
-          S.push({ x, y, s, h, k, v: 0, t: 0, ph: 'accel' });
+          const h = segHeading(seg, q.ls / segLen, q.tan, q.x, q.y);
+          if (prev) s += Math.hypot(q.x - prev[0], q.y - prev[1]);
+          prev = [q.x, q.y];
+          prevTan = q.tan;
+          S.push({ x: q.x, y: q.y, s, h, k: q.k, v: 0, t: 0, ph: 'accel' });
+          tans.push(q.tan);
           joint.push(0);
-        }
+        });
       }
       const n = S.length;
       if (n < 2) { pv.data = null; return; }
 
-      // ONE model: the Pedro 2.1.2 follower on this drivetrain's physics.
-      // The real follower holds speed down in corners with its centripetal
-      // correction (the same grip circle, with Pedro's own margin) and slows
-      // for what is ahead by predictive braking: its stopping distance is
-      // computed from the zero-power coast-down rate scaled by
-      // brakingStrength and the library's own factor of 4, and the drive
-      // vector brakes to hold that profile onto corners and onto the end
-      // pose. That is the backward pass below.
-      const muEff = c.strafe ? c.mu * STRAFE_MU : c.mu;
-      const aLat = muEff * GRAV;              // the grip circle's radius
-      const vtop = met.vtop;
+      // ONE model: Pedro 3.0.1's follower, Foresight, on this drivetrain's
+      // physics. Foresight drives at full power down the tangent. With
+      // pathSkip on, its default, it carries momentum from one path of a
+      // chain into the next instead of braking at each joint, and it brakes
+      // only for the end of the chain, from the moment its fitted stopping
+      // distance reaches the last pose (brakeAccel above). It has no
+      // centripetal term at all: the normal feedforward it hands its power
+      // allocator is zero. What holds speed down in a corner is grip, not the
+      // follower, so the ceiling below is the grip circle with this page's own
+      // 0.9 margin, and a joint, a corner of no radius, is rounded over half a
+      // robot. A mecanum robot driving at an angle to its heading pays the
+      // diamond penalty for it (dirAt), sample by sample, which is the same
+      // interpolation Foresight caps its own target speed with.
+      const mec = ($('wType') as HTMLSelectElement).value === 'mecanum';
       const drag = c.crr * c.m * GRAV;
-      const iCap = capAt(c, budget0(c));
-      const abBrake = ZPA_IN_S2 * BRAKING_STRENGTH * BRAKING_SCALE * M_PER_IN;
-
+      const vtop = met.vtop;
+      const dirs: Dir[] = new Array(n);
+      const aLat = new Array<number>(n);      // the grip circle's radius, per sample
+      const vTopAt = new Array<number>(n);    // top speed in that sample's direction
       const kM = new Array<number>(n);        // curvature per metre
       const vCap = new Array<number>(n);      // centripetal ceiling per sample
       for (let i = 0; i < n; i++) {
+        dirs[i] = mec ? dirAt(S[i].h - tans[i]) : DIR_FWD;
+        aLat[i] = c.mu * dirs[i].muF * GRAV;
+        vTopAt[i] = vtop / dirs[i].k;
         kM[i] = S[i].k / M_PER_IN;
-        vCap[i] = Math.max(0, Math.min(vtop, Math.sqrt(aLat / Math.max(kM[i], 1e-6)) * 0.9));
+        vCap[i] = Math.max(0, Math.min(vTopAt[i], Math.sqrt(aLat[i] / Math.max(kM[i], 1e-6)) * 0.9));
       }
       // The joint between two paths is a corner of no radius. Round it over the
       // blend length and cap on that; the cap lands on the joint itself, and
@@ -5020,39 +5957,44 @@ follower.followPath(lane);`,
       for (let j = 0; j < n; j++) {
         if (joint[j] <= 0.02) continue;
         const kJ = joint[j] / (JOINT_BLEND_IN * M_PER_IN);
-        vCap[j] = Math.min(vCap[j], Math.sqrt(aLat / kJ) * Math.max(0, Math.cos(joint[j] / 2)));
+        vCap[j] = Math.min(vCap[j], Math.sqrt(aLat[j] / kJ) * Math.max(0, Math.cos(joint[j] / 2)));
       }
 
       // Forward: what the drivetrain can build from a standstill, with sag and
-      // the current cap already inside forceAt. A corner is already spending
-      // grip, so only what is left of the circle,
+      // the current cap already inside forceAt, and the fuse's i²t budget
+      // spent and refilled along the way, exactly as the sprint spends it. A
+      // corner is already spending grip, so only what is left of the circle,
       // sqrt((mu g)^2 - (v^2 k)^2), is available to drive forward.
       const vf = new Array<number>(n).fill(0);
+      let budget = budget0(c);
       for (let i = 1; i < n; i++) {
         const ds = (S[i].s - S[i - 1].s) * M_PER_IN;
         const v0 = vf[i - 1];
-        let a = (forceAt(v0, c, iCap).F - drag) / c.m;
+        const fa = forceAt(v0, c, capAt(c, budget), dirs[i - 1]);
+        let a = (fa.F - drag) / c.m;
         const used = v0 * v0 * kM[i - 1];
-        a = Math.min(a, Math.sqrt(Math.max(0, aLat * aLat - used * used)));
+        a = Math.min(a, Math.sqrt(Math.max(0, aLat[i - 1] * aLat[i - 1] - used * used)));
         const raw = Math.sqrt(Math.max(0, v0 * v0 + 2 * a * ds));
         vf[i] = Math.min(raw, vCap[i]);
+        budget = spend(c, budget, fa.Itot, ds / Math.max(0.02, (v0 + vf[i]) / 2));
       }
-      // Backward from a dead stop at the end: predictive braking. The decel
-      // is the follower's braking rate (abBrake above) plus rolling drag,
-      // never more than grip could hold. forCorner
-      // remembers WHAT the braking is braking for: a corner ahead, or the
-      // end of the chain. That is the difference between "turn-limited" and
-      // "braking" on the badge, and it is why the corner stays named for the
-      // whole ramp into it rather than for one sample sitting on the joint.
+      // Backward from a dead stop at the end: the natural braking curve, read
+      // at each sample's own speed and direction, never more than the grip a
+      // corner leaves. forCorner remembers WHAT the braking is braking for: a
+      // corner ahead, or the end of the chain. That is the difference between
+      // "turn-limited" and "braking" on the badge, and it is why the corner
+      // stays named for the whole ramp into it rather than for one sample
+      // sitting on the joint.
       const vb = new Array<number>(n).fill(0);
       const forCorner = new Array<boolean>(n).fill(false);
       for (let i = n - 2; i >= 0; i--) {
         const ds = (S[i + 1].s - S[i].s) * M_PER_IN;
-        const used = vb[i + 1] * vb[i + 1] * kM[i + 1];
-        const gripLeft = Math.sqrt(Math.max(0, aLat * aLat - used * used));
-        const ab = Math.max(0.2, Math.min(abBrake + c.crr * GRAV, gripLeft));
-        const raw = Math.sqrt(vb[i + 1] * vb[i + 1] + 2 * ab * ds);
-        if (vCap[i] < raw) { vb[i] = vCap[i]; forCorner[i] = vCap[i] < vtop - 1e-3; }
+        const vn = vb[i + 1];
+        const used = vn * vn * kM[i + 1];
+        const gripLeft = Math.sqrt(Math.max(0, aLat[i + 1] * aLat[i + 1] - used * used));
+        const ab = brakeAccel(vn, c, gripLeft, dirs[i + 1]);
+        const raw = Math.sqrt(vn * vn + 2 * ab * ds);
+        if (vCap[i] < raw) { vb[i] = vCap[i]; forCorner[i] = vCap[i] < vTopAt[i] - 1e-3; }
         else { vb[i] = raw; forCorner[i] = forCorner[i + 1]; }
       }
 
@@ -5069,8 +6011,8 @@ follower.followPath(lane);`,
         S[i].t = t;
         S[i].ph = i === n - 1 ? 'stop'
           : vb[i] < vf[i] - eps && vb[i] < vCap[i] - eps ? (forCorner[i] ? 'turn' : 'brake')
-            : vCap[i] < vtop - eps && vCap[i] <= v + eps ? 'turn'
-              : v >= vtop - eps ? 'cap' : 'accel';
+            : vCap[i] < vTopAt[i] - eps && vCap[i] <= v + eps ? 'turn'
+              : v >= vTopAt[i] - eps ? 'cap' : 'accel';
       }
 
       let cornerIn = 0;
@@ -5178,7 +6120,7 @@ follower.followPath(lane);`,
       // Three or four y values, and round ones: a strip this short cannot
       // carry more, and a scale marked 0 / 51 / 101 is a scale nobody reads.
       let ysS = niceStep(yMax, 3);
-      for (let guard = 0; guard < 6 && Math.floor(yMax / ysS) > 3; guard++) ysS *= 2;
+      for (let guard = 0; guard < 6 && Math.floor(yMax / ysS) > 3; guard++) ysS = nextNice(ysS);
       const yvS: number[] = [0];
       for (let v = ysS; v <= yMax + 1e-9; v += ysS) yvS.push(v);
       g.lineWidth = W_HAIR;
@@ -5194,9 +6136,14 @@ follower.followPath(lane);`,
       g.fillStyle = P.ink3;
       g.textAlign = 'right'; g.textBaseline = 'middle';
       for (const v of yvS) g.fillText(tickNum(v, ysS), M.l - 9, Y(v));
-      const xs = niceStep(lenIn, 6);
+      // Same rule as every other figure: round steps, widened until no two
+      // labels touch, and a label at the far end held inside the canvas.
+      const xs = fitXStep(g, 0, lenIn, pw, niceStep(lenIn, 6));
       g.textAlign = 'center'; g.textBaseline = 'top';
-      for (let s = 0; s <= lenIn + 1e-9; s += xs) g.fillText(tickNum(s, xs), X(s), y1s + 10);
+      for (let s = 0; s <= lenIn + 1e-9; s += xs) {
+        const t = tickNum(s, xs), hw = g.measureText(t).width / 2;
+        g.fillText(t, Math.min(W - 2 - hw, X(s)), y1s + 10);
+      }
 
       g.font = FONT_LABEL;
       g.textAlign = 'center'; g.textBaseline = 'top';
@@ -5217,10 +6164,11 @@ follower.followPath(lane);`,
       g.stroke();
 
       // The gearing's ceiling, named on its own line, so "at top speed" has
-      // something visible to be at.
+      // something visible to be at. It is a reference, not a limit, so it
+      // takes the reference dash the profile's own top-speed line uses.
       if (vTop <= yMax) {
         g.strokeStyle = P.s3;
-        g.setLineDash(DASH_LIMIT); g.lineWidth = W_REF;
+        g.setLineDash(DASH_REF); g.lineWidth = W_REF;
         const ty = SNAP(Y(vTop));
         g.beginPath(); g.moveTo(M.l, ty); g.lineTo(x1s, ty); g.stroke();
         g.setLineDash([]);
@@ -5702,10 +6650,11 @@ follower.followPath(lane);`,
       state.basis = b;
       setSeg($('basisSpec'), $('basisDyno'), b === 'spec');
     };
-    // Only goBILDA publishes a vendor sheet AND has a gm0 dyno row here, so
-    // only goBILDA gets the choice. Showing a dead toggle would be a lie.
-    // The stored choice is left alone while hidden (motorKey ignores it for a
-    // platform with one basis), so it survives a trip through another brand.
+    // A platform gets the choice when it has both a vendor sheet and a gm0
+    // dyno row, which is now all three brands; the custom motor has neither,
+    // and showing a dead toggle would be a lie. The stored choice is left
+    // alone while hidden (motorKey ignores it for a platform with one basis),
+    // so it survives a trip through another brand.
     const syncBasisVisibility = () => {
       ($('basisWrap') as HTMLElement).hidden = !platform().spec;
     };
@@ -6096,6 +7045,17 @@ follower.followPath(lane);`,
       roRaf = requestAnimationFrame(() => { roRaf = 0; drawAll(); drawPath(); });
     }) : null;
     shell.querySelectorAll('.dt-chartbox').forEach((b) => ro?.observe(b));
+    // A window dragged to a screen with another pixel ratio changes no box
+    // size, so the observer above never hears of it. A resolution query
+    // does, and it is re-armed at the new ratio each time it fires.
+    let dprMq: MediaQueryList | null = null;
+    const onDpr = () => { if (!shell.isConnected) return; repaintFigures(); watchDpr(); };
+    const watchDpr = () => {
+      dprMq?.removeEventListener('change', onDpr);
+      dprMq = window.matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`);
+      dprMq.addEventListener('change', onDpr);
+    };
+    watchDpr();
 
     // Canvas text does not reflow when a webfont arrives: whatever face was
     // resolved at paint time is baked into the bitmap. So the figures are
@@ -6157,6 +7117,7 @@ follower.followPath(lane);`,
       window.removeEventListener('beforeprint', onBeforePrint);
       window.removeEventListener('afterprint', restoreFolds);
       ro?.disconnect();
+      dprMq?.removeEventListener('change', onDpr);
       aio?.disconnect();
       cancelAnimationFrame(pv.raf);
     }, { once: true });
